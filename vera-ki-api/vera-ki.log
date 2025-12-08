@@ -1,0 +1,10 @@
+nohup: ignoring input
+INFO:     Will watch for changes in these directories: ['/var/www/aeralogin+implement/vera-ki-api']
+INFO:     Uvicorn running on http://0.0.0.0:8850 (Press CTRL+C to quit)
+INFO:     Started reloader process [76905] using StatReload
+INFO:     Started server process [76907]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+2025-12-07 13:19:39,273 - aera-chat - INFO - Chat request: what is this...
+2025-12-07 13:19:43,053 - aera-chat - INFO - Response generated: 323 chars
+INFO:     127.0.0.1:54246 - "POST /api/chat HTTP/1.1" 200 OK
