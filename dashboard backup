@@ -1,0 +1,951 @@
+<!--
+VEra-Resonance — Admin Follower Dashboard
+© 2025 Karlheinz Beismann — VEra-Resonance Project
+Licensed under the Apache License, Version 2.0
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VEra-Resonance — Follower Dashboard</title>
+    
+    <!-- 🔥 Paymaster Integration for Gasless Transactions -->
+    <script type="module" src="../onchainkit-paymaster.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .owner-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .owner-section h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .input-group button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .input-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .input-group button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        
+        .link-section {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .link-section p {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .link-display {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .link-display input {
+            flex: 1;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+        
+        .link-display button {
+            padding: 10px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .followers-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .table-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+        }
+        
+        .table-header h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .table-header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 14px 20px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+        }
+        
+        th {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .score-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .platform-badge {
+            display: inline-block;
+            background: #e0e0e0;
+            color: #333;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        
+        .address-short {
+            font-family: monospace;
+            font-size: 12px;
+            color: #667eea;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .status.loading {
+            background: #e7f3ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: pulse 1.5s infinite;
+            margin-right: 5px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        
+        .export-button {
+            padding: 10px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        /* Blockchain Integration Styles */
+        .blockchain-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        
+        .blockchain-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .blockchain-status.disconnected {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .blockchain-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .blockchain-card h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .nft-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .basescan-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .basescan-link:hover {
+            text-decoration: underline;
+        }
+        
+        .blockchain-info {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .blockchain-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .blockchain-info-label {
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .blockchain-info-value {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👥 AEra-Resonance Follower Dashboard</h1>
+            <p>Track your verified followers and their Resonance Scores</p>
+        </div>
+        
+        <div class="owner-section">
+            <h2>🦊 Your Account - Connect MetaMask</h2>
+            <div class="input-group">
+                <input type="text" id="ownerInput" placeholder="Enter your wallet address (0x...)" value="">
+                <button id="metamaskBtn" onclick="connectMetaMask()" style="background: linear-gradient(135deg, #f6851b 0%, #fbdb57 100%);">
+                    🦊 Connect MetaMask
+                </button>
+                <button onclick="loadDashboard()">Load Dashboard</button>
+            </div>
+            <div id="statusMessage"></div>
+            <div style="margin-top: 10px; padding: 12px; background: #f0f0f0; border-radius: 6px; font-size: 12px; color: #666; display: none;" id="walletInfo">
+                <span id="walletAddress"></span>
+                <button onclick="disconnectWallet()" style="float: right; padding: 4px 8px; font-size: 11px;">Disconnect</button>
+            </div>
+        </div>
+        
+        <!-- Follower Link Generation (ALWAYS VISIBLE) -->
+        <div class="owner-section">
+            <h2>📤 Share Your Follower Link</h2>
+            <div class="link-section">
+                <p>Generate a custom link to share with your followers on social media</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600;">Select Platform:</label>
+                        <select id="platformSelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+                            <option value="direct">Direct Link</option>
+                            <option value="twitter">🐦 X / Twitter</option>
+                            <option value="discord">🎮 Discord</option>
+                            <option value="telegram">✈️ Telegram</option>
+                            <option value="facebook">👍 Facebook</option>
+                            <option value="reddit">🤖 Reddit</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button onclick="generateLink()" style="width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Generate Link</button>
+                    </div>
+                </div>
+                <div class="link-display" id="linkDisplay" style="display: none;">
+                    <input type="text" id="generatedLink" readonly>
+                    <button onclick="copyToClipboard()">Copy</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="dashboardContent" style="display: none;">
+            <!-- Owner Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="value" id="followerCount">0</div>
+                    <div class="label">Verified Followers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="avgScore">0</div>
+                    <div class="label">Average Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="yourScore">0</div>
+                    <div class="label">Your Score</div>
+                </div>
+            </div>
+            
+            <!-- Blockchain Stats Grid -->
+            <div class="stats-grid" id="blockchainStats" style="margin-top: 30px;">
+                <div class="stat-card">
+                    <div class="value" id="identityStatus">
+                        <span class="loading"></span>
+                    </div>
+                    <div class="label">Identity NFT Status</div>
+                    
+                    <!-- 🔥 Gasless Mint Button -->
+                    <button id="mintGaslessBtn" onclick="mintGasless()" style="
+                        display: none;
+                        margin-top: 10px;
+                        padding: 10px 20px;
+                        background: linear-gradient(135deg, #11998e, #38ef7d);
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(17, 153, 142, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(17, 153, 142, 0.3)'">
+                        ⚡ Mint NFT (Gasless - $0.00)
+                    </button>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="blockchainScore">
+                        <span class="loading"></span>
+                    </div>
+                    <div class="label">Blockchain Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="syncStatus">
+                        <span class="loading"></span>
+                    </div>
+                    <div class="label">Sync Status</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="blockchainHealth">
+                        <span class="loading"></span>
+                    </div>
+                    <div class="label">Blockchain Health</div>
+                </div>
+            </div>
+            
+            <!-- Followers Table -->
+            <div class="followers-table">
+                <div class="table-header">
+                    <h2>👥 Your Followers</h2>
+                    <p id="followerCount2">0 verified followers</p>
+                </div>
+                <div id="followersContainer">
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        <div class="loading"></div> Loading followers...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Blockchain Interaction History -->
+            <div class="followers-table" id="interactionHistory" style="margin-top: 20px;">
+                <div class="table-header">
+                    <h2>⛓️ Blockchain Interaction History</h2>
+                    <p id="interactionCount">Loading...</p>
+                </div>
+                <div id="interactionsContainer">
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        <div class="loading"></div> Loading blockchain data...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Blockchain Dashboard Integration - MUST load before inline scripts -->
+    <script src="blockchain-dashboard.js"></script>
+    
+    <script>
+        // ✅ Define API_BASE globally
+        const API_BASE = window.location.origin || 'http://localhost:8840';
+        
+        async function loadDashboard() {
+            const owner = document.getElementById('ownerInput').value.toLowerCase().trim();
+            const statusDiv = document.getElementById('statusMessage');
+            
+            if (!owner || !owner.startsWith('0x') || owner.length !== 42) {
+                statusDiv.innerHTML = '<div class="status error">❌ Please enter a valid wallet address</div>';
+                return;
+            }
+            
+            // ✅ Check if user already connected with MetaMask
+            if (!dashboardToken || connectedWallet !== owner) {
+                statusDiv.innerHTML = '<div class="status error">❌ Please connect MetaMask first (🦊 Connect MetaMask button)</div>';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<div class="status loading"><span class="loading"></span> Loading dashboard...</div>';
+            
+            try {
+                // ✅ No MetaMask needed here - user already verified via connectMetaMask()
+                // Just load the dashboard
+                console.log('� Loading dashboard with stored token...');
+                
+                const response = await fetch(`${API_BASE}/admin/followers?owner=${owner}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load dashboard');
+                }
+                
+                displayDashboard(data);
+                statusDiv.innerHTML = '<div class="status success">✓ Dashboard loaded successfully</div>';
+                console.log('✓ Dashboard loaded!');
+                
+                // ===== BLOCKCHAIN: Load blockchain data =====
+                // ⚠️ IMPORTANT: Load blockchain data for CONNECTED WALLET, not owner from input field
+                // The input field is for viewing OTHER people's followers
+                // But YOUR blockchain stats (NFT, Score) should be shown for YOUR wallet
+                try {
+                    console.log('[Dashboard] Checking for BlockchainDashboard module...');
+                    console.log('[Dashboard] window.BlockchainDashboard =', typeof window.BlockchainDashboard);
+                    
+                    if (window.BlockchainDashboard) {
+                        console.log('🔗 [Dashboard] Loading blockchain data for CONNECTED wallet:', connectedWallet);
+                        await window.BlockchainDashboard.loadBlockchainData(connectedWallet);
+                        console.log('✓ [Dashboard] Blockchain data loaded!');
+                    } else {
+                        console.error('❌ [Dashboard] BlockchainDashboard module not found!');
+                        console.log('[Dashboard] Available window properties:', Object.keys(window).filter(k => k.includes('Blockchain')));
+                    }
+                } catch (blockchainError) {
+                    console.error('❌ [Dashboard] Blockchain data load failed:', blockchainError);
+                    console.error('[Dashboard] Stack trace:', blockchainError.stack);
+                    // Non-critical - dashboard still works without blockchain data
+                }
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                statusDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+                document.getElementById('dashboardContent').style.display = 'none';
+            }
+        }
+        
+        function displayDashboard(data) {
+            // Update stats
+            document.getElementById('followerCount').textContent = data.total_followers;
+            document.getElementById('followerCount2').textContent = `${data.total_followers} verified followers`;
+            document.getElementById('avgScore').textContent = data.statistics.average_score;
+            document.getElementById('yourScore').textContent = data.owner_score || '—';
+            
+            // Build followers table
+            const container = document.getElementById('followersContainer');
+            
+            if (data.followers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No verified followers yet</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Share your custom link to get followers!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Follower Address</th>
+                            <th>Score</th>
+                            <th>Platform</th>
+                            <th>Verified At</th>
+                            <th>Logins</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.followers.map(f => `
+                            <tr>
+                                <td>${f.display_name || f.follower_address.substring(0, 10) + '...' + f.follower_address.substring(38)}</td>
+                                <td><span class="score-badge">${f.resonance_score}/100</span></td>
+                                <td><span class="platform-badge">${f.source_platform || 'unknown'}</span></td>
+                                <td style="font-size: 12px;">${new Date(f.verified_at).toLocaleDateString()}</td>
+                                <td>${f.login_count}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = tableHTML;
+            
+            // Platform distribution
+            const platformHtml = Object.entries(data.statistics.by_platform)
+                .map(([p, c]) => `<span class="platform-badge">${p}: ${c}</span>`)
+                .join(' ');
+            
+            // Show dashboard
+            document.getElementById('dashboardContent').style.display = 'block';
+        }
+        
+        async function generateLink() {
+            const owner = document.getElementById('ownerInput').value.toLowerCase().trim();
+            const platform = document.getElementById('platformSelect').value;
+            const linkDisplay = document.getElementById('linkDisplay');
+            const linkInput = document.getElementById('generatedLink');
+            
+            if (!owner || !owner.startsWith('0x')) {
+                alert('Please enter a valid wallet address first');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/follower-link?owner=${owner}&source=${platform}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error);
+                }
+                
+                linkInput.value = data.follower_link;
+                linkDisplay.style.display = 'flex';
+                
+            } catch (error) {
+                alert('Error generating link: ' + error.message);
+            }
+        }
+        
+        function copyToClipboard() {
+            const linkInput = document.getElementById('generatedLink');
+            linkInput.select();
+            document.execCommand('copy');
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Copied!';
+            setTimeout(() => btn.textContent = originalText, 2000);
+        }
+        
+        // ===== NEW: MetaMask Integration =====
+        // Store verified token in memory (not localStorage for security)
+        let dashboardToken = null;
+        let connectedWallet = null;
+        
+        async function connectMetaMask() {
+            if (typeof window.ethereum === 'undefined') {
+                alert('❌ MetaMask not installed!\n\nPlease install MetaMask extension:\nhttps://metamask.io');
+                return;
+            }
+            
+            try {
+                console.log('� Step 1: Requesting MetaMask account access...');
+                
+                // Request account access
+                const accounts = await window.ethereum.request({
+                    method: 'eth_requestAccounts'
+                });
+                
+                console.log('✅ Account received:', accounts[0]);
+                
+                const walletAddress = accounts[0].toLowerCase();
+                
+                // 🔐 SECURITY: Step 2 - Get Challenge from Backend
+                console.log('� Step 2: Requesting challenge from backend...');
+                const challengeResponse = await fetch(`${API_BASE}/admin/challenge`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ owner: walletAddress })
+                });
+                
+                const challengeData = await challengeResponse.json();
+                if (!challengeData.success) {
+                    throw new Error('Failed to get challenge: ' + challengeData.error);
+                }
+                
+                const nonce = challengeData.nonce;
+                console.log('✓ Challenge received:', nonce);
+                
+                // 🔐 SECURITY: Step 3 - Sign Challenge with MetaMask
+                console.log('🔐 Step 3: Requesting MetaMask signature...');
+                const messageToSign = `VEra-Resonance Dashboard Access\n\nNonce: ${nonce}\n\nBitte bestätigen Sie in MetaMask um auf Ihr Dashboard zuzugreifen.`;
+                
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [messageToSign, walletAddress]
+                });
+                
+                console.log('✓ Signature received:', signature.substring(0, 20) + '...');
+                
+                // 🔐 SECURITY: Step 4 - Verify Signature on Backend
+                console.log('🔐 Step 4: Verifying signature on backend...');
+                const verifyResponse = await fetch(`${API_BASE}/admin/verify-signature`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ owner: walletAddress, signature, nonce })
+                });
+                
+                const verifyData = await verifyResponse.json();
+                if (!verifyData.success || !verifyData.verified) {
+                    throw new Error('Signature verification failed: ' + verifyData.error);
+                }
+                
+                console.log('✓ Signature verified!');
+                
+                // 🆕 Check if user exists in DB - if not, register via /api/verify for Auto-NFT-Mint
+                console.log('🔍 Checking if user exists...');
+                try {
+                    const userCheckResponse = await fetch(`${API_BASE}/api/user/${walletAddress}`);
+                    const userData = await userCheckResponse.json();
+                    
+                    if (!userData || !userData.address) {
+                        // User doesn't exist - register via /api/verify to trigger Auto-NFT-Mint
+                        console.log('🆕 First-time user - registering and triggering Auto-NFT-Mint...');
+                        
+                        // Get new nonce for /api/verify
+                        const nonceResponse2 = await fetch(`${API_BASE}/api/nonce`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ address: walletAddress })
+                        });
+                        const nonceData2 = await nonceResponse2.json();
+                        
+                        // Sign the standard login message
+                        const loginMessage = nonceData2.message;
+                        const loginSignature = await ethereum.request({
+                            method: 'personal_sign',
+                            params: [loginMessage, walletAddress]
+                        });
+                        
+                        // Call /api/verify to create user and trigger Auto-NFT-Mint
+                        const registerResponse = await fetch(`${API_BASE}/api/verify`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                address: walletAddress,
+                                signature: loginSignature,
+                                nonce: nonceData2.nonce,
+                                display_name: "Dashboard User"
+                            })
+                        });
+                        
+                        const registerData = await registerResponse.json();
+                        
+                        if (registerData.is_human) {
+                            console.log('✅ User registered! Score:', registerData.resonance_score);
+                            console.log('🎨 Auto-NFT-Mint triggered!');
+                            alert('🎉 Welcome! Your account has been created.\n\n' +
+                                  '📊 Initial Resonance Score: ' + registerData.resonance_score + '\n' +
+                                  '🎨 Identity NFT is being minted...\n' +
+                                  'Check status in Dashboard after it loads!');
+                        } else {
+                            console.warn('⚠️ User registration returned is_human=false');
+                        }
+                    } else {
+                        console.log('✓ User already exists with score:', userData.score);
+                    }
+                } catch (userCheckError) {
+                    console.warn('⚠️ Could not check/register user:', userCheckError);
+                    // Non-critical error - dashboard can still load
+                }
+                
+                // ✅ Store token for later use (no more MetaMask needed for loadDashboard)
+                dashboardToken = signature;  // Use signature as token
+                connectedWallet = walletAddress;
+                
+                // Auto-fill input
+                document.getElementById('ownerInput').value = walletAddress;
+                
+                // Show wallet info
+                const walletInfo = document.getElementById('walletInfo');
+                walletInfo.style.display = 'block';
+                document.getElementById('walletAddress').innerHTML = 
+                    `✓ Connected: <strong>${walletAddress.substring(0, 10)}...${walletAddress.substring(38)}</strong>`;
+                
+                // 🎯 Do NOT auto-load dashboard - user must click "Load Dashboard" button
+                // But now loadDashboard() will NOT need MetaMask confirmation
+                
+            } catch (error) {
+                console.error('❌ Error in connectMetaMask:', error);
+                
+                if (error.code === 4001 || error.message.includes('rejected')) {
+                    alert('❌ You rejected the MetaMask signature request');
+                } else {
+                    alert('❌ Error: ' + error.message);
+                }
+                
+                dashboardToken = null;
+                connectedWallet = null;
+            }
+        }
+        
+        function disconnectWallet() {
+            document.getElementById('ownerInput').value = '';
+            document.getElementById('walletInfo').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'none';
+            document.getElementById('statusMessage').innerHTML = '';
+            dashboardToken = null;
+            connectedWallet = null;
+        }
+        
+        // 🔥 Gasless NFT Mint using Alchemy Paymaster
+        async function mintGasless() {
+            if (!connectedWallet) {
+                alert('⚠️ Please connect MetaMask first!');
+                return;
+            }
+            
+            const btn = document.getElementById('mintGaslessBtn');
+            const statusDiv = document.getElementById('identityStatus');
+            
+            // Disable button during mint
+            btn.disabled = true;
+            btn.textContent = '⏳ Minting...';
+            statusDiv.innerHTML = '⏳ Preparing gasless transaction...';
+            
+            try {
+                // Import Paymaster module
+                const { mintIdentityNFTGasless } = await import('../onchainkit-paymaster.js');
+                
+                console.log('🔥 Starting gasless NFT mint for:', connectedWallet);
+                statusDiv.innerHTML = '⏳ Sign transaction in MetaMask (NO GAS REQUIRED!)';
+                
+                // Execute gasless mint
+                const txHash = await mintIdentityNFTGasless(connectedWallet);
+                
+                console.log('✅ Gasless mint successful! TX:', txHash);
+                
+                // Update UI with success
+                statusDiv.innerHTML = `
+                    <div style="color: #11998e; font-weight: bold;">✅ Minted!</div>
+                    <a href="https://sepolia.basescan.org/tx/${txHash}" target="_blank" style="font-size: 12px; color: #667eea; text-decoration: underline;">
+                        View Transaction ↗
+                    </a>
+                    <div style="margin-top: 5px; padding: 5px 10px; background: linear-gradient(135deg, #11998e, #38ef7d); color: white; border-radius: 8px; font-size: 12px; display: inline-block;">
+                        ⚡ You paid $0.00 in gas fees!
+                    </div>
+                `;
+                
+                // Hide mint button (already minted)
+                btn.style.display = 'none';
+                
+                // Show success alert
+                alert('🎉 Identity NFT minted successfully!\n\n' +
+                      '✅ Transaction confirmed on BASE Sepolia\n' +
+                      '⚡ You paid $0.00 in gas fees (sponsored by Alchemy Paymaster)\n\n' +
+                      `TX Hash: ${txHash.substring(0, 20)}...`);
+                
+                // Refresh dashboard to update NFT status
+                console.log('🔄 Refreshing dashboard to show updated NFT status...');
+                await loadDashboard();
+                
+            } catch (error) {
+                console.error('❌ Gasless mint failed:', error);
+                
+                // Reset UI
+                statusDiv.innerHTML = '❌ Not Minted';
+                btn.disabled = false;
+                btn.textContent = '⚡ Mint NFT (Gasless - $0.00)';
+                
+                // User-friendly error messages
+                let errorMsg = 'Mint failed: ';
+                if (error.message.includes('rejected')) {
+                    errorMsg += 'You rejected the transaction';
+                } else if (error.message.includes('already minted')) {
+                    errorMsg += 'NFT already minted';
+                    btn.style.display = 'none'; // Hide button
+                } else if (error.message.includes('network')) {
+                    errorMsg += 'Network error - please check your connection';
+                } else {
+                    errorMsg += error.message;
+                }
+                
+                alert('❌ ' + errorMsg);
+            }
+        }
+        
+        // 🚫 SECURITY: Do NOT listen to accountsChanged for auto-connection
+        // Only disconnect when accounts are removed
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    disconnectWallet();
+                }
+                // Do NOT call loadDashboard - user must click button
+            });
+        }
+        
+        // Load from URL if owner is in params
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const owner = params.get('owner');
+            if (owner) {
+                document.getElementById('ownerInput').value = owner;
+                // Do NOT auto-load - user must click button
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join AEra Telegram Community | NFT-Gated Access</title>
+    <meta name="description" content="Join the exclusive AEra Telegram community - Identity NFT required">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0052ff;
+            --secondary: #00d4ff;
+            --dark: #0a0e27;
+            --darker: #050814;
+            --light: #f0f4ff;
+            --accent: #6366f1;
+            --success: #10b981;
+            --telegram: #0088cc;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: var(--light);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        /* Header */
+        header {
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 39, 0.8);
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            font-size: 3rem;
+            background: none !important;
+            -webkit-background-clip: unset !important;
+            background-clip: unset !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            opacity: 0.8;
+        }
+
+        nav a:hover {
+            color: var(--secondary);
+            opacity: 1;
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 650px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .page-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.85; }
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #ffffff, var(--telegram));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            color: rgba(240, 244, 255, 0.7);
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 36px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .status-box {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .status-box:hover {
+            border-color: rgba(0, 212, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .status-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.3));
+        }
+
+        .status-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--light);
+            margin-bottom: 12px;
+        }
+
+        .status-message {
+            font-size: 16px;
+            color: rgba(240, 244, 255, 0.7);
+            line-height: 1.7;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 18px 36px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            margin-top: 24px;
+            box-shadow: 0 4px 20px rgba(0, 82, 255, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(0, 82, 255, 0.5);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary), var(--success));
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 10px 40px rgba(0, 212, 255, 0.5);
+        }
+
+        .btn-telegram {
+            background: linear-gradient(135deg, #0088cc, #00aae7);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0, 136, 204, 0.4);
+        }
+
+        .btn-telegram:hover {
+            box-shadow: 0 10px 40px rgba(0, 136, 204, 0.6);
+        }
+
+        .loading {
+            display: none;
+            margin: 24px 0;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: var(--secondary);
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading p {
+            color: rgba(240, 244, 255, 0.7);
+            font-size: 16px;
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .error.active {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .success.active {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-box {
+            background: rgba(0, 212, 255, 0.05);
+            border: 2px solid rgba(0, 212, 255, 0.2);
+            border-radius: 14px;
+            padding: 24px;
+            margin-top: 28px;
+            text-align: left;
+        }
+
+        .info-box h3 {
+            color: var(--secondary);
+            font-size: 18px;
+            margin-bottom: 14px;
+            font-weight: 700;
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .info-box li {
+            padding: 10px 0;
+            color: rgba(240, 244, 255, 0.8);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 15px;
+        }
+
+        .info-box li:before {
+            content: "✓";
+            color: var(--success);
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .wallet-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            color: var(--secondary);
+            word-break: break-all;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .page-subtitle {
+                font-size: 1rem;
+            }
+
+            .container {
+                padding: 32px 24px;
+            }
+
+            .status-title {
+                font-size: 22px;
+            }
+
+            .status-message {
+                font-size: 16px;
+            }
+
+            nav {
+                gap: 1rem;
+            }
+
+            nav a {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation"></div>
+
+    <!-- Header (same as landing.html) -->
+    <header>
+        <a href="/" class="logo">
+            <span class="logo-icon" style="color: #3b82f6; animation: pulse 2s ease-in-out infinite;">🌀</span>
+            <span>AEraLogIn</span>
+        </a>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/#features">Features</a>
+            <a href="https://github.com/VEra-Resonance/AEra-LogIn" target="_blank">GitHub</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <div class="page-header">
+            <div class="page-icon">✈️</div>
+            <h1 class="page-title">Join AEra Telegram</h1>
+            <p class="page-subtitle">Exclusive NFT-Gated Community Access</p>
+        </div>
+
+        <div class="container">
+
+            <div class="error" id="errorBox"></div>
+            <div class="success" id="successBox"></div>
+
+            <!-- Loading State -->
+            <div class="loading" id="loadingBox">
+                <div class="spinner"></div>
+                <p style="margin-top: 20px;">Checking your Identity NFT...</p>
+            </div>
+
+            <!-- Initial: Not Connected -->
+            <div class="status-box" id="notConnected">
+                <div class="status-icon">�</div>
+                <div class="status-title">Connect Your Wallet</div>
+                <p class="status-message">
+                    To access the private AEra Telegram community, you need to verify your Identity NFT.
+                </p>
+                <button class="btn" id="connectBtn">
+                    🦊 Connect Wallet
+                </button>
+            </div>
+
+            <!-- State: Wallet Connected, Checking NFT -->
+            <div class="status-box" id="connected" style="display: none;">
+                <div class="status-icon">🔍</div>
+                <div class="status-title">Checking NFT...</div>
+                <p class="status-message">
+                    Verifying your AEra Identity NFT on BASE blockchain...
+                </p>
+                <div class="wallet-info" id="walletDisplay"></div>
+            </div>
+
+            <!-- State: NFT Verified - Access Granted -->
+            <div class="status-box" id="accessGranted" style="display: none;">
+                <div class="status-icon">✅</div>
+                <div class="status-title">Access Granted!</div>
+                <p class="status-message">
+                    Your Identity NFT has been verified. Welcome to the AEra Telegram community!
+                </p>
+                <button class="btn btn-telegram" id="joinBtn" onclick="joinTelegram()">
+                    <span>✈️</span> Join AEra Telegram
+                </button>
+            </div>
+
+            <!-- State: No NFT - Mint Required -->
+            <div class="status-box" id="accessDenied" style="display: none;">
+                <div class="status-icon">❌</div>
+                <div class="status-title">Identity NFT Required</div>
+                <p class="status-message">
+                    You need an AEra Identity NFT to access the community. Mint your free NFT now (gasless!)
+                </p>
+                <button class="btn btn-secondary" onclick="goToMint()">
+                    🎨 Mint Identity NFT (Free)
+                </button>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>💡 Why Identity NFT Gate?</h3>
+                <ul>
+                    <li>Proof-of-Human verification via BASE blockchain</li>
+                    <li>Bot-free community with verified members only</li>
+                    <li>On-chain reputation & Resonance Score tracking</li>
+                    <li>Gasless minting - completely free to join</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables - declared first
+        let connectBtn;
+        let userAddress = null;
+        let inviteLink = null;
+        let ownerWallet = null; // NEW: Owner tracking
+        
+        // Extract owner from URL parameters
+        function getOwnerFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const owner = urlParams.get('owner');
+            if (owner && owner.startsWith('0x') && owner.length === 42) {
+                ownerWallet = owner.toLowerCase();
+                console.log('✓ Owner detected from URL:', ownerWallet);
+            }
+        }
+        
+        // Call on page load
+        getOwnerFromURL();
+
+        // State Management
+        function showState(state) {
+            // Hide all states
+            document.getElementById('notConnected').style.display = 'none';
+            document.getElementById('connected').style.display = 'none';
+            document.getElementById('accessGranted').style.display = 'none';
+            document.getElementById('accessDenied').style.display = 'none';
+            document.getElementById('loadingBox').classList.remove('active');
+
+            // Show requested state
+            if (state === 'loading') {
+                document.getElementById('loadingBox').classList.add('active');
+            } else {
+                document.getElementById(state).style.display = 'block';
+            }
+        }
+
+        function showError(message) {
+            const errorBox = document.getElementById('errorBox');
+            errorBox.textContent = '⚠️ ' + message;
+            errorBox.classList.add('active');
+            setTimeout(() => {
+                errorBox.classList.remove('active');
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const successBox = document.getElementById('successBox');
+            successBox.textContent = '✓ ' + message;
+            successBox.classList.add('active');
+            setTimeout(() => {
+                successBox.classList.remove('active');
+            }, 5000);
+        }
+
+        // Connect Wallet
+        async function connectWallet() {
+            try {
+                console.log('⏳ Starting wallet connection...');
+                
+                if (typeof window.ethereum === 'undefined') {
+                    console.log('❌ No Web3 wallet detected');
+                    showError('MetaMask not found. Please install MetaMask to continue.');
+                    return;
+                }
+                
+                connectBtn.disabled = true;
+                console.log('🦊 Requesting wallet connection...');
+                showSuccess('⏳ Waiting for wallet connection...');
+                
+                let accounts = [];
+                try {
+                    accounts = await window.ethereum.request({ 
+                        method: 'eth_requestAccounts'
+                    });
+                } catch (popupError) {
+                    console.log('❌ Wallet connection rejected: ' + popupError.message);
+                    showError('Wallet connection rejected!');
+                    connectBtn.disabled = false;
+                    return;
+                }
+
+                if (!accounts || accounts.length === 0) {
+                    console.log('❌ No accounts found in wallet');
+                    showError('No accounts found. Please unlock MetaMask and try again.');
+                    connectBtn.disabled = false;
+                    return;
+                }
+
+                userAddress = accounts[0].toLowerCase();
+                console.log('✅ Wallet connected:', userAddress);
+
+                // Check network (BASE Sepolia = 84532)
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                console.log('Current network:', chainId);
+
+                if (chainId !== '0x14a34') { // BASE Sepolia chainId
+                    showError('Please switch to BASE Sepolia Testnet in MetaMask.');
+                    
+                    // Try to switch network automatically
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0x14a34' }],
+                        });
+                    } catch (switchError) {
+                        console.error('Network switch error:', switchError);
+                        showError('Please manually switch to BASE Sepolia Testnet in MetaMask.');
+                        return;
+                    }
+                }
+                
+                // Show loading and check NFT
+                showState('loading');
+                document.getElementById('walletDisplay').textContent = userAddress;
+
+                // Check NFT
+                await checkNFT();
+
+            } catch (error) {
+                console.error('❌ connectWallet error:', error);
+                showError('Error: ' + error.message);
+                connectBtn.disabled = false;
+                showState('notConnected');
+            }
+        }
+
+        // Check if user has Identity NFT
+        async function checkNFT() {
+            try {
+                showState('loading');
+
+                const response = await fetch('/api/check-rft', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        address: userAddress
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.allowed && data.has_nft) {
+                    // NFT verified - show access granted
+                    showState('accessGranted');
+                    showSuccess('Identity NFT verified!');
+                } else {
+                    // No NFT - show mint required
+                    showState('accessDenied');
+                }
+
+            } catch (error) {
+                console.error('NFT check error:', error);
+                showError('Failed to verify NFT: ' + error.message);
+                showState('notConnected');
+            }
+        }
+
+        // Join Telegram (get invite link)
+        async function joinTelegram() {
+            try {
+                const joinBtn = document.getElementById('joinBtn');
+                joinBtn.disabled = true;
+                joinBtn.textContent = 'Getting invite link...';
+
+                const response = await fetch('/api/telegram/invite', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        address: userAddress,
+                        owner_wallet: ownerWallet // NEW: Track owner
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.invite_link) {
+                    // Open Telegram invite link in new tab
+                    window.open(data.invite_link, '_blank');
+                    showSuccess('Opening Telegram... Welcome to the community! 🎉');
+                    
+                    // Reset button
+                    setTimeout(() => {
+                        joinBtn.disabled = false;
+                        joinBtn.innerHTML = '<span>✈️</span> Join AEra Telegram';
+                    }, 3000);
+                } else {
+                    showError(data.error || 'Failed to get invite link');
+                    joinBtn.disabled = false;
+                    joinBtn.innerHTML = '<span>✈️</span> Join AEra Telegram';
+                }
+
+            } catch (error) {
+                console.error('Join Telegram error:', error);
+                showError('Failed to join Telegram: ' + error.message);
+                const joinBtn = document.getElementById('joinBtn');
+                joinBtn.disabled = false;
+                joinBtn.innerHTML = '<span>✈️</span> Join AEra Telegram';
+            }
+        }
+
+        // Go to mint page
+        function goToMint() {
+            window.location.href = '/';
+        }
+
+        // Initialize on page load - EXACT PATTERN FROM DASHBOARD.HTML
+        window.addEventListener('DOMContentLoaded', function() {
+            try {
+                connectBtn = document.getElementById('connectBtn');
+                
+                console.log('✓ Ready. Please connect your wallet to verify NFT access.');
+                console.log('✓ Button found:', connectBtn ? 'YES' : 'NO');
+                console.log('✓ window.ethereum available:', typeof window.ethereum !== 'undefined');
+                
+                // Add event listener EXACTLY like dashboard.html
+                connectBtn.addEventListener('click', connectWallet);
+                
+                // Listen for account changes
+                if (window.ethereum) {
+                    window.ethereum.on('accountsChanged', (accounts) => {
+                        // Reset to initial state when account changes
+                        userAddress = null;
+                        showState('notConnected');
+                        showSuccess('Account changed. Please connect again to verify your NFT.');
+                    });
+                }
+            } catch (error) {
+                console.error('❌ Initialization error:', error);
+            }
+        });
+    </script>
+
+    <!-- Footer -->
+    <footer style="padding: 3rem 5%; border-top: 1px solid rgba(255, 255, 255, 0.1); text-align: center; color: rgba(240, 244, 255, 0.6); margin-top: 4rem;">
+        <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap;">
+            <a href="https://github.com/VEra-Resonance/AEra-LogIn" target="_blank" style="color: rgba(240, 244, 255, 0.6); text-decoration: none; transition: color 0.3s;">⭐ GitHub</a>
+            <a href="/privacy-policy" style="color: #10b981; text-decoration: none; transition: color 0.3s;">🔒 Privacy Policy</a>
+            <a href="https://sepolia.basescan.org/address/0xF6f86cc0b916BCfE44cff64b00C2fe6e7954A3Ce" target="_blank" style="color: rgba(240, 244, 255, 0.6); text-decoration: none; transition: color 0.3s;">Identity NFT Contract</a>
+            <a href="https://sepolia.basescan.org/address/0xD4676a88bfAD40A87c8a5e889EE4AdD1448527c4" target="_blank" style="color: rgba(240, 244, 255, 0.6); text-decoration: none; transition: color 0.3s;">Score Contract</a>
+            <a href="https://sepolia.basescan.org/address/0xE2d5B85E4A9B0820c59658607C03bC90ba63b7b9" target="_blank" style="color: rgba(240, 244, 255, 0.6); text-decoration: none; transition: color 0.3s;">Registry Contract</a>
+            <a href="https://base.org" target="_blank" style="color: rgba(240, 244, 255, 0.6); text-decoration: none; transition: color 0.3s;">BASE L2</a>
+        </div>
+        <p>
+            &copy; 2025 AEraLogIn. Built on Coinbase BASE L2.<br>
+            Powered by Alchemy, Blockscout & Web3.py
+        </p>
+        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.5;">
+            ⚠️ Beta Version - BASE Sepolia Testnet - Not for Production Use
+        </p>
+    </footer>
+
+    <!-- ===== AERA CHAT WIDGET ===== -->
+    <link rel="stylesheet" href="/aera-chat.css?v=5">
+    <script src="/aera-chat.js?v=5"></script>
+</body>
+</html>
