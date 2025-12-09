@@ -9,19 +9,21 @@
 import { createPublicClient, createWalletClient, custom, http } from 'viem';
 import { baseSepolia } from 'viem/chains';
 
-// Alchemy Config aus .env
-const ALCHEMY_API_KEY = 'u_oAA5oIIbGQ-0AdX3efg';
+// Alchemy Config - Load from environment variables!
+// NEVER commit real API keys to Git!
+const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || 'YOUR_ALCHEMY_API_KEY';
 const PAYMASTER_URL = `https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
 
 /**
  * OnchainKit Paymaster Config
  * 
  * Das ist ALLES was du brauchst für gaslose Transaktionen!
+ * Configure ALCHEMY_API_KEY and ALCHEMY_POLICY_ID in .env
  */
 export const paymasterConfig = {
     url: PAYMASTER_URL,
     context: {
-        policyId: 'aa242308-5c4a-481d-9b79-daa557be004e'
+        policyId: process.env.ALCHEMY_POLICY_ID || 'YOUR_POLICY_ID'
     }
 };
 
