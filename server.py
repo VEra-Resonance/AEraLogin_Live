@@ -2130,7 +2130,7 @@ async def get_blockchain_identity(address: str):
             "status": "active",
             "minted_at": "2024-11-30T14:30:00",
             "contract_address": "0x...",
-            "basescan_url": "https://sepolia.basescan.org/nft/0x..."
+            "basescan_url": "https://basescan.org/nft/0x..."
         }
     """
     try:
@@ -2174,8 +2174,8 @@ async def get_blockchain_identity(address: str):
         
         contract_address = os.getenv("IDENTITY_NFT_ADDRESS", "")
         tx_hash = user['identity_mint_tx_hash']
-        basescan_url = f"https://sepolia.basescan.org/nft/{contract_address}/{token_id}" if token_id else None
-        tx_url = f"https://sepolia.basescan.org/tx/{tx_hash}" if tx_hash else None
+        basescan_url = f"https://basescan.org/nft/{contract_address}/{token_id}" if token_id else None
+        tx_url = f"https://basescan.org/tx/{tx_hash}" if tx_hash else None
         
         return {
             "has_identity": has_identity,
@@ -2207,7 +2207,7 @@ async def get_blockchain_score(address: str):
             "last_sync": "2024-11-30T14:30:00",
             "next_sync_at": 60,
             "contract_address": "0x...",
-            "basescan_url": "https://sepolia.basescan.org/address/0x..."
+            "basescan_url": "https://basescan.org/address/0x..."
         }
     """
     try:
@@ -2241,7 +2241,7 @@ async def get_blockchain_score(address: str):
         next_sync_at = ((total_resonance // 2) + 1) * 2 if total_resonance < 100 else ((total_resonance // 2) + 1) * 2
         
         contract_address = os.getenv("RESONANCE_SCORE_ADDRESS", "")
-        basescan_url = f"https://sepolia.basescan.org/address/{contract_address}"
+        basescan_url = f"https://basescan.org/address/{contract_address}"
         
         return {
             "address": address,
@@ -2284,7 +2284,7 @@ async def get_blockchain_interactions(address: str, offset: int = 0, limit: int 
                     "interaction_type_name": "FOLLOW",
                     "timestamp": 1701360000,
                     "dashboard_link": "https://...",
-                    "basescan_url": "https://sepolia.basescan.org/tx/0x..."
+                    "basescan_url": "https://basescan.org/tx/0x..."
                 }
             ],
             "total": 5,
@@ -2322,7 +2322,7 @@ async def get_blockchain_interactions(address: str, offset: int = 0, limit: int 
                 "weight_follower": interaction.get("weight_follower", 0),
                 "weight_creator": interaction.get("weight_creator", 0),
                 "tx_hash": tx_hash,  # ✅ Add tx_hash field for frontend
-                "basescan_url": f"https://sepolia.basescan.org/tx/{tx_hash}" if tx_hash else None
+                "basescan_url": f"https://basescan.org/tx/{tx_hash}" if tx_hash else None
             })
         
         return {
@@ -2361,7 +2361,7 @@ async def get_blockchain_stats():
                 "total_interactions": 420,
                 "total_score_synced": 7500
             },
-            "basescan_base_url": "https://sepolia.basescan.org"
+            "basescan_base_url": "https://basescan.org"
         }
     """
     try:
@@ -2404,7 +2404,7 @@ async def get_blockchain_stats():
                 "total_score_synced": total_score_synced,
                 "users_with_blockchain_score": users_with_score
             },
-            "basescan_base_url": "https://sepolia.basescan.org"
+            "basescan_base_url": "https://basescan.org"
         }
         
     except Exception as e:
