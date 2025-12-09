@@ -10,8 +10,7 @@ Licensed under the Apache License, Version 2.0
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AEraLogIn — Resonance Dashboard</title>
     
-    <!-- 🔥 Paymaster Integration for Gasless Transactions -->
-    <script type="module" src="../onchainkit-paymaster.js"></script>
+    <!-- NFT Minting is now handled by backend wallet (no paymaster needed) -->
     
     <style>
         * { 
@@ -917,12 +916,13 @@ Licensed under the Apache License, Version 2.0
     <header class="header">
         <div class="logo">
             <span class="logo-icon" style="color: #3b82f6; animation: pulse 2s ease-in-out infinite;">🌀</span>
-            <span>AEraLogIn Dashboard</span>
+            <span>AEraLogIn</span>
         </div>
         <nav>
             <a onclick="scrollToSection('stats')">Stats</a>
             <a onclick="scrollToSection('followers')">Followers</a>
             <a onclick="scrollToSection('blockchain')">Blockchain</a>
+            <a href="/logo.html">Logo</a>
             <a href="/">Home</a>
         </nav>
         
@@ -937,12 +937,13 @@ Licensed under the Apache License, Version 2.0
         <a onclick="scrollToSection('stats'); closeMenu();">Stats</a>
         <a onclick="scrollToSection('followers'); closeMenu();">Followers</a>
         <a onclick="scrollToSection('blockchain'); closeMenu();">Blockchain</a>
+        <a href="/logo.html">Logo</a>
         <a href="/">Home</a>
     </nav>
     
     <div class="container">
         <div class="owner-section">
-            <h2>💼 Your Account - Connect Wallet</h2>
+            <h2>💼 Dashboard - Your Account - Connect Wallet</h2>
             <div class="input-group">
                 <input type="text" id="ownerInput" placeholder="Enter your wallet address (0x...)" value="">
                 <button id="metamaskBtn" onclick="connectMetaMask()" style="background: linear-gradient(135deg, var(--primary), var(--accent));">
@@ -1077,24 +1078,6 @@ Licensed under the Apache License, Version 2.0
                         <span class="loading"></span>
                     </div>
                     <div class="label">Identity NFT Status</div>
-                    
-                    <!-- 🔥 Gasless Mint Button -->
-                    <button id="mintGaslessBtn" onclick="mintGasless()" style="
-                        display: none;
-                        margin-top: 8px;
-                        padding: 6px 14px;
-                        background: linear-gradient(135deg, #11998e, #38ef7d);
-                        color: white;
-                        border: none;
-                        border-radius: 6px;
-                        font-size: 11px;
-                        font-weight: bold;
-                        cursor: pointer;
-                        box-shadow: 0 3px 12px rgba(17, 153, 142, 0.3);
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 16px rgba(17, 153, 142, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 3px 12px rgba(17, 153, 142, 0.3)'">
-                        ⚡ Mint NFT (Gasless - $0.00)
-                    </button>
                 </div>
                 <div class="stat-card">
                     <div class="value" id="blockchainScore">
@@ -1632,83 +1615,7 @@ Licensed under the Apache License, Version 2.0
             connectedWallet = null;
         }
         
-        // 🔥 Gasless NFT Mint using Alchemy Paymaster
-        async function mintGasless() {
-            if (!connectedWallet) {
-                alert('⚠️ Please connect MetaMask first!');
-                return;
-            }
-            
-            const btn = document.getElementById('mintGaslessBtn');
-            const statusDiv = document.getElementById('identityStatus');
-            
-            // Disable button during mint
-            btn.disabled = true;
-            btn.textContent = '⏳ Minting...';
-            statusDiv.innerHTML = '⏳ Preparing gasless transaction...';
-            
-            try {
-                // Import Paymaster module
-                const { mintIdentityNFTGasless } = await import('../onchainkit-paymaster.js');
-                
-                console.log('🔥 Starting gasless NFT mint for:', connectedWallet);
-                statusDiv.innerHTML = '⏳ Sign transaction in MetaMask (NO GAS REQUIRED!)';
-                
-                // Execute gasless mint
-                const txHash = await mintIdentityNFTGasless(connectedWallet);
-                
-                console.log('✅ Gasless mint successful! TX:', txHash);
-                
-                // Update UI with success
-                statusDiv.innerHTML = `
-                    <div style="color: #11998e; font-weight: bold;">✅ Minted!</div>
-                    <a href="https://basescan.org/tx/${txHash}" target="_blank" style="font-size: 12px; color: #667eea; text-decoration: underline;">
-                        View Transaction ↗
-                    </a>
-                    <div style="margin-top: 5px; padding: 5px 10px; background: linear-gradient(135deg, #11998e, #38ef7d); color: white; border-radius: 8px; font-size: 12px; display: inline-block;">
-                        ⚡ You paid $0.00 in gas fees!
-                    </div>
-                `;
-                
-                // Hide mint button (already minted)
-                btn.style.display = 'none';
-                
-                // Show success alert
-                alert('🎉 Identity NFT minted successfully!\n\n' +
-                      '✅ Transaction confirmed on BASE Mainnet\n' +
-                      '⚡ You paid $0.00 in gas fees (sponsored by Alchemy Paymaster)\n\n' +
-                      `TX Hash: ${txHash.substring(0, 20)}...`);
-                
-                // Refresh dashboard to update NFT status
-                console.log('🔄 Refreshing dashboard to show updated NFT status...');
-                await loadDashboard();
-                
-            } catch (error) {
-                console.error('❌ Gasless mint failed:', error);
-                
-                // Reset UI
-                statusDiv.innerHTML = '❌ Not Minted';
-                btn.disabled = false;
-                btn.textContent = '⚡ Mint NFT (Gasless - $0.00)';
-                
-                // User-friendly error messages
-                let errorMsg = 'Mint failed: ';
-                if (error.message.includes('rejected')) {
-                    errorMsg += 'You rejected the transaction';
-                } else if (error.message.includes('already minted')) {
-                    errorMsg += 'NFT already minted';
-                    btn.style.display = 'none'; // Hide button
-                } else if (error.message.includes('network')) {
-                    errorMsg += 'Network error - please check your connection';
-                } else {
-                    errorMsg += error.message;
-                }
-                
-                alert('❌ ' + errorMsg);
-            }
-        }
-        
-        // 🚫 SECURITY: Do NOT listen to accountsChanged for auto-connection
+        //  SECURITY: Do NOT listen to accountsChanged for auto-connection
         // Only disconnect when accounts are removed
         if (window.ethereum) {
             window.ethereum.on('accountsChanged', (accounts) => {
@@ -1937,8 +1844,8 @@ Licensed under the Apache License, Version 2.0
     </footer>
 
     <!-- ===== AERA CHAT WIDGET ===== -->
-    <link rel="stylesheet" href="/aera-chat.css?v=1765212363">
-    <script src="/aera-chat.js?v=1765212363"></script>
+    <link rel="stylesheet" href="/aera-chat.css?v=20251209002">
+    <script src="/aera-chat.js?v=20251209001"></script>
     <script>
         // Initialize AEra Chat Widget
         if (typeof initAeraChat === 'function') {

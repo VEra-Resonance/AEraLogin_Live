@@ -487,6 +487,20 @@ Platform: {{ platform_name }}
             align-items: center;
         }
 
+        .nav-menu a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            opacity: 0.8;
+            cursor: pointer;
+        }
+
+        .nav-menu a:hover {
+            color: var(--secondary);
+            opacity: 1;
+        }
+
         .nav-menu.mobile-menu {
             position: fixed;
             top: 0;
@@ -629,6 +643,7 @@ Platform: {{ platform_name }}
         <!-- Desktop Navigation -->
         <nav class="nav-menu">
             <a href="/">Home</a>
+            <a href="/logo.html">Logo</a>
             <a href="/dashboard">Dashboard</a>
         </nav>
 
@@ -641,6 +656,7 @@ Platform: {{ platform_name }}
     <!-- Mobile Navigation (outside header for proper z-index stacking) -->
     <nav class="nav-menu mobile-menu" id="mobileMenu">
         <a href="/">Home</a>
+        <a href="/logo.html">Logo</a>
         <a href="/dashboard">Dashboard</a>
     </nav>
     
@@ -1365,8 +1381,8 @@ Platform: {{ platform_name }}
     </script>
 
     <!-- ===== AERA CHAT WIDGET ===== -->
-    <link rel="stylesheet" href="/aera-chat.css?v=1765212363">
-    <script src="/aera-chat.js?v=1765212363"></script>
+    <link rel="stylesheet" href="/aera-chat.css?v=20251209002">
+    <script src="/aera-chat.js?v=20251209001"></script>
     <script>
         // Initialize AEra Chat Widget immediately
         if (typeof initAeraChat === 'function') {
