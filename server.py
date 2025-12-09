@@ -599,7 +599,7 @@ async def resonance_landing():
 @app.get("/landing", response_class=HTMLResponse)
 async def new_landing():
     """New Modern Landing Page - Authenticity & Resonance Theme"""
-    with open(os.path.join(os.path.dirname(__file__), "landing-new.html"), "r") as f:
+    with open(os.path.join(os.path.dirname(__file__), "landing.html"), "r") as f:
         return f.read()
 
 @app.get("/dashboard", response_class=HTMLResponse)
