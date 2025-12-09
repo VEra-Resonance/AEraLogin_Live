@@ -35,6 +35,9 @@ from logger import logger, api_logger, db_logger, wallet_logger, airdrop_logger,
 from web3_service import web3_service
 from blockchain_sync import sync_score_after_update
 
+# ===== IMPORT TELEGRAM BOT SERVICE =====
+from telegram_bot_service import telegram_bot, create_one_time_telegram_invite, check_bot_setup
+
 # Config
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", 8840))
@@ -1018,9 +1021,29 @@ async def telegram_invite(req: Request):
                 if invite_link:
                     log_activity("INFO", "DISCORD_GATE", "Using default Discord link from .env")
             else:
-                invite_link = os.getenv("TELEGRAM_INVITE_LINK", "")
-                if invite_link:
-                    log_activity("INFO", "TELEGRAM_GATE", "Using default Telegram link from .env")
+                # 🤖 TELEGRAM: Try Bot API for TRUE one-time links first!
+                if telegram_bot.is_configured:
+                    try:
+                        log_activity("INFO", "TELEGRAM_GATE", "🤖 Attempting Bot API one-time link", address=address[:10])
+                        success, bot_link = await create_one_time_telegram_invite(
+                            wallet_address=address,
+                            expire_seconds=300  # 5 minutes
+                        )
+                        if success:
+                            invite_link = bot_link
+                            log_activity("INFO", "TELEGRAM_GATE", "✅ Bot API one-time link created", 
+                                        address=address[:10], 
+                                        link=invite_link[:30] + "...")
+                        else:
+                            log_activity("WARNING", "TELEGRAM_GATE", f"Bot API failed: {bot_link}, falling back to static link")
+                    except Exception as bot_err:
+                        log_activity("WARNING", "TELEGRAM_GATE", f"Bot API error: {str(bot_err)}, falling back to static link")
+                
+                # Fallback to static link from .env
+                if not invite_link:
+                    invite_link = os.getenv("TELEGRAM_INVITE_LINK", "")
+                    if invite_link:
+                        log_activity("INFO", "TELEGRAM_GATE", "Using default Telegram link from .env (static)")
         
         if not invite_link:
             platform_name = "Discord" if platform == "discord" else "Telegram"
@@ -1274,6 +1297,42 @@ async def community_redirect(token: str):
             """,
             status_code=500
         )
+
+
+@app.get("/api/telegram-bot/status")
+async def telegram_bot_status():
+    """
+    🤖 Check Telegram Bot configuration and status
+    
+    Returns:
+        {
+            "configured": true/false,
+            "ready": true/false,
+            "bot_username": "@YourBot",
+            "can_create_one_time_links": true/false,
+            "error": "..." (if any)
+        }
+    """
+    try:
+        status = await check_bot_setup()
+        
+        return {
+            "configured": status.get("token_configured", False) and status.get("group_configured", False),
+            "ready": status.get("ready", False),
+            "bot_username": f"@{status['bot_info'].get('username')}" if status.get("bot_info") else None,
+            "can_create_one_time_links": status.get("ready", False),
+            "permissions": status.get("permissions"),
+            "message": status.get("message"),
+            "error": status.get("error")
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "TELEGRAM_BOT", f"Status check failed: {str(e)}")
+        return {
+            "configured": False,
+            "ready": False,
+            "error": str(e)
+        }
 
 
 @app.post("/api/telegram-gate/set-group")
