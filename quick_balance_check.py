@@ -1,8 +1,9 @@
 from web3 import Web3
 import sys
+import os
 
-rpc_url = "https://sepolia.base.org"
-wallet = "0xed1a95ab5b794Dc20964693FBCc60A3DFb5A22C5"
+rpc_url = os.getenv("BASE_RPC_URL", "https://sepolia.base.org")
+wallet = os.getenv("TEST_WALLET", "0xed1a95ab5b794Dc20964693FBCc60A3DFb5A22C5")
 
 print(f"🔄 Verbinde zu BASE Sepolia...")
 w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={'timeout': 10}))
