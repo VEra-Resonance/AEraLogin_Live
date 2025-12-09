@@ -342,6 +342,99 @@ async def check_bot_setup() -> Dict[str, Any]:
     return status
 
 
+# ===== GROUP BOT INTEGRATION =====
+
+def store_capabilities_for_invite(invite_link: str, score: int, min_score: int = 50):
+    """
+    Speichert Capabilities für einen Invite-Link
+    
+    Wird vom Gate-Prozess aufgerufen BEVOR der Link an den User geht.
+    Der Group Bot holt diese dann wenn der User beitritt.
+    
+    Args:
+        invite_link: Der erstellte Telegram Invite Link
+        score: Resonance Score des Users (wird in Capabilities umgewandelt)
+        min_score: Mindest-Score für Schreibrechte
+    """
+    try:
+        # Import hier um circular imports zu vermeiden
+        from telegram_group_bot import group_bot
+        
+        # Generiere Capabilities basierend auf Score
+        capabilities = []
+        
+        # Schreibrechte wenn Score >= min_score
+        if score >= min_score:
+            capabilities.append("write")
+        
+        # Poll-Capabilities für alle erreichbaren Stufen
+        poll_levels = [50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
+        for level in poll_levels:
+            if score >= level:
+                capabilities.append(f"poll_{level}")
+        
+        # Bei Group Bot registrieren
+        group_bot.session_manager.store_pending_token(
+            invite_link=invite_link,
+            capabilities=capabilities,
+            expire_seconds=120  # 2 Minuten Zeit zum Beitreten
+        )
+        
+        logger.info(f"✅ Capabilities stored for invite: {capabilities}")
+        return True
+        
+    except ImportError:
+        # Group Bot nicht verfügbar - kein Problem, läuft auch ohne
+        logger.debug("Group Bot not available - skipping capability storage")
+        return False
+    except Exception as e:
+        logger.warning(f"Could not store capabilities: {e}")
+        return False
+
+
+async def create_one_time_telegram_invite_with_capabilities(
+    wallet_address: str,
+    score: int,
+    min_score: int = 50,
+    expire_seconds: int = 300
+) -> Tuple[bool, str]:
+    """
+    Erstellt Einmal-Link UND registriert Capabilities für Group Bot
+    
+    Kombiniert:
+    1. create_one_time_telegram_invite() - Link erstellen
+    2. store_capabilities_for_invite() - Capabilities für Group Bot
+    
+    Args:
+        wallet_address: Für Link-Name (anonymisiert)
+        score: Resonance Score
+        min_score: Mindest-Score für Schreibrechte
+        expire_seconds: Link-Gültigkeit
+    
+    Returns:
+        (success, invite_link_or_error)
+    """
+    # 1. Link erstellen
+    success, result = await create_one_time_telegram_invite(
+        wallet_address=wallet_address,
+        expire_seconds=expire_seconds
+    )
+    
+    if not success:
+        return False, result
+    
+    invite_link = result
+    
+    # 2. Capabilities für Group Bot speichern
+    store_capabilities_for_invite(
+        invite_link=invite_link,
+        score=score,
+        min_score=min_score
+    )
+    
+    return True, invite_link
+
+
 # ===== CLI TEST =====
 if __name__ == "__main__":
     import asyncio

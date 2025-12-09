@@ -38,6 +38,13 @@ from blockchain_sync import sync_score_after_update
 # ===== IMPORT TELEGRAM BOT SERVICE =====
 from telegram_bot_service import telegram_bot, create_one_time_telegram_invite, check_bot_setup
 
+# Try to import extended function for Group Bot integration
+try:
+    from telegram_bot_service import create_one_time_telegram_invite_with_capabilities
+    GROUP_BOT_AVAILABLE = True
+except ImportError:
+    GROUP_BOT_AVAILABLE = False
+
 # Config
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", 8840))
@@ -1025,10 +1032,37 @@ async def telegram_invite(req: Request):
                 if telegram_bot.is_configured:
                     try:
                         log_activity("INFO", "TELEGRAM_GATE", "🤖 Attempting Bot API one-time link", address=address[:10])
-                        success, bot_link = await create_one_time_telegram_invite(
-                            wallet_address=address,
-                            expire_seconds=300  # 5 minutes
-                        )
+                        
+                        # 🔐 NEW: Get user's score for Group Bot capabilities
+                        user_score = 50  # Default
+                        try:
+                            conn_score = get_db_connection()
+                            cursor_score = conn_score.cursor()
+                            cursor_score.execute("SELECT score FROM users WHERE address=?", (address,))
+                            score_result = cursor_score.fetchone()
+                            if score_result:
+                                user_score = score_result['score']
+                            conn_score.close()
+                        except Exception as score_err:
+                            log_activity("WARNING", "TELEGRAM_GATE", f"Could not fetch score: {score_err}")
+                        
+                        # Use extended function if Group Bot is available
+                        if GROUP_BOT_AVAILABLE:
+                            success, bot_link = await create_one_time_telegram_invite_with_capabilities(
+                                wallet_address=address,
+                                score=user_score,
+                                min_score=50,  # TODO: Make configurable
+                                expire_seconds=300  # 5 minutes
+                            )
+                            if success:
+                                log_activity("INFO", "TELEGRAM_GATE", "✅ Link + Capabilities created", 
+                                            address=address[:10], score=user_score)
+                        else:
+                            success, bot_link = await create_one_time_telegram_invite(
+                                wallet_address=address,
+                                expire_seconds=300  # 5 minutes
+                            )
+                        
                         if success:
                             invite_link = bot_link
                             log_activity("INFO", "TELEGRAM_GATE", "✅ Bot API one-time link created", 
