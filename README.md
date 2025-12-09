@@ -6,9 +6,9 @@ A Web3 authentication and reputation system built on Coinbase's BASE Layer 2 net
 
 ---
 
-## 🌐 Built on BASE Sepolia
+## 🌐 Live on BASE Mainnet
 
-This project leverages **BASE Sepolia Testnet** (Chain ID: 84532) - Coinbase's Ethereum Layer 2 solution - for:
+This project is deployed on **BASE Mainnet** (Chain ID: 8453) - Coinbase's Ethereum Layer 2 solution - for:
 
 - **⚡ 99.97% Lower Gas Costs** - NFT minting ~$0.0003 vs $1.00 on Ethereum
 - **🚀 Faster Transactions** - Sub-second confirmation times
@@ -16,10 +16,10 @@ This project leverages **BASE Sepolia Testnet** (Chain ID: 84532) - Coinbase's E
 - **🛡️ Ethereum Security** - Inherits Ethereum's security guarantees
 
 ### Network Information
-- **Network**: BASE Sepolia Testnet
-- **Chain ID**: 84532
-- **RPC URL**: https://sepolia.base.org
-- **Block Explorer**: https://sepolia.basescan.org
+- **Network**: BASE Mainnet
+- **Chain ID**: 8453
+- **RPC URL**: https://mainnet.base.org
+- **Block Explorer**: https://basescan.org
 
 ---
 
@@ -55,13 +55,13 @@ This project leverages **BASE Sepolia Testnet** (Chain ID: 84532) - Coinbase's E
 
 ## 🏗️ Architecture
 
-### Smart Contracts (BASE Sepolia)
+### Smart Contracts (BASE Mainnet)
 
 | Contract | Address | Purpose | Explorer |
 |---------|---------|---------|----------|
-| **AEraIdentityNFT** | `0xF6f86cc0b916BCfE44cff64b00C2fe6e7954A3Ce` | Soul-bound Identity NFT | [View on Basescan](https://sepolia.basescan.org/address/0xF6f86cc0b916BCfE44cff64b00C2fe6e7954A3Ce) |
-| **AEraResonanceScore** | `0xD4676a88bfAD40A87c8a5e889EE4AdD1448527c4` | On-chain reputation score | [View on Basescan](https://sepolia.basescan.org/address/0xD4676a88bfAD40A87c8a5e889EE4AdD1448527c4) |
-| **AEraResonanceRegistry** | `0xE2d5B85E4A9B0820c59658607C03bC90ba63b7b9` | Interaction & follower log | [View on Basescan](https://sepolia.basescan.org/address/0xE2d5B85E4A9B0820c59658607C03bC90ba63b7b9) |
+| **AEraIdentityNFT** | `0xF9ff5DC523927B9632049bd19e17B610E9197d53` | Soul-bound Identity NFT | [View on Basescan](https://basescan.org/address/0xF9ff5DC523927B9632049bd19e17B610E9197d53) |
+| **AEraResonanceScore** | `0x9A814DBF7E2352CE9eA6293b4b731B2a24800102` | On-chain reputation score | [View on Basescan](https://basescan.org/address/0x9A814DBF7E2352CE9eA6293b4b731B2a24800102) |
+| **AEraResonanceRegistry** | `0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF` | Interaction & follower log | [View on Basescan](https://basescan.org/address/0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF) |
 
 ### Backend Components
 
@@ -92,8 +92,8 @@ sudo apt install git python3-pip
 
 ```bash
 # Clone repository
-git clone https://github.com/VEra-Resonance/AEra-LogIn-BASE-Sepolia.git
-cd AEra-LogIn-BASE-Sepolia
+git clone https://github.com/VEra-Resonance/AEraLogIn_on_BASE.git
+cd AEraLogIn_on_BASE
 
 # Create virtual environment
 python3 -m venv venv
@@ -114,16 +114,16 @@ cp .env.example .env
 Required environment variables:
 
 ```env
-# BASE Sepolia RPC
-BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+# BASE Mainnet RPC
+BASE_RPC_URL=https://mainnet.base.org
 
 # Backend Wallet (with MINTER_ROLE)
 PRIVATE_KEY=your_private_key_here
 
 # Smart Contracts
-IDENTITY_NFT_ADDRESS=0xF6f86cc0b916BCfE44cff64b00C2fe6e7954A3Ce
-RESONANCE_SCORE_ADDRESS=0xD4676a88bfAD40A87c8a5e889EE4AdD1448527c4
-RESONANCE_REGISTRY_ADDRESS=0xE2d5B85E4A9B0820c59658607C03bC90ba63b7b9
+IDENTITY_NFT_ADDRESS=0xF9ff5DC523927B9632049bd19e17B610E9197d53
+RESONANCE_SCORE_ADDRESS=0x9A814DBF7E2352CE9eA6293b4b731B2a24800102
+RESONANCE_REGISTRY_ADDRESS=0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF
 
 # Server
 PORT=8840
@@ -148,7 +148,7 @@ python server.py
 1. **Visit Landing Page**: `http://localhost:8840`
 2. **Connect MetaMask** - Ensure you're on BASE Sepolia network
 3. **Sign Authentication** - Verify wallet ownership
-4. **Receive Identity NFT** - Automatically minted on first login
+4. **Receive Identity NFT** - Automatically minted on first login (gasless!)
 5. **Access Dashboard** - View your followers and Resonance Score
 
 ### For Developers
@@ -179,8 +179,8 @@ GET /api/blockchain/identity/{address}
   "has_identity": true,
   "token_id": 15,
   "status": "active",
-  "contract_address": "0xF6f86cc0b916BCfE44cff64b00C2fe6e7954A3Ce",
-  "basescan_url": "https://sepolia.basescan.org/nft/..."
+  "contract_address": "0xF9ff5DC523927B9632049bd19e17B610E9197d53",
+  "basescan_url": "https://basescan.org/nft/..."
 }
 ```
 
@@ -230,7 +230,7 @@ GET /api/blockchain/stats
   "resonance_score": "✅ Connected",
   "resonance_registry": "✅ Connected",
   "backend_wallet": "0x22A2...",
-  "network": "BASE Sepolia"
+  "network": "BASE Mainnet"
 }
 ```
 
@@ -256,11 +256,11 @@ GET /api/blockchain/stats
 
 ### Technology Stack
 
-- **Backend**: FastAPI, Python 3.9+
+- **Backend**: FastAPI, Python 3.13+
 - **Blockchain**: Web3.py, eth-account
 - **Frontend**: Vanilla JS, Web3.js, MetaMask
 - **Database**: SQLite
-- **Network**: BASE Sepolia (L2)
+- **Network**: BASE Mainnet (L2)
 
 ---
 
@@ -279,17 +279,16 @@ GET /api/blockchain/stats
 
 1. **Never commit `.env` files**
 2. **Keep private keys secure**
-3. **Use testnet for development**
-4. **Verify all contracts on Basescan**
-5. **Regular security audits**
+3. **Verify all contracts on Basescan**
+4. **Regular security audits**
 
 ---
 
-## 🌟 Why BASE Sepolia?
+## 🌟 Why BASE Mainnet?
 
 ### Cost Comparison
 
-| Operation | Ethereum Mainnet | BASE Sepolia | Savings |
+| Operation | Ethereum Mainnet | BASE Mainnet | Savings |
 |-----------|-----------------|--------------|---------|
 | NFT Mint | ~$1.00 | ~$0.0003 | 99.97% |
 | Score Update | ~$0.50 | ~$0.0002 | 99.96% |
@@ -307,7 +306,6 @@ GET /api/blockchain/stats
 
 ## 🛣️ Roadmap
 
-- **Deploy contracts on BASE Mainnet** - Production-ready deployment
 - **Dashboard V2 with cross-platform resonance analytics** - Enhanced user insights
 - **Optional Miniapp integration** - Once SIWE is supported natively in Base Miniapps
 
@@ -321,9 +319,9 @@ Apache License 2.0 - See [LICENSE](LICENSE) file for details
 
 ## 🔗 Links
 
-- **Repository**: https://github.com/VEra-Resonance/AEra-LogIn-BASE-Sepolia
+- **Repository**: https://github.com/VEra-Resonance/AEraLogIn_on_BASE
 - **BASE Network**: https://base.org
-- **BASE Sepolia Explorer**: https://sepolia.basescan.org
+- **BASE Explorer**: https://basescan.org
 - **Coinbase L2 Docs**: https://docs.base.org
 
 ---
@@ -337,7 +335,7 @@ This is an open-source project. Contributions are welcome!
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test on BASE Sepolia
+4. Test locally
 5. Submit a pull request
 
 ---
@@ -351,4 +349,4 @@ For issues, questions, or feature requests:
 
 ---
 
-**Built with ❤️ on BASE Sepolia - Coinbase's Ethereum L2 Solution**
+**Built with ❤️ on BASE Mainnet - Coinbase's Ethereum L2 Solution**
