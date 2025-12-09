@@ -374,17 +374,25 @@ def init_db():
     )
     """)
     
-    # Telegram-Invites-Tabelle: Track Telegram Gate Access (with owner tracking)
+    # Telegram-Invites-Tabelle: Track Telegram/Discord Gate Access (with owner tracking)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS telegram_invites (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        address TEXT UNIQUE,
+        address TEXT,
         invited_at TEXT,
         granted BOOLEAN DEFAULT 1,
         owner_wallet TEXT,
-        FOREIGN KEY(address) REFERENCES users(address)
+        platform TEXT DEFAULT 'telegram',
+        FOREIGN KEY(address) REFERENCES users(address),
+        UNIQUE(address, platform)
     )
     """)
+    
+    # Migration: Add platform column if not exists
+    try:
+        cursor.execute("ALTER TABLE telegram_invites ADD COLUMN platform TEXT DEFAULT 'telegram'")
+    except:
+        pass  # Column already exists
     
     # Owner-Telegram-Groups-Tabelle: Owner-specific Telegram group links
     cursor.execute("""
@@ -915,18 +923,21 @@ async def check_rft(req: Request):
 @app.post("/api/telegram/invite")
 async def telegram_invite(req: Request):
     """
-    🔐 Telegram-Gate: Generate invite link (only if NFT verified)
+    🔐 Platform-Gate: Generate invite link (only if NFT verified)
+    Supports: telegram, discord, and other platforms
     
     Request:
         {
-            "address": "0x..."
+            "address": "0x...",
+            "platform": "telegram" | "discord" (optional, defaults to telegram)
         }
     
     Response (success):
         {
             "success": true,
-            "invite_link": "https://t.me/+XXXXXX",
-            "message": "Welcome to AEra Telegram community!"
+            "invite_link": "https://t.me/+XXXXXX" or "https://discord.gg/XXXXX",
+            "message": "Welcome to AEra community!",
+            "platform": "telegram" | "discord"
         }
     
     Response (denied):
@@ -939,6 +950,7 @@ async def telegram_invite(req: Request):
     try:
         data = await req.json()
         address = data.get("address", "").lower()
+        platform = data.get("platform", "telegram").lower()  # Default to telegram
         
         if not address or not address.startswith("0x") or len(address) != 42:
             return {
@@ -951,7 +963,7 @@ async def telegram_invite(req: Request):
         has_identity = await web3_service.has_identity_nft(address)
         
         if not has_identity:
-            log_activity("WARNING", "TELEGRAM_GATE", "❌ Invite denied - No NFT", 
+            log_activity("WARNING", f"{platform.upper()}_GATE", "❌ Invite denied - No NFT", 
                         address=address[:10])
             return {
                 "success": False,
@@ -959,11 +971,11 @@ async def telegram_invite(req: Request):
                 "mint_required": True
             }
         
-        # Get Telegram invite link (owner-specific or default)
+        # Get invite link (owner-specific or default)
         owner_wallet = (data.get("owner_wallet") or "").lower() if isinstance(data, dict) else ""
-        telegram_invite_link = None
+        invite_link = None
         
-        # Try to get owner-specific Telegram link first
+        # Try to get owner-specific link first
         if owner_wallet:
             try:
                 conn_temp = get_db_connection()
@@ -977,28 +989,34 @@ async def telegram_invite(req: Request):
                 conn_temp.close()
                 
                 if result:
-                    telegram_invite_link = result['telegram_invite_link']
-                    log_activity("INFO", "TELEGRAM_GATE", "✓ Using owner-specific Telegram link", 
+                    invite_link = result['telegram_invite_link']
+                    log_activity("INFO", f"{platform.upper()}_GATE", "✓ Using owner-specific link", 
                                 owner=owner_wallet[:10])
             except Exception as e:
-                log_activity("WARNING", "TELEGRAM_GATE", f"Could not fetch owner link: {str(e)}")
+                log_activity("WARNING", f"{platform.upper()}_GATE", f"Could not fetch owner link: {str(e)}")
         
-        # Fallback to default link from .env
-        if not telegram_invite_link:
-            telegram_invite_link = os.getenv("TELEGRAM_INVITE_LINK", "")
-            if telegram_invite_link:
-                log_activity("INFO", "TELEGRAM_GATE", "Using default Telegram link from .env")
+        # Fallback to default link from .env based on platform
+        if not invite_link:
+            if platform == "discord":
+                invite_link = os.getenv("DISCORD_INVITE_LINK", "")
+                if invite_link:
+                    log_activity("INFO", "DISCORD_GATE", "Using default Discord link from .env")
+            else:
+                invite_link = os.getenv("TELEGRAM_INVITE_LINK", "")
+                if invite_link:
+                    log_activity("INFO", "TELEGRAM_GATE", "Using default Telegram link from .env")
         
-        if not telegram_invite_link:
-            log_activity("ERROR", "TELEGRAM_GATE", "Telegram invite link not configured")
+        if not invite_link:
+            platform_name = "Discord" if platform == "discord" else "Telegram"
+            log_activity("ERROR", f"{platform.upper()}_GATE", f"{platform_name} invite link not configured")
             return {
                 "success": False,
-                "error": "Telegram invite link not configured",
+                "error": f"{platform_name} invite link not configured",
                 "mint_required": False
             }
         
         # Log successful access grant
-        log_activity("INFO", "TELEGRAM_GATE", "✓ Invite link granted", 
+        log_activity("INFO", f"{platform.upper()}_GATE", "✓ Invite link granted", 
                     address=address[:10])
         
         # Track invite in database + add 0.1 score bonus (ONE-TIME ONLY)
@@ -1009,22 +1027,23 @@ async def telegram_invite(req: Request):
             # Extract owner_wallet from request data (if provided)
             owner_wallet = (data.get("owner_wallet") or "").lower() if isinstance(data, dict) else ""
             
-            # Check if this is first-time Telegram access
+            # Check if this is first-time access (per platform)
             cursor.execute(
-                """SELECT COUNT(*) as count FROM telegram_invites WHERE address = ?""",
-                (address,)
+                """SELECT COUNT(*) as count FROM telegram_invites WHERE address = ? AND platform = ?""",
+                (address, platform)
             )
-            previous_invites = cursor.fetchone()['count']
+            result = cursor.fetchone()
+            previous_invites = result['count'] if result else 0
             
-            # Insert invite record
+            # Insert invite record (with platform)
             cursor.execute(
                 """INSERT OR IGNORE INTO telegram_invites 
-                   (address, invited_at, granted, owner_wallet)
-                   VALUES (?, ?, ?, ?)""",
-                (address, datetime.now(timezone.utc).isoformat(), 1, owner_wallet or None)
+                   (address, invited_at, granted, owner_wallet, platform)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (address, datetime.now(timezone.utc).isoformat(), 1, owner_wallet or None, platform)
             )
             
-            # 🎯 ONE-TIME BONUS: Add 0.1 points for first Telegram join
+            # 🎯 ONE-TIME BONUS: Add 0.1 points for first join (per platform)
             if previous_invites == 0:
                 try:
                     # Update backend score (resonance_score = off-chain score)
@@ -1033,29 +1052,32 @@ async def telegram_invite(req: Request):
                            WHERE address = ?""",
                         (address,)
                     )
-                    log_activity("INFO", "TELEGRAM_BONUS", "✓ +0.1 score for first Telegram join", 
+                    platform_name = "Discord" if platform == "discord" else "Telegram"
+                    log_activity("INFO", f"{platform.upper()}_BONUS", f"✓ +0.1 score for first {platform_name} join", 
                                 address=address[:10])
                 except Exception as score_err:
-                    log_activity("WARNING", "TELEGRAM_BONUS", f"Could not update score: {str(score_err)}")
+                    log_activity("WARNING", f"{platform.upper()}_BONUS", f"Could not update score: {str(score_err)}")
             
             conn.commit()
             conn.close()
             
             if owner_wallet:
-                log_activity("INFO", "TELEGRAM_GATE", "✓ Invite tracked with owner", 
+                log_activity("INFO", f"{platform.upper()}_GATE", "✓ Invite tracked with owner", 
                             address=address[:10], owner=owner_wallet[:10])
         except Exception as db_err:
             # Non-critical error - invite still works
-            log_activity("WARNING", "TELEGRAM_GATE", f"Could not log invite: {str(db_err)}")
+            log_activity("WARNING", f"{platform.upper()}_GATE", f"Could not log invite: {str(db_err)}")
         
+        platform_name = "Discord" if platform == "discord" else "Telegram"
         return {
             "success": True,
-            "invite_link": telegram_invite_link,
-            "message": "Welcome to AEra Telegram community!"
+            "invite_link": invite_link,
+            "message": f"Welcome to AEra {platform_name} community!",
+            "platform": platform
         }
         
     except Exception as e:
-        log_activity("ERROR", "TELEGRAM_GATE", f"Invite generation error: {str(e)}")
+        log_activity("ERROR", "PLATFORM_GATE", f"Invite generation error: {str(e)}")
         return {
             "success": False,
             "error": "Internal server error",
