@@ -1493,9 +1493,21 @@ Licensed under the Apache License, Version 2.0
                 const nonce = challengeData.nonce;
                 console.log('✓ Challenge received:', nonce);
                 
-                // 🔐 SECURITY: Step 3 - Sign Challenge with Web3 Wallet
-                console.log('🔐 Step 3: Requesting wallet signature...');
-                const messageToSign = `VEra-Resonance Dashboard Access\n\nNonce: ${nonce}\n\nPlease confirm in your Web3 wallet to access your dashboard.`;
+                // 🔐 SECURITY: Step 3 - Sign Challenge with Web3 Wallet (SIWE/EIP-4361 Format)
+                console.log('🔐 Step 3: Requesting wallet signature (SIWE format)...');
+                const domain = window.location.host;
+                const uri = window.location.origin;
+                const issuedAt = new Date().toISOString();
+                const messageToSign = `${domain} wants you to sign in with your Ethereum account:
+${walletAddress}
+
+Sign in to AEraLogIn Dashboard
+
+URI: ${uri}
+Version: 1
+Chain ID: 8453
+Nonce: ${nonce}
+Issued At: ${issuedAt}`;
                 
                 const signature = await window.ethereum.request({
                     method: 'personal_sign',
@@ -1504,12 +1516,12 @@ Licensed under the Apache License, Version 2.0
                 
                 console.log('✓ Signature received:', signature.substring(0, 20) + '...');
                 
-                // 🔐 SECURITY: Step 4 - Verify Signature on Backend
+                // 🔐 SECURITY: Step 4 - Verify Signature on Backend (send message for SIWE verification)
                 console.log('🔐 Step 4: Verifying signature on backend...');
                 const verifyResponse = await fetch(`${API_BASE}/admin/verify-signature`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ owner: walletAddress, signature, nonce })
+                    body: JSON.stringify({ owner: walletAddress, signature, nonce, message: messageToSign })
                 });
                 
                 const verifyData = await verifyResponse.json();

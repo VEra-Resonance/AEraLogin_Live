@@ -2599,13 +2599,14 @@ async def get_dashboard_challenge(data: dict):
 @app.post("/admin/verify-signature")
 async def verify_dashboard_signature(data: dict):
     """
-    🔐 SECURITY: Verify personal_sign signature
+    🔐 SECURITY: Verify personal_sign signature (supports SIWE/EIP-4361)
     
     Request body:
         {
             "owner": "0x...",
             "signature": "0x...",
-            "nonce": "..."
+            "nonce": "...",
+            "message": "..." (optional - the signed message for SIWE)
         }
     
     Response:
@@ -2644,11 +2645,35 @@ async def verify_dashboard_signature(data: dict):
             log_activity("WARNING", "AUTH", "Challenge expired", owner=owner[:10])
             return {"success": False, "error": "Challenge expired"}
         
-        # Verify signature
+        # Verify signature - supports both old format and SIWE (EIP-4361)
         try:
-            messageToSign = f"VEra-Resonance Dashboard Access\n\nNonce: {nonce}\n\nPlease confirm in your Web3 wallet to access your dashboard."
-            message = encode_defunct(text=messageToSign)
-            recovered_address = Account.recover_message(message, signature=signature).lower()
+            from eth_account.messages import encode_defunct
+            
+            recovered_address = None
+            signed_message = data.get("message", "")  # Frontend can send the signed message
+            
+            # If frontend sent the message, use it directly
+            if signed_message and nonce in signed_message:
+                try:
+                    message = encode_defunct(text=signed_message)
+                    recovered_address = Account.recover_message(message, signature=signature).lower()
+                    log_activity("INFO", "AUTH", "SIWE message verification", owner=owner[:10])
+                except Exception as e:
+                    log_activity("DEBUG", "AUTH", f"SIWE verification failed: {e}")
+            
+            # Fallback: Try old format for backwards compatibility
+            if recovered_address != owner:
+                old_message = f"VEra-Resonance Dashboard Access\n\nNonce: {nonce}\n\nPlease confirm in your Web3 wallet to access your dashboard."
+                try:
+                    message = encode_defunct(text=old_message)
+                    recovered_address = Account.recover_message(message, signature=signature).lower()
+                    log_activity("INFO", "AUTH", "Old format verification", owner=owner[:10])
+                except:
+                    pass
+            
+            if not recovered_address:
+                raise Exception("Could not recover address from signature")
+                
         except Exception as e:
             log_activity("ERROR", "AUTH", "Signature recovery failed", owner=owner[:10], error=str(e))
             return {"success": False, "error": f"Invalid signature: {str(e)}"}
