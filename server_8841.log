@@ -1,0 +1,315 @@
+nohup: ignoring input
+[12:05:00] [INFO    ] 🌐 Connected to BASE Sepolia: https://base-rpc.publicnode.com
+[12:05:00] [INFO    ] 💳 Backend Wallet: 0x22A2cAcB19e77D25DA063A787870A3eE6BAC8Dfe
+[12:05:00] [INFO    ] ✅ Identity NFT Contract: 0xF9ff5DC523927B9632049bd19e17B610E9197d53
+[12:05:00] [INFO    ] ✅ Resonance Score Contract: 0x9A814DBF7E2352CE9eA6293b4b731B2a24800102
+[12:05:00] [INFO    ] ✅ Resonance Registry Contract: 0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF
+[12:05:00] [INFO    ] ✓ CORS Konfiguration: ['*']
+[12:05:00] [INFO    ] ✓ CSP Middleware aktiviert (Web3 kompatibel)
+[12:05:00] [INFO    ] ✓ Static Files mounted: /var/www/aeralogin+implement/aeralogin
+/var/www/aeralogin+implement/aeralogin/server.py:517: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+INFO:     Started server process [74793]
+INFO:     Waiting for application startup.
+[12:05:00] [INFO    ] 🚀 VEra-Resonance Server gestartet
+[12:05:00] [INFO    ]    🌐 Öffentliche URL: http://72.60.38.143:8841
+[12:05:00] [INFO    ]    📍 Host: 0.0.0.0:8841
+[12:05:00] [INFO    ]    🔐 CORS Origins: ['*']
+[12:05:00] [INFO    ]    ⛓️  Blockchain Sync Queue gestartet
+[12:05:00] [INFO    ]    🎨 NFT Mint Confirmation Checker gestartet
+[12:05:00] [INFO    ] ✅ Sync queue processor started
+[12:05:00] [INFO    ] ✅ NFT confirmation checker started
+INFO:     Application startup complete.
+[12:05:00] [INFO    ] 🔄 Score sync queue processor started
+[12:05:00] [INFO    ] 🎨 NFT confirmation checker started
+INFO:     Uvicorn running on http://0.0.0.0:8841 (Press CTRL+C to quit)
+[12:05:02] [INFO    ] 📋 Added to sync queue: 0x9de3772a1b2e958561d8371ee34364dcd90967ba → 112
+[12:05:02] [INFO    ]    📋 Queued: 0x9de3772a... (112 → blockchain: 100)
+[12:05:02] [INFO    ]    📊 1 users added to initial sync queue
+[12:05:02] [INFO    ] 📊 Processing sync queue item: 0x9de3772a1b2e958561d8371ee34364dcd90967ba → 112 (attempt 1)
+[12:05:03] [INFO    ] 🔢 Next nonce: 121 (blockchain: 121)
+[12:05:03] [INFO    ] � Score update transaction sent: fac8cb7d91bd48634007d09cc37c7346ff9ca383d0c132336dc28ce21c65e816
+[12:05:03] [INFO    ]    → Address: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[12:05:03] [INFO    ]    → Score: 112
+[12:05:03] [INFO    ]    → Nonce: 121
+[12:05:03] [INFO    ] ⏳ Waiting for score update confirmation...
+[12:05:05] [INFO    ] ✅ Score updated successfully! Block: 39159879
+[12:05:05] [INFO    ] ✅ Sync successful: fac8cb7d91bd48634007d09cc37c7346ff9ca383d0c132336dc28ce21c65e816
+[12:05:05] [INFO    ] ✅ Database updated: blockchain_score=112 for 0x9de3772a...
+✓ Datenbank initialisiert: /var/www/aeralogin+implement/aeralogin/aera.db
+INFO:     85.127.106.225:5439 - "GET /join-telegram.html HTTP/1.1" 404 Not Found
+INFO:     85.127.106.225:5439 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     85.127.106.225:54741 - "GET /join-telegram HTTP/1.1" 200 OK
+INFO:     85.127.106.225:54741 - "GET /aera-chat.css?v=4 HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5405 - "GET /aera-chat.js HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5405 - "POST /api/nonce HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5481 - "POST /api/nonce HTTP/1.1" 200 OK
+[12:08:54] [INFO    ] [AUTH] Auto-login with token - signature verification | address=0x9de3772a
+[12:08:54] [INFO    ] [AUTH] ✓✓✓ Auto-login: Signature VERIFIED | address=0x9de3772a
+[12:08:54] [WARNING ] Token expired for 0x9de3772a
+[12:08:54] [WARNING ] Token expired for 0x9de3772a
+INFO:     85.127.106.225:5481 - "POST /api/verify-token HTTP/1.1" 200 OK
+[12:08:57] [INFO    ] [AUTH] Verify request received | address=0x9de3772a | has_signature=True | referrer_source=telegram | owner_wallet=none
+[12:08:57] [INFO    ] [AUTH] ✓✓✓ Signature VERIFIED | address=0x9de3772a
+[12:08:57] [INFO    ] 📊 Resonance for 0x9de3772a: 62 (own) + 51 (avg follower) = 113
+[12:08:57] [INFO    ] [AUTH] Existing user login | address=0x9de3772a | old_score=61 | new_score=62 | login_count=5 | referrer=telegram
+[12:08:57] [INFO    ] ✅ Found token ID 10 from TX receipt for 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[12:08:57] [INFO    ] [BLOCKCHAIN] ✓ Identity NFT verified | address=0x9de3772a | token_id=10
+[12:08:57] [INFO    ] [AUTH] ✓ Verify successful (SIGNATURE VERIFIED) | address=0x9de3772a | score=62
+INFO:     85.127.106.225:5481 - "POST /api/verify HTTP/1.1" 200 OK
+[12:08:57] [INFO    ] [TELEGRAM_GATE] Using default Telegram link from .env
+[12:08:57] [INFO    ] [TELEGRAM_GATE] ✓ Invite link granted | address=0x9de3772a
+INFO:     85.127.106.225:5481 - "POST /api/telegram/invite HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5447 - "GET /join-telegram HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5447 - "POST /api/nonce HTTP/1.1" 200 OK
+[12:09:52] [INFO    ] [AUTH] Auto-login with token - signature verification | address=0x9de3772a
+[12:09:52] [INFO    ] [AUTH] ✓✓✓ Auto-login: Signature VERIFIED | address=0x9de3772a
+[12:09:52] [INFO    ] [AUTH] ✓ Auto-login SUCCESSFUL (signature + token verified) | address=0x9de3772a | score=62
+INFO:     85.127.106.225:5447 - "POST /api/verify-token HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5565 - "POST /api/nonce HTTP/1.1" 200 OK
+[12:10:09] [INFO    ] [AUTH] Verify request received | address=0x9de3772a | has_signature=True | referrer_source=telegram | owner_wallet=none
+[12:10:09] [INFO    ] [AUTH] ✓✓✓ Signature VERIFIED | address=0x9de3772a
+[12:10:09] [INFO    ] 📊 Resonance for 0x9de3772a: 63 (own) + 51 (avg follower) = 114
+[12:10:09] [INFO    ] 📊 Syncing milestone resonance to blockchain: 0x9de3772a1b2e958561d8371ee34364dcd90967ba → 114
+[12:10:09] [INFO    ] 🔢 Next nonce: 122 (blockchain: 122)
+[12:10:09] [INFO    ] � Score update transaction sent: c81ceaeccca5dd4a70296f3cd29b20cb28659e5111c9ce08897d73bf858f616c
+[12:10:09] [INFO    ]    → Address: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[12:10:09] [INFO    ]    → Score: 114
+[12:10:09] [INFO    ]    → Nonce: 122
+[12:10:09] [INFO    ] ⏳ Waiting for score update confirmation...
+[12:10:11] [INFO    ] ✅ Score updated successfully! Block: 39160032
+[12:10:11] [INFO    ] ✅ Score synced to blockchain: c81ceaeccca5dd4a70296f3cd29b20cb28659e5111c9ce08897d73bf858f616c
+[12:10:11] [INFO    ] ✅ Database sync status updated for 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[12:10:11] [INFO    ] [AUTH] Existing user login | address=0x9de3772a | old_score=62 | new_score=63 | login_count=6 | referrer=telegram
+[12:10:11] [INFO    ] ✅ Found token ID 10 from TX receipt for 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[12:10:11] [INFO    ] [BLOCKCHAIN] ✓ Identity NFT verified | address=0x9de3772a | token_id=10
+[12:10:11] [INFO    ] [AUTH] ✓ Verify successful (SIGNATURE VERIFIED) | address=0x9de3772a | score=63
+INFO:     85.127.106.225:5565 - "POST /api/verify HTTP/1.1" 200 OK
+[12:10:11] [INFO    ] [TELEGRAM_GATE] Using default Telegram link from .env
+[12:10:11] [INFO    ] [TELEGRAM_GATE] ✓ Invite link granted | address=0x9de3772a
+INFO:     85.127.106.225:5565 - "POST /api/telegram/invite HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5578 - "GET /join-telegram HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5465 - "GET /join-telegram HTTP/1.1" 200 OK
+[12:41:09] [ERROR   ] Cannot connect to VERA-KI Server (Port 8850)
+INFO:     85.127.106.225:5550 - "POST /api/vera-chat HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5462 - "GET / HTTP/1.1" 200 OK
+[12:41:45] [ERROR   ] Cannot connect to VERA-KI Server (Port 8850)
+INFO:     85.127.106.225:5423 - "POST /api/vera-chat HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5544 - "GET /dashboard HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5577 - "GET /onchainkit-paymaster.js HTTP/1.1" 404 Not Found
+INFO:     85.127.106.225:5544 - "GET /blockchain-dashboard.js?v=20251204-2 HTTP/1.1" 200 OK
+[12:53:07] [INFO    ] [AUTH] Dashboard challenge created | owner=0x65e78d7f | nonce=9e6ea787c0
+INFO:     85.127.106.225:5436 - "POST /admin/challenge HTTP/1.1" 200 OK
+[12:53:10] [INFO    ] [AUTH] ✓ Dashboard signature verified | owner=0x65e78d7f
+[12:53:10] [INFO    ] [AUTH] 🆕 First-time dashboard user - creating account | address=0x65e78d7f
+[12:53:10] [INFO    ] [BLOCKCHAIN] 🔄 Syncing initial score | address=0x65e78d7f
+[12:53:10] [INFO    ] 📊 Resonance for 0x65e78d7f: 50 (own) + 0 (avg follower) = 50
+[12:53:10] [INFO    ] 📊 Syncing milestone resonance to blockchain: 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192 → 50
+[12:53:10] [INFO    ] 🔢 Next nonce: 123 (blockchain: 123)
+[12:53:10] [INFO    ] � Score update transaction sent: 2e18e76e5bb59ca196b75438af7a7168790e905979c49671c5ab467fae0e1130
+[12:53:10] [INFO    ]    → Address: 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192
+[12:53:10] [INFO    ]    → Score: 50
+[12:53:10] [INFO    ]    → Nonce: 123
+[12:53:10] [INFO    ] ⏳ Waiting for score update confirmation...
+[12:53:13] [INFO    ] ✅ Score updated successfully! Block: 39161323
+[12:53:13] [INFO    ] ✅ Score synced to blockchain: 2e18e76e5bb59ca196b75438af7a7168790e905979c49671c5ab467fae0e1130
+[12:53:13] [INFO    ] ✅ Database sync status updated for 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192
+[12:53:15] [INFO    ] [BLOCKCHAIN] 🎨 Starting Identity NFT mint for new dashboard user | address=0x65e78d7f
+[12:53:15] [INFO    ] 🔢 Next nonce: 124 (blockchain: 124)
+[12:53:15] [INFO    ] 📤 NFT mint transaction sent: 04d782846a0b16b48860cb732e69a2a50cd49759fd7c832bfa4f309a6c5b4ddd
+[12:53:15] [INFO    ]    → For: 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192
+[12:53:15] [INFO    ]    → Nonce: 124
+[12:53:15] [INFO    ] ⏳ Waiting for NFT mint confirmation...
+[12:53:17] [INFO    ] ✅ NFT minted successfully! Block: 39161325
+[12:53:17] [INFO    ] [BLOCKCHAIN] ✅ NFT mint transaction sent for new user | address=0x65e78d7f | tx_hash=04d782846a0b16b4...
+INFO:     85.127.106.225:5436 - "POST /admin/verify-signature HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5436 - "GET /api/user/0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192 HTTP/1.1" 200 OK
+[12:53:31] [INFO    ] 🔍 Checking 1 pending NFT mints...
+[12:53:31] [INFO    ] ✅ Found token ID 25 from TX receipt for 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192
+[12:53:31] [INFO    ] ✅ NFT confirmed: 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192 → Token #25 (Status: active)
+[12:53:40] [INFO    ] [ADMIN] Dashboard requested | owner=0x65e78d7f
+[12:53:40] [INFO    ] [ADMIN] Dashboard returned | owner=0x65e78d7f | followers_count=0
+INFO:     85.127.106.225:54606 - "GET /admin/followers?owner=0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192 HTTP/1.1" 200 OK
+INFO:     85.127.106.225:54606 - "GET /api/blockchain/identity/0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192 HTTP/1.1" 200 OK
+[12:53:40] [INFO    ] 🔍 Querying Blockscout for interactions of 0x65E78D7f2Ce8f69fB42Ef23A1fef2E039B03C192
+INFO:     85.127.106.225:54629 - "GET /api/blockchain/score/0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192 HTTP/1.1" 200 OK
+INFO:     85.127.106.225:54606 - "GET /api/blockchain/stats HTTP/1.1" 200 OK
+[12:53:41] [INFO    ] ✅ Found 0 interactions for 0x65E78D7f2Ce8f69fB42Ef23A1fef2E039B03C192
+INFO:     85.127.106.225:54746 - "GET /api/blockchain/interactions/0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192?limit=10 HTTP/1.1" 200 OK
+[12:53:49] [INFO    ] [ADMIN] Follower link generated | owner=0x65e78d7f | source=twitter | base_url=http://72.60.38.143:8841
+INFO:     85.127.106.225:5436 - "GET /admin/follower-link?owner=0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192&source=twitter HTTP/1.1" 200 OK
+[12:53:59] [INFO    ] ✓ Serving dynamic landing for: twitter (X / Twitter)
+INFO:     85.127.106.225:54741 - "GET /follow?owner=0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192&source=twitter HTTP/1.1" 200 OK
+INFO:     85.127.106.225:54726 - "POST /api/check-follower-status HTTP/1.1" 200 OK
+[12:54:49] [INFO    ] ✓ Serving dynamic landing for: twitter (X / Twitter)
+INFO:     85.127.106.225:5600 - "GET /follow?owner=0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192&source=twitter HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5600 - "POST /api/check-follower-status HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5600 - "POST /api/nonce HTTP/1.1" 200 OK
+[12:54:58] [INFO    ] [AUTH] Verify request received | address=0x0082e27b | has_signature=True | referrer_source=twitter | owner_wallet=0x65e78d7f
+[12:54:58] [INFO    ] [AUTH] ✓✓✓ Signature VERIFIED | address=0x0082e27b
+[12:54:58] [INFO    ] [FOLLOWER] ✓ Follower registered | owner=0x65e78d7f | follower=0x0082e27b | source=twitter
+[12:54:58] [INFO    ] [BONUS] ✓ Follow-Bonus added (pending) | owner=0x65e78d7f | bonus=+1 | activation=next_login
+[12:54:58] [INFO    ] [AUTH] New user registered | address=0x0082e27b | initial_score=50 | referrer=twitter | owner=0x65e78d7f
+[12:54:58] [INFO    ] 📊 Resonance for 0x0082e27b: 50 (own) + 0 (avg follower) = 50
+[12:54:58] [INFO    ] 📊 Syncing milestone resonance to blockchain: 0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3 → 50
+[12:54:58] [INFO    ] 🔢 Next nonce: 125 (blockchain: 125)
+[12:54:58] [INFO    ] � Score update transaction sent: 9e198dc3b861bd2aaab1f6fa34711a0bc5d9668373e3822281a4e58f67e9d7b4
+[12:54:58] [INFO    ]    → Address: 0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3
+[12:54:58] [INFO    ]    → Score: 50
+[12:54:58] [INFO    ]    → Nonce: 125
+[12:54:58] [INFO    ] ⏳ Waiting for score update confirmation...
+[12:55:01] [INFO    ] ✅ Score updated successfully! Block: 39161377
+[12:55:01] [INFO    ] ✅ Score synced to blockchain: 9e198dc3b861bd2aaab1f6fa34711a0bc5d9668373e3822281a4e58f67e9d7b4
+[12:55:01] [INFO    ] ✅ Database sync status updated for 0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3
+[12:55:01] [INFO    ] 🔍 Checking 1 pending NFT mints...
+[12:55:02] [INFO    ] ⏳ NFT still pending: 0x0082e27b... (age: 0.0h)
+[12:55:05] [INFO    ] [BLOCKCHAIN] 🎨 Starting Identity NFT mint | address=0x0082e27b
+[12:55:05] [INFO    ] 🔢 Next nonce: 126 (blockchain: 126)
+[12:55:05] [INFO    ] 📤 NFT mint transaction sent: 810a77fc18a71d90e75bd0d8961747faa79ff646249b201107bf4fbe034c6045
+[12:55:05] [INFO    ]    → For: 0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3
+[12:55:05] [INFO    ]    → Nonce: 126
+[12:55:05] [INFO    ] ⏳ Waiting for NFT mint confirmation...
+[12:55:07] [INFO    ] ✅ NFT minted successfully! Block: 39161380
+[12:55:07] [INFO    ] [BLOCKCHAIN] 📤 Identity NFT mint transaction sent | address=0x0082e27b | tx_hash=810a77fc18a71d90...
+[12:55:07] [INFO    ] ✓ Airdrop queued for execution: 0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3
+[12:55:07] [INFO    ] [AUTH] ✓ Verify successful (SIGNATURE VERIFIED) | address=0x0082e27b | score=50
+INFO:     85.127.106.225:5600 - "POST /api/verify HTTP/1.1" 200 OK
+[12:55:18] [INFO    ] [ADMIN] Follow confirmed | owner=0x65e78d7f | follower=0x0082e27b
+[12:55:18] [INFO    ] 🔢 Next nonce: 127 (blockchain: 127)
+[12:55:19] [INFO    ] 📤 Interaction transaction sent: ca8ba8d65b2bb8b874da0640183ae2c51cd19099fbfabc7c6fe2686b8d3c924e
+[12:55:19] [INFO    ]    → Initiator: 0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3
+[12:55:19] [INFO    ]    → Responder: 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192
+[12:55:19] [INFO    ]    → Type: 0
+[12:55:19] [INFO    ]    → Nonce: 127
+[12:55:19] [INFO    ] ⏳ Waiting for transaction receipt...
+[12:55:21] [INFO    ] ✅ [BLOCKCHAIN] Interaction recorded on-chain successfully!
+[12:55:21] [INFO    ]    → Block: 39161387
+[12:55:21] [INFO    ]    → Gas used: 285798
+[12:55:21] [INFO    ] [BLOCKCHAIN] ✓ Interaction recorded on-chain | initiator=0x0082e27b | responder=0x65e78d7f | type=FOLLOW | tx_hash={'tx_hash': 'ca8ba8d
+[12:55:21] [INFO    ] 📋 Added to sync queue: 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192 → 100
+[12:55:21] [INFO    ] 📊 Added 0x65e78d7f to sync queue after follow confirmation (score: 100)
+[12:55:21] [INFO    ] 📊 Processing sync queue item: 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192 → 100 (attempt 1)
+[12:55:21] [INFO    ] 🔢 Next nonce: 128 (blockchain: 128)
+[12:55:21] [INFO    ] � Score update transaction sent: ada43a9854497cd5b546a4be4ba827d5145dfef27d020d9da35d7b42bcd95b5d
+[12:55:21] [INFO    ]    → Address: 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192
+[12:55:21] [INFO    ]    → Score: 100
+[12:55:21] [INFO    ]    → Nonce: 128
+[12:55:21] [INFO    ] ⏳ Waiting for score update confirmation...
+[12:55:23] [INFO    ] ✅ Score updated successfully! Block: 39161388
+[12:55:23] [INFO    ] ✅ Sync successful: ada43a9854497cd5b546a4be4ba827d5145dfef27d020d9da35d7b42bcd95b5d
+[12:55:23] [INFO    ] ✅ Database updated: blockchain_score=100 for 0x65e78d7f...
+INFO:     85.127.106.225:5479 - "POST /admin/confirm-follower HTTP/1.1" 200 OK
+[12:55:32] [INFO    ] 🔍 Checking 1 pending NFT mints...
+[12:55:32] [INFO    ] ✅ Found token ID 26 from TX receipt for 0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3
+[12:55:32] [INFO    ] ✅ NFT confirmed: 0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3 → Token #26 (Status: active)
+INFO:     85.127.106.225:54711 - "GET /dashboard HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5405 - "GET /onchainkit-paymaster.js HTTP/1.1" 404 Not Found
+[12:56:01] [INFO    ] [AUTH] Dashboard challenge created | owner=0x0082e27b | nonce=5143f21723
+INFO:     85.127.106.225:54711 - "POST /admin/challenge HTTP/1.1" 200 OK
+[12:56:04] [INFO    ] [AUTH] ✓ Dashboard signature verified | owner=0x0082e27b
+INFO:     85.127.106.225:54711 - "POST /admin/verify-signature HTTP/1.1" 200 OK
+INFO:     85.127.106.225:54711 - "GET /api/user/0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3 HTTP/1.1" 200 OK
+[12:56:07] [INFO    ] [ADMIN] Dashboard requested | owner=0x0082e27b
+[12:56:07] [INFO    ] [ADMIN] Dashboard returned | owner=0x0082e27b | followers_count=0
+INFO:     85.127.106.225:54711 - "GET /admin/followers?owner=0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3 HTTP/1.1" 200 OK
+INFO:     85.127.106.225:54711 - "GET /api/blockchain/identity/0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3 HTTP/1.1" 200 OK
+[12:56:08] [INFO    ] 🔍 Querying Blockscout for interactions of 0x0082E27bA5bc8Ef5fae605fd52d9b556A3f1D0D3
+INFO:     85.127.106.225:5591 - "GET /api/blockchain/score/0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3 HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5403 - "GET /api/blockchain/stats HTTP/1.1" 200 OK
+[12:56:08] [INFO    ] ✅ Found 1 interactions for 0x0082E27bA5bc8Ef5fae605fd52d9b556A3f1D0D3
+INFO:     85.127.106.225:5597 - "GET /api/blockchain/interactions/0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3?limit=10 HTTP/1.1" 200 OK
+[12:56:14] [INFO    ] [ADMIN] Follower link generated | owner=0x0082e27b | source=reddit | base_url=http://72.60.38.143:8841
+INFO:     85.127.106.225:5411 - "GET /admin/follower-link?owner=0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3&source=reddit HTTP/1.1" 200 OK
+[12:56:40] [INFO    ] ✓ Serving dynamic landing for: reddit (Reddit)
+INFO:     85.127.106.225:5509 - "GET /follow?owner=0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3&source=reddit HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5515 - "POST /api/check-follower-status HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5515 - "POST /api/nonce HTTP/1.1" 200 OK
+[12:57:12] [INFO    ] [AUTH] Verify request received | address=0x65e78d7f | has_signature=True | referrer_source=reddit | owner_wallet=0x0082e27b
+[12:57:12] [INFO    ] [AUTH] ✓✓✓ Signature VERIFIED | address=0x65e78d7f
+[12:57:12] [INFO    ] [BONUS] ✓ Follow-Bonus activated | address=0x65e78d7f | bonus=+1 | new_score=52
+[12:57:12] [INFO    ] 📊 Resonance for 0x65e78d7f: 52 (own) + 50 (avg follower) = 102
+[12:57:12] [INFO    ] 📊 Syncing milestone resonance to blockchain: 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192 → 102
+[12:57:12] [INFO    ] 🔢 Next nonce: 129 (blockchain: 129)
+[12:57:13] [INFO    ] � Score update transaction sent: b807d65e1a660fa64420d593c5c107b0ae8e3b92ad0a2e6b821a7f9049855315
+[12:57:13] [INFO    ]    → Address: 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192
+[12:57:13] [INFO    ]    → Score: 102
+[12:57:13] [INFO    ]    → Nonce: 129
+[12:57:13] [INFO    ] ⏳ Waiting for score update confirmation...
+[12:57:15] [INFO    ] ✅ Score updated successfully! Block: 39161444
+[12:57:15] [INFO    ] ✅ Score synced to blockchain: b807d65e1a660fa64420d593c5c107b0ae8e3b92ad0a2e6b821a7f9049855315
+[12:57:15] [INFO    ] ✅ Database sync status updated for 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192
+[12:57:15] [INFO    ] [AUTH] Existing user login | address=0x65e78d7f | old_score=50 | new_score=52 | login_count=1 | referrer=reddit
+[12:57:15] [INFO    ] [FOLLOWER] ✓ New follower registered (multi-platform) | owner=0x0082e27b | follower=0x65e78d7f | source=reddit
+[12:57:15] [INFO    ] [BONUS] ✓ Follow-Bonus added (pending) | owner=0x0082e27b | bonus=+1 | activation=next_login
+[12:57:15] [INFO    ] ✅ Found token ID 25 from TX receipt for 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192
+[12:57:15] [INFO    ] [BLOCKCHAIN] ✓ Identity NFT verified | address=0x65e78d7f | token_id=25
+[12:57:15] [INFO    ] [AUTH] ✓ Verify successful (SIGNATURE VERIFIED) | address=0x65e78d7f | score=52
+INFO:     85.127.106.225:5570 - "POST /api/verify HTTP/1.1" 200 OK
+[12:57:21] [INFO    ] [ADMIN] Follow confirmed | owner=0x0082e27b | follower=0x65e78d7f
+[12:57:21] [INFO    ] 🔢 Next nonce: 130 (blockchain: 130)
+[12:57:22] [INFO    ] 📤 Interaction transaction sent: 7619da00a9fc8b81c8b709ed9c8626e5b1ed8dd0ee21546796229028e7ff05d8
+[12:57:22] [INFO    ]    → Initiator: 0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192
+[12:57:22] [INFO    ]    → Responder: 0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3
+[12:57:22] [INFO    ]    → Type: 0
+[12:57:22] [INFO    ]    → Nonce: 130
+[12:57:22] [INFO    ] ⏳ Waiting for transaction receipt...
+[12:57:23] [INFO    ] ✅ [BLOCKCHAIN] Interaction recorded on-chain successfully!
+[12:57:23] [INFO    ]    → Block: 39161448
+[12:57:23] [INFO    ]    → Gas used: 251598
+[12:57:23] [INFO    ] [BLOCKCHAIN] ✓ Interaction recorded on-chain | initiator=0x65e78d7f | responder=0x0082e27b | type=FOLLOW | tx_hash={'tx_hash': '7619da0
+[12:57:23] [INFO    ] 📋 Added to sync queue: 0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3 → 102
+[12:57:23] [INFO    ] 📊 Added 0x0082e27b to sync queue after follow confirmation (score: 102)
+[12:57:23] [INFO    ] 📊 Processing sync queue item: 0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3 → 102 (attempt 1)
+[12:57:23] [INFO    ] 🔢 Next nonce: 131 (blockchain: 131)
+[12:57:23] [INFO    ] � Score update transaction sent: b9726d55c9cbc359f40f2645896205835025453e7b54507142183a110d85d215
+[12:57:23] [INFO    ]    → Address: 0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3
+[12:57:23] [INFO    ]    → Score: 102
+[12:57:23] [INFO    ]    → Nonce: 131
+[12:57:23] [INFO    ] ⏳ Waiting for score update confirmation...
+[12:57:25] [INFO    ] ✅ Score updated successfully! Block: 39161449
+[12:57:25] [INFO    ] ✅ Sync successful: b9726d55c9cbc359f40f2645896205835025453e7b54507142183a110d85d215
+[12:57:25] [INFO    ] ✅ Database updated: blockchain_score=102 for 0x0082e27b...
+INFO:     85.127.106.225:5557 - "POST /admin/confirm-follower HTTP/1.1" 200 OK
+[12:57:50] [INFO    ] [ADMIN] Dashboard requested | owner=0x0082e27b
+[12:57:50] [INFO    ] [ADMIN] Dashboard returned | owner=0x0082e27b | followers_count=1
+INFO:     85.127.106.225:5505 - "GET /admin/followers?owner=0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3 HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5505 - "GET /api/blockchain/identity/0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3 HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5460 - "GET /api/blockchain/score/0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3 HTTP/1.1" 200 OK
+[12:57:51] [INFO    ] 🔍 Querying Blockscout for interactions of 0x0082E27bA5bc8Ef5fae605fd52d9b556A3f1D0D3
+INFO:     85.127.106.225:54746 - "GET /api/blockchain/stats HTTP/1.1" 200 OK
+[12:57:52] [INFO    ] ✅ Found 2 interactions for 0x0082E27bA5bc8Ef5fae605fd52d9b556A3f1D0D3
+INFO:     85.127.106.225:54611 - "GET /api/blockchain/interactions/0x0082e27ba5bc8ef5fae605fd52d9b556a3f1d0d3?limit=10 HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5416 - "GET /dashboard HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5416 - "GET /onchainkit-paymaster.js HTTP/1.1" 404 Not Found
+[13:17:15] [INFO    ] [AUTH] Dashboard challenge created | owner=0x65e78d7f | nonce=b607191ae8
+INFO:     85.127.106.225:5416 - "POST /admin/challenge HTTP/1.1" 200 OK
+[13:17:18] [INFO    ] [AUTH] ✓ Dashboard signature verified | owner=0x65e78d7f
+INFO:     85.127.106.225:5416 - "POST /admin/verify-signature HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5416 - "GET /api/user/0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192 HTTP/1.1" 200 OK
+[13:17:20] [INFO    ] [ADMIN] Dashboard requested | owner=0x65e78d7f
+[13:17:20] [INFO    ] [ADMIN] Dashboard returned | owner=0x65e78d7f | followers_count=1
+INFO:     85.127.106.225:5416 - "GET /admin/followers?owner=0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192 HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5416 - "GET /api/blockchain/identity/0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192 HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5533 - "GET /api/blockchain/score/0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192 HTTP/1.1" 200 OK
+[13:17:20] [INFO    ] 🔍 Querying Blockscout for interactions of 0x65E78D7f2Ce8f69fB42Ef23A1fef2E039B03C192
+INFO:     85.127.106.225:54605 - "GET /api/blockchain/stats HTTP/1.1" 200 OK
+[13:17:21] [INFO    ] ✅ Found 2 interactions for 0x65E78D7f2Ce8f69fB42Ef23A1fef2E039B03C192
+INFO:     85.127.106.225:54720 - "GET /api/blockchain/interactions/0x65e78d7f2ce8f69fb42ef23a1fef2e039b03c192?limit=10 HTTP/1.1" 200 OK
+[13:19:43] [INFO    ] VERA-Chat: 'what is this...' → 323 chars
+INFO:     85.127.106.225:5407 - "POST /api/vera-chat HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5488 - "GET / HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5414 - "GET / HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5584 - "GET /security-concept.html HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5503 - "GET / HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5437 - "GET /security-concept.html HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5437 - "GET /dashboard HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5503 - "GET /onchainkit-paymaster.js HTTP/1.1" 404 Not Found
+INFO:     85.127.106.225:5499 - "GET / HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5482 - "GET / HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5482 - "GET /aera-chat.css?v=4 HTTP/1.1" 200 OK
+INFO:     85.127.106.225:5409 - "GET /aera-chat.js HTTP/1.1" 200 OK

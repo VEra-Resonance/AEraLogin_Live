@@ -29,7 +29,7 @@ logging.basicConfig(
 logger = logging.getLogger("aera-chat")
 
 # Environment Variables
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "sk-bda91b9737bd49d491136933acfeed7d")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "YOUR_DEEPSEEK_API_KEY")
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 MODEL = "deepseek-chat"
 
