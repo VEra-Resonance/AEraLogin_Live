@@ -407,6 +407,22 @@ def init_db():
     )
     """)
     
+    # 🔐 Community Redirect Tokens: One-time, time-limited tokens for secure redirects
+    # This prevents users from copying and sharing the actual invite link
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS community_redirect_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        token TEXT UNIQUE NOT NULL,
+        address TEXT NOT NULL,
+        invite_link TEXT NOT NULL,
+        platform TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        used BOOLEAN DEFAULT 0,
+        used_at TEXT
+    )
+    """)
+    
     conn.commit()
     conn.close()
     print(f"✓ Datenbank initialisiert: {DB_PATH}")
@@ -1068,12 +1084,43 @@ async def telegram_invite(req: Request):
             # Non-critical error - invite still works
             log_activity("WARNING", f"{platform.upper()}_GATE", f"Could not log invite: {str(db_err)}")
         
+        # 🔐 SECURITY: Generate one-time redirect token instead of returning link directly
+        # Token is valid for 30 seconds and can only be used once
+        import secrets
+        redirect_token = secrets.token_urlsafe(32)  # 256-bit secure token
+        token_created_at = datetime.now(timezone.utc)
+        token_expires_at = token_created_at + timedelta(seconds=30)
+        
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                """INSERT INTO community_redirect_tokens 
+                   (token, address, invite_link, platform, created_at, expires_at, used)
+                   VALUES (?, ?, ?, ?, ?, ?, 0)""",
+                (redirect_token, address, invite_link, platform, 
+                 token_created_at.isoformat(), token_expires_at.isoformat())
+            )
+            conn.commit()
+            conn.close()
+            log_activity("INFO", f"{platform.upper()}_GATE", "✓ Secure redirect token generated", 
+                        address=address[:10], token=redirect_token[:8])
+        except Exception as token_err:
+            log_activity("ERROR", f"{platform.upper()}_GATE", f"Token generation failed: {str(token_err)}")
+            return {
+                "success": False,
+                "error": "Could not generate secure redirect",
+                "mint_required": False
+            }
+        
         platform_name = "Discord" if platform == "discord" else "Telegram"
         return {
             "success": True,
-            "invite_link": invite_link,
+            "redirect_token": redirect_token,  # Token instead of direct link
+            "redirect_url": f"/api/community/redirect?token={redirect_token}",
             "message": f"Welcome to AEra {platform_name} community!",
-            "platform": platform
+            "platform": platform,
+            "expires_in_seconds": 30
         }
         
     except Exception as e:
@@ -1083,6 +1130,150 @@ async def telegram_invite(req: Request):
             "error": "Internal server error",
             "mint_required": False
         }
+
+
+@app.get("/api/community/redirect")
+async def community_redirect(token: str):
+    """
+    🔐 Secure One-Time Redirect to Community Invite Link
+    
+    This endpoint validates the token and performs a server-side redirect.
+    The actual invite link is NEVER exposed to the frontend JavaScript.
+    
+    Security features:
+    - Token is valid for 30 seconds only
+    - Token can only be used ONCE
+    - Token is cryptographically secure (256-bit)
+    
+    Query Parameters:
+        token: The one-time redirect token from /api/telegram/invite
+    
+    Response:
+        HTTP 302 Redirect to the actual community invite link
+        OR error page if token is invalid/expired/used
+    """
+    from fastapi.responses import RedirectResponse, HTMLResponse
+    
+    if not token:
+        return HTMLResponse(
+            content="""
+            <html>
+            <head><title>Invalid Token</title></head>
+            <body style="font-family: sans-serif; text-align: center; padding: 50px; background: #1a1a2e; color: white;">
+                <h1>❌ Invalid Token</h1>
+                <p>No redirect token provided.</p>
+                <a href="/landing" style="color: #00d4ff;">← Back to Landing Page</a>
+            </body>
+            </html>
+            """,
+            status_code=400
+        )
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Fetch token data
+        cursor.execute(
+            """SELECT id, address, invite_link, platform, expires_at, used 
+               FROM community_redirect_tokens WHERE token = ?""",
+            (token,)
+        )
+        token_data = cursor.fetchone()
+        
+        if not token_data:
+            conn.close()
+            log_activity("WARNING", "REDIRECT", "❌ Invalid token attempted", token=token[:8] if len(token) >= 8 else token)
+            return HTMLResponse(
+                content="""
+                <html>
+                <head><title>Invalid Token</title></head>
+                <body style="font-family: sans-serif; text-align: center; padding: 50px; background: #1a1a2e; color: white;">
+                    <h1>❌ Invalid Token</h1>
+                    <p>This redirect token does not exist.</p>
+                    <a href="/landing" style="color: #00d4ff;">← Back to Landing Page</a>
+                </body>
+                </html>
+                """,
+                status_code=404
+            )
+        
+        # Check if token already used
+        if token_data['used']:
+            conn.close()
+            log_activity("WARNING", "REDIRECT", "❌ Token already used", token=token[:8])
+            return HTMLResponse(
+                content="""
+                <html>
+                <head><title>Token Already Used</title></head>
+                <body style="font-family: sans-serif; text-align: center; padding: 50px; background: #1a1a2e; color: white;">
+                    <h1>⚠️ Token Already Used</h1>
+                    <p>This redirect token has already been used.</p>
+                    <p style="opacity: 0.7; font-size: 14px;">For security, each token can only be used once.</p>
+                    <a href="/landing" style="color: #00d4ff;">← Back to Landing Page</a>
+                </body>
+                </html>
+                """,
+                status_code=403
+            )
+        
+        # Check if token expired
+        expires_at = datetime.fromisoformat(token_data['expires_at'].replace('Z', '+00:00'))
+        now = datetime.now(timezone.utc)
+        
+        if now > expires_at:
+            conn.close()
+            log_activity("WARNING", "REDIRECT", "❌ Token expired", token=token[:8])
+            return HTMLResponse(
+                content="""
+                <html>
+                <head><title>Token Expired</title></head>
+                <body style="font-family: sans-serif; text-align: center; padding: 50px; background: #1a1a2e; color: white;">
+                    <h1>⏰ Token Expired</h1>
+                    <p>This redirect token has expired (valid for 30 seconds only).</p>
+                    <p style="opacity: 0.7; font-size: 14px;">Please go through the verification process again.</p>
+                    <a href="/landing" style="color: #00d4ff;">← Back to Landing Page</a>
+                </body>
+                </html>
+                """,
+                status_code=410
+            )
+        
+        # Mark token as used
+        cursor.execute(
+            """UPDATE community_redirect_tokens 
+               SET used = 1, used_at = ? 
+               WHERE id = ?""",
+            (now.isoformat(), token_data['id'])
+        )
+        conn.commit()
+        conn.close()
+        
+        invite_link = token_data['invite_link']
+        platform = token_data['platform']
+        address = token_data['address']
+        
+        log_activity("INFO", "REDIRECT", f"✓ Secure redirect to {platform}", 
+                    address=address[:10], token=token[:8])
+        
+        # Perform the actual redirect (HTTP 302)
+        return RedirectResponse(url=invite_link, status_code=302)
+        
+    except Exception as e:
+        log_activity("ERROR", "REDIRECT", f"Redirect error: {str(e)}")
+        return HTMLResponse(
+            content=f"""
+            <html>
+            <head><title>Error</title></head>
+            <body style="font-family: sans-serif; text-align: center; padding: 50px; background: #1a1a2e; color: white;">
+                <h1>❌ Error</h1>
+                <p>An error occurred while processing your request.</p>
+                <a href="/landing" style="color: #00d4ff;">← Back to Landing Page</a>
+            </body>
+            </html>
+            """,
+            status_code=500
+        )
 
 
 @app.post("/api/telegram-gate/set-group")

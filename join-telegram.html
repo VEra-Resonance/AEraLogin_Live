@@ -1279,13 +1279,15 @@ Issued At: ${issuedAt}`;
                     
                     const inviteData = await inviteResponse.json();
                     
-                    if (inviteData.success && inviteData.invite_link) {
-                        log(`✅ ${platformName} invite link received: ` + inviteData.invite_link);
+                    // 🔐 SECURITY: Backend now returns a redirect_url with one-time token
+                    // The actual invite link is NEVER exposed to the frontend
+                    if (inviteData.success && inviteData.redirect_url) {
+                        log(`✅ ${platformName} secure redirect token received`);
                         showStatus(`✅ Opening ${platformName}... Welcome to the community! 🎉`, 'success');
                         
-                        // Direct redirect to platform (more reliable than window.open)
+                        // Redirect via secure token endpoint (link is hidden)
                         setTimeout(() => {
-                            window.location.href = inviteData.invite_link;
+                            window.location.href = inviteData.redirect_url;
                         }, 1500);  // 1.5 second delay to show success message
                         
                         verifyBtn.textContent = `✅ Redirecting to ${platformName}...`;
