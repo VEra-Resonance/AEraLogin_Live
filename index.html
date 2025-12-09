@@ -869,7 +869,20 @@ Platform: {{ platform_name }}
                 const nonceData = await nonceResponse.json();
                 if (!nonceData.success) throw new Error('Nonce generation failed');
                 
-                const messageToSign = nonceData.message;
+                // 🔐 SIWE (EIP-4361) compliant message format
+                const domain = window.location.host;
+                const uri = window.location.origin;
+                const issuedAt = new Date().toISOString();
+                const messageToSign = `${domain} wants you to sign in with your Ethereum account:
+${currentWallet}
+
+Sign in to AEraLogIn - Decentralized Identity
+
+URI: ${uri}
+Version: 1
+Chain ID: 8453
+Nonce: ${nonceData.nonce}
+Issued At: ${issuedAt}`;
                 log('✓ Nonce received');
                 
                 // Wallet Signature
@@ -974,6 +987,39 @@ Platform: {{ platform_name }}
                     showStatus('❌ Wallet connection rejected!', 'error');
                     connectBtn.disabled = false;
                     return;
+                }
+                
+                // 🔗 Auto-switch to BASE Mainnet (Chain ID: 8453 = 0x2105)
+                try {
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    if (chainId !== '0x2105') {
+                        log('🔄 Switching to BASE Mainnet...');
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: '0x2105' }]
+                            });
+                            log('✓ Switched to BASE Mainnet');
+                        } catch (switchError) {
+                            if (switchError.code === 4902) {
+                                await window.ethereum.request({
+                                    method: 'wallet_addEthereumChain',
+                                    params: [{
+                                        chainId: '0x2105',
+                                        chainName: 'Base Mainnet',
+                                        rpcUrls: ['https://mainnet.base.org'],
+                                        nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                                        blockExplorerUrls: ['https://basescan.org']
+                                    }]
+                                });
+                                log('✓ BASE Mainnet added and switched');
+                            } else {
+                                throw switchError;
+                            }
+                        }
+                    }
+                } catch (chainError) {
+                    log('⚠️ Network switch failed: ' + chainError.message);
                 }
                 
                 if (!accounts || accounts.length === 0) {
@@ -1089,6 +1135,39 @@ Platform: {{ platform_name }}
                     return;
                 }
                 
+                // 🔗 Auto-switch to BASE Mainnet (Chain ID: 8453 = 0x2105)
+                try {
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    if (chainId !== '0x2105') {
+                        log('🔄 Switching to BASE Mainnet...');
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: '0x2105' }]
+                            });
+                            log('✓ Switched to BASE Mainnet');
+                        } catch (switchError) {
+                            if (switchError.code === 4902) {
+                                await window.ethereum.request({
+                                    method: 'wallet_addEthereumChain',
+                                    params: [{
+                                        chainId: '0x2105',
+                                        chainName: 'Base Mainnet',
+                                        rpcUrls: ['https://mainnet.base.org'],
+                                        nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                                        blockExplorerUrls: ['https://basescan.org']
+                                    }]
+                                });
+                                log('✓ BASE Mainnet added and switched');
+                            } else {
+                                throw switchError;
+                            }
+                        }
+                    }
+                } catch (chainError) {
+                    log('⚠️ Network switch failed: ' + chainError.message);
+                }
+                
                 if (!accounts || accounts.length === 0) {
                     log('❌ No wallet available');
                     showStatus('❌ Web3 wallet not active!', 'error');
@@ -1118,7 +1197,20 @@ Platform: {{ platform_name }}
                 const nonceData = await nonceResponse.json();
                 if (!nonceData.success) throw new Error('Nonce generation failed');
                 
-                const messageToSign = nonceData.message;
+                // 🔐 SIWE (EIP-4361) compliant message format
+                const domain = window.location.host;
+                const uri = window.location.origin;
+                const issuedAt = new Date().toISOString();
+                const messageToSign = `${domain} wants you to sign in with your Ethereum account:
+${currentAddress}
+
+Sign in to AEraLogIn - Decentralized Identity
+
+URI: ${uri}
+Version: 1
+Chain ID: 8453
+Nonce: ${nonceData.nonce}
+Issued At: ${issuedAt}`;
                 log('✓ Nonce received');
                 
                 // Wallet Signature
