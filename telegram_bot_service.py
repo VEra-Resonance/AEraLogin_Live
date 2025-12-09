@@ -19,6 +19,10 @@ import aiohttp
 import logging
 from datetime import datetime, timezone
 from typing import Optional, Tuple, Dict, Any
+from dotenv import load_dotenv
+
+# .env laden
+load_dotenv()
 
 # Logger
 logger = logging.getLogger("TelegramBot")
