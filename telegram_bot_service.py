@@ -344,43 +344,36 @@ async def check_bot_setup() -> Dict[str, Any]:
 
 # ===== GROUP BOT INTEGRATION =====
 
-def store_capabilities_for_invite(invite_link: str, score: int, min_score: int = 50):
+def store_capabilities_for_invite(invite_link: str, wallet_address: str, score: int, min_score: int = 50):
     """
-    Speichert Capabilities für einen Invite-Link
+    Speichert Wallet+Score für einen Invite-Link
     
     Wird vom Gate-Prozess aufgerufen BEVOR der Link an den User geht.
     Der Group Bot holt diese dann wenn der User beitritt.
     
+    DATENSCHUTZ:
+    - Wallet wird nur temporär für 2 Min gespeichert
+    - Nach Beitritt oder Ablauf wird alles gelöscht
+    
     Args:
         invite_link: Der erstellte Telegram Invite Link
-        score: Resonance Score des Users (wird in Capabilities umgewandelt)
-        min_score: Mindest-Score für Schreibrechte
+        wallet_address: Wallet-Adresse für Live-Score API
+        score: Initialer Resonance Score
+        min_score: Mindest-Score für Schreibrechte (für Logging)
     """
     try:
         # Import hier um circular imports zu vermeiden
         from telegram_group_bot import group_bot
         
-        # Generiere Capabilities basierend auf Score
-        capabilities = []
-        
-        # Schreibrechte wenn Score >= min_score
-        if score >= min_score:
-            capabilities.append("write")
-        
-        # Poll-Capabilities für alle erreichbaren Stufen
-        poll_levels = [50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
-        for level in poll_levels:
-            if score >= level:
-                capabilities.append(f"poll_{level}")
-        
-        # Bei Group Bot registrieren
+        # Bei Group Bot registrieren - mit Wallet für Live-Score
         group_bot.session_manager.store_pending_token(
             invite_link=invite_link,
-            capabilities=capabilities,
+            wallet_address=wallet_address,
+            initial_score=score,
             expire_seconds=120  # 2 Minuten Zeit zum Beitreten
         )
         
-        logger.info(f"✅ Capabilities stored for invite: {capabilities}")
+        logger.info(f"✅ Token stored for invite (score: {score})")
         return True
         
     except ImportError:
@@ -428,6 +421,7 @@ async def create_one_time_telegram_invite_with_capabilities(
     # 2. Capabilities für Group Bot speichern
     store_capabilities_for_invite(
         invite_link=invite_link,
+        wallet_address=wallet_address,
         score=score,
         min_score=min_score
     )

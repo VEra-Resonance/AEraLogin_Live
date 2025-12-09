@@ -64,26 +64,42 @@ Dein Resonance Score wurde verifiziert.
 
 @dataclass
 class UserSession:
-    """Session für einen verifizierten User (NUR im RAM!)"""
+    """
+    Session für einen verifizierten User (NUR im RAM!)
+    
+    DATENSCHUTZ:
+    - wallet_hash: SHA256-Hash der Wallet-Adresse (für API-Anfragen)
+    - Die echte Wallet wird NICHT gespeichert
+    - Bei Server-Neustart werden alle Sessions gelöscht
+    """
     telegram_id: int
-    capabilities: List[str]  # z.B. ["write", "poll_50", "poll_60"]
+    wallet_hash: str  # SHA256 Hash für sichere Referenz (kein Klartext!)
+    wallet_address: str  # Temporär für API-Calls (wird bei Session-Ende gelöscht)
+    last_score: int  # Letzter bekannter Resonance Score
     session_start: float
     last_activity: float
+    last_score_check: float  # Wann wurde Score zuletzt geprüft
     expires: float
     
     def is_expired(self) -> bool:
         return time.time() > self.expires
     
-    def has_capability(self, cap: str) -> bool:
-        """Prüft ob User eine bestimmte Capability hat"""
-        return cap in self.capabilities
+    def needs_score_refresh(self, interval_seconds: int = 60) -> bool:
+        """Prüft ob Score-Check fällig ist (default: alle 60 Sekunden)"""
+        return time.time() - self.last_score_check > interval_seconds
     
-    def can_write(self) -> bool:
-        return self.has_capability("write")
+    def update_score(self, new_score: int):
+        """Aktualisiert den gecachten Score"""
+        self.last_score = new_score
+        self.last_score_check = time.time()
+    
+    def can_write(self, min_score: int) -> bool:
+        """Prüft ob User Schreibrechte hat basierend auf Resonance Score"""
+        return self.last_score >= min_score
     
     def can_vote_poll(self, min_score: int) -> bool:
         """Prüft ob User an Poll mit bestimmtem min_score teilnehmen kann"""
-        return self.has_capability(f"poll_{min_score}")
+        return self.last_score >= min_score
     
     def extend_session(self, timeout_seconds: int):
         """Verlängert Session bei Aktivität"""
@@ -231,13 +247,96 @@ class CapabilityTokenManager:
             return None
 
 
+# ===== LIVE SCORE API =====
+
+class ResonanceScoreAPI:
+    """
+    Holt den echten Resonance Score vom Server
+    
+    Resonance Score = Eigene Punkte + Durchschnitt der Follower-Punkte
+    
+    DATENSCHUTZ:
+    - Keine Daten werden im Bot gespeichert
+    - Nur temporäre API-Calls
+    """
+    
+    def __init__(self, server_url: str):
+        self.server_url = server_url.rstrip('/')
+    
+    async def get_resonance_score(self, wallet_address: str) -> Optional[int]:
+        """
+        Holt den aktuellen Resonance Score für eine Wallet
+        
+        Returns:
+            total_resonance (int) oder None bei Fehler
+        """
+        try:
+            import httpx
+            
+            url = f"{self.server_url}/api/blockchain/score/{wallet_address.lower()}"
+            
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(url)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    if "error" in data:
+                        logger.warning(f"Score API error: {data['error']}")
+                        return None
+                    
+                    # total_resonance = own_score + follower_bonus
+                    total_resonance = data.get("total_resonance", 0)
+                    logger.debug(f"Score for {wallet_address[:10]}...: {total_resonance}")
+                    return int(total_resonance)
+                else:
+                    logger.warning(f"Score API HTTP {response.status_code}")
+                    return None
+                    
+        except Exception as e:
+            logger.error(f"Score API error: {e}")
+            return None
+    
+    async def verify_nft_ownership(self, wallet_address: str) -> bool:
+        """
+        Prüft ob Wallet ein AEra NFT besitzt
+        
+        Returns:
+            True wenn NFT vorhanden
+        """
+        try:
+            import httpx
+            
+            url = f"{self.server_url}/api/nft/check/{wallet_address.lower()}"
+            
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(url)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    return data.get("has_nft", False)
+                    
+        except Exception as e:
+            logger.error(f"NFT check error: {e}")
+        
+        return False
+
+
+# Globale Score-API Instanz
+score_api = ResonanceScoreAPI(SERVER_URL)
+
+
 # ===== SESSION MANAGER =====
 
 class SessionManager:
     """
     Verwaltet User-Sessions (NUR im RAM!)
     
-    Bei Server-Neustart sind alle Sessions weg → User müssen neu verifizieren
+    DATENSCHUTZ:
+    - Wallet-Adressen werden nur temporär für API-Calls gespeichert
+    - Bei Session-Ende wird alles gelöscht
+    - Bei Server-Neustart sind alle Sessions weg
+    
     Das ist gewollt für maximale Sicherheit!
     """
     
@@ -280,22 +379,27 @@ class SessionManager:
         for link in expired_tokens:
             del self.pending_tokens[link]
     
-    def store_pending_token(self, invite_link: str, capabilities: List[str], 
-                           expire_seconds: int = 120):
-        """Speichert Token für noch nicht beigetretenen User"""
+    def store_pending_token(self, invite_link: str, wallet_address: str,
+                           initial_score: int, expire_seconds: int = 120):
+        """
+        Speichert Token für noch nicht beigetretenen User
+        
+        DATENSCHUTZ: Wallet wird temporär gespeichert bis User beitritt (max 2 Min)
+        """
         self.pending_tokens[invite_link] = {
-            "caps": capabilities,
+            "wallet": wallet_address.lower(),
+            "score": initial_score,
             "exp": time.time() + expire_seconds,
             "created": time.time()
         }
-        logger.info(f"Pending token stored for link: {invite_link[:30]}...")
+        logger.info(f"Pending token stored for link: {invite_link[:30]}... (score: {initial_score})")
     
-    def claim_pending_token(self, invite_link: str) -> Optional[List[str]]:
+    def claim_pending_token(self, invite_link: str) -> Optional[Dict[str, Any]]:
         """
         Holt und löscht pending Token für Invite-Link
         
         Returns:
-            Liste von Capabilities oder None
+            Dict mit wallet, score oder None
         """
         if invite_link in self.pending_tokens:
             token_data = self.pending_tokens.pop(invite_link)
@@ -305,27 +409,47 @@ class SessionManager:
                 logger.warning(f"Pending token expired for link: {invite_link[:30]}...")
                 return None
             
-            return token_data.get("caps", [])
+            return {
+                "wallet": token_data.get("wallet"),
+                "score": token_data.get("score", 0)
+            }
         
         return None
     
     def create_session(self, group_id: int, telegram_id: int, 
-                      capabilities: List[str], timeout: int) -> UserSession:
-        """Erstellt neue Session für User"""
+                      wallet_address: str, initial_score: int, 
+                      timeout: int) -> UserSession:
+        """
+        Erstellt neue Session für User mit Live-Score
+        
+        DATENSCHUTZ:
+        - wallet_address wird temporär gespeichert für API-Calls
+        - wallet_hash ist SHA256 für Logging (kein Klartext in Logs)
+        """
         if group_id not in self.sessions:
             self.sessions[group_id] = {}
         
         now = time.time()
+        
+        # Hash für sicheres Logging
+        wallet_hash = hashlib.sha256(wallet_address.lower().encode()).hexdigest()[:16]
+        
         session = UserSession(
             telegram_id=telegram_id,
-            capabilities=capabilities,
+            wallet_hash=wallet_hash,
+            wallet_address=wallet_address.lower(),
+            last_score=initial_score,
             session_start=now,
             last_activity=now,
+            last_score_check=now,
             expires=now + timeout
         )
         
         self.sessions[group_id][telegram_id] = session
-        logger.info(f"Session created: user {telegram_id} in group {group_id}, caps: {capabilities}")
+        logger.info(f"Session created: user {telegram_id} in group {group_id}, "
+                   f"wallet_hash: {wallet_hash}, score: {initial_score}")
+        
+        return session
         
         return session
     
@@ -485,9 +609,10 @@ class TelegramGroupBot:
         Handler für neue Mitglieder
         
         1. Prüft ob pending Token für den Invite-Link existiert
-        2. Erstellt Session mit Capabilities
-        3. Gibt Schreibrechte wenn berechtigt
-        4. Sendet Begrüßung
+        2. Holt Live Resonance Score
+        3. Erstellt Session mit Wallet-Referenz
+        4. Gibt Schreibrechte wenn Score >= min_score
+        5. Sendet Begrüßung
         """
         try:
             message = update.message
@@ -511,32 +636,45 @@ class TelegramGroupBot:
                 if hasattr(message, 'chat_invite_link') and message.chat_invite_link:
                     invite_link = message.chat_invite_link.invite_link
                 
-                capabilities = []
+                token_data = None
                 
                 if invite_link:
                     # Versuche pending Token zu claimen
-                    capabilities = self.session_manager.claim_pending_token(invite_link) or []
-                    logger.info(f"Claimed capabilities for {username}: {capabilities}")
+                    token_data = self.session_manager.claim_pending_token(invite_link)
+                    if token_data:
+                        logger.info(f"Claimed token for {username}: wallet_hash={hashlib.sha256(token_data['wallet'].encode()).hexdigest()[:16]}")
                 
-                if capabilities:
-                    # Erstelle Session
+                if token_data and token_data.get("wallet"):
+                    wallet_address = token_data["wallet"]
+                    
+                    # Live Score vom Server holen
+                    live_score = await score_api.get_resonance_score(wallet_address)
+                    
+                    if live_score is None:
+                        # Fallback auf gespeicherten Score
+                        live_score = token_data.get("score", 0)
+                        logger.warning(f"Could not fetch live score, using cached: {live_score}")
+                    
+                    # Erstelle Session mit Wallet-Referenz
                     session = self.session_manager.create_session(
                         group_id=chat_id,
                         telegram_id=user_id,
-                        capabilities=capabilities,
+                        wallet_address=wallet_address,
+                        initial_score=live_score,
                         timeout=config.session_timeout
                     )
                     
-                    # Schreibrechte geben wenn "write" Capability vorhanden
-                    if session.can_write():
+                    # Schreibrechte basierend auf Live-Score
+                    if session.can_write(config.min_score):
                         await self._unmute_user(context.bot, chat_id, user_id)
                         
                         # Begrüßung senden
                         await message.reply_text(
-                            config.welcome_message.format(
-                                username=username,
-                                timeout_minutes=config.session_timeout // 60
-                            ),
+                            f"🎉 **Willkommen {username}!**\n\n"
+                            f"✅ Resonance Score: **{live_score}** (min: {config.min_score})\n"
+                            f"📝 Du hast Schreibrechte!\n\n"
+                            f"📊 Nutze `/mystatus` für deinen Status.\n"
+                            f"❓ Nutze `/help` für alle Befehle.",
                             parse_mode='Markdown'
                         )
                     else:
@@ -544,8 +682,9 @@ class TelegramGroupBot:
                         await self._mute_user(context.bot, chat_id, user_id)
                         await message.reply_text(
                             f"👋 Willkommen {username}!\n\n"
-                            f"⚠️ Dein Resonance Score reicht noch nicht für Schreibrechte.\n"
-                            f"Erhöhe deinen Score auf mindestens {config.min_score} um zu schreiben.",
+                            f"📊 Dein Resonance Score: **{live_score}**\n"
+                            f"⚠️ Mindestens **{config.min_score}** für Schreibrechte benötigt.\n\n"
+                            f"💡 Erhöhe deinen Score durch Aktivität und Follower!",
                             parse_mode='Markdown'
                         )
                 else:
@@ -569,7 +708,8 @@ class TelegramGroupBot:
         Handler für Nachrichten
         
         - Verlängert Session bei Aktivität
-        - Prüft Schreibrechte
+        - Prüft Live Resonance Score
+        - Muted/Unmuted automatisch bei Score-Änderung
         """
         try:
             message = update.message
@@ -588,6 +728,38 @@ class TelegramGroupBot:
             if session:
                 # Session verlängern
                 session.extend_session(config.session_timeout)
+                
+                # Live Score Check (alle 60 Sekunden)
+                if session.needs_score_refresh(interval_seconds=60):
+                    new_score = await score_api.get_resonance_score(session.wallet_address)
+                    
+                    if new_score is not None:
+                        old_score = session.last_score
+                        session.update_score(new_score)
+                        
+                        old_can_write = old_score >= config.min_score
+                        new_can_write = new_score >= config.min_score
+                        
+                        # Score hat sich geändert - Berechtigungen anpassen
+                        if old_can_write and not new_can_write:
+                            # Score gefallen - muten
+                            await self._mute_user(context.bot, chat_id, user_id)
+                            await message.reply_text(
+                                f"⚠️ Dein Resonance Score ist auf **{new_score}** gefallen.\n"
+                                f"Schreibrechte entzogen (min: {config.min_score}).",
+                                parse_mode='Markdown'
+                            )
+                            logger.info(f"User {user_id} muted: score dropped {old_score} -> {new_score}")
+                            
+                        elif not old_can_write and new_can_write:
+                            # Score gestiegen - unmuten
+                            await self._unmute_user(context.bot, chat_id, user_id)
+                            await message.reply_text(
+                                f"🎉 Dein Resonance Score ist auf **{new_score}** gestiegen!\n"
+                                f"Du hast jetzt Schreibrechte!",
+                                parse_mode='Markdown'
+                            )
+                            logger.info(f"User {user_id} unmuted: score rose {old_score} -> {new_score}")
                 
                 # Warnung wenn Session bald abläuft (< 5 Min)
                 remaining = session.time_remaining()
@@ -646,24 +818,54 @@ class TelegramGroupBot:
         await update.message.reply_text(help_text, parse_mode='Markdown')
     
     async def cmd_mystatus(self, update, context):
-        """Zeigt Session-Status des Users"""
+        """Zeigt Session-Status des Users mit Live-Score"""
         chat_id = update.message.chat.id
         user_id = update.message.from_user.id
+        
+        config = self.get_group_config(chat_id)
+        
+        # Admin-Check
+        is_admin = await self.is_admin(chat_id, user_id, context.bot)
+        
+        if is_admin:
+            status_text = f"""
+👑 **Admin Status**
+
+Du bist Administrator dieser Gruppe.
+Admins haben immer volle Rechte - keine Session nötig.
+
+**Gruppen-Einstellungen:**
+📊 Mindest-Score: {config.min_score}
+⏱️ Session-Timeout: {config.session_timeout // 60} Minuten
+👥 Aktive Sessions: {len(self.session_manager.sessions.get(chat_id, {}))}
+            """
+            await update.message.reply_text(status_text, parse_mode='Markdown')
+            return
         
         session = self.session_manager.get_session(chat_id, user_id)
         
         if session:
+            # Live Score abrufen
+            live_score = await score_api.get_resonance_score(session.wallet_address)
+            
+            if live_score is not None:
+                session.update_score(live_score)
+            else:
+                live_score = session.last_score  # Fallback auf gecachten Score
+            
             remaining = session.time_remaining()
             remaining_str = f"{remaining // 60}:{remaining % 60:02d}"
             
-            caps_str = ", ".join(session.capabilities) if session.capabilities else "Keine"
+            can_write = session.can_write(config.min_score)
             
             status_text = f"""
 ✅ **Session aktiv**
 
-⏱️ Verbleibend: {remaining_str}
-🔑 Berechtigungen: {caps_str}
-📝 Schreibrechte: {'✅ Ja' if session.can_write() else '❌ Nein'}
+📊 **Resonance Score:** {live_score}
+📝 **Schreibrechte:** {'✅ Ja' if can_write else '❌ Nein'} (min: {config.min_score})
+⏱️ **Session:** {remaining_str} verbleibend
+
+🔐 Wallet: `{session.wallet_hash}...` (anonymisiert)
             """
         else:
             status_text = f"""
@@ -932,7 +1134,7 @@ Bitte verifiziere dich:
             if not poll or poll.closed:
                 return
             
-            # Prüfe Session und Capability
+            # Prüfe Session
             session = self.session_manager.get_session(chat_id, user_id)
             if not session:
                 await message.reply_text(
@@ -941,10 +1143,20 @@ Bitte verifiziere dich:
                 )
                 return
             
+            # Live Score Check für Poll-Berechtigung
+            live_score = await score_api.get_resonance_score(session.wallet_address)
+            
+            if live_score is not None:
+                session.update_score(live_score)
+            else:
+                live_score = session.last_score  # Fallback
+            
             if not session.can_vote_poll(poll.min_score):
                 await message.reply_text(
                     f"❌ Für diesen Poll ist ein Resonance Score von mindestens "
-                    f"**{poll.min_score}** erforderlich."
+                    f"**{poll.min_score}** erforderlich.\n"
+                    f"📊 Dein Score: **{live_score}**",
+                    parse_mode='Markdown'
                 )
                 return
             
@@ -952,7 +1164,8 @@ Bitte verifiziere dich:
             option_index = vote_num - 1
             if self.poll_manager.vote(poll.poll_id, user_id, option_index):
                 await message.reply_text(
-                    f"✅ Stimme für **{poll.options[option_index]}** gezählt!",
+                    f"✅ Stimme für **{poll.options[option_index]}** gezählt!\n"
+                    f"📊 Dein Score: {live_score}",
                     parse_mode='Markdown'
                 )
             else:
