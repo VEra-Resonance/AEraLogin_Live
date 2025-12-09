@@ -117,7 +117,8 @@ Required environment variables:
 # BASE Mainnet RPC
 BASE_RPC_URL=https://mainnet.base.org
 
-# Backend Wallet (with MINTER_ROLE)
+# Backend Wallet (Operator - with delegated MINTER_ROLE, UPDATER_ROLE)
+# This wallet executes daily operations like NFT minting and score updates
 PRIVATE_KEY=your_private_key_here
 
 # Smart Contracts
@@ -128,6 +129,14 @@ RESONANCE_REGISTRY_ADDRESS=0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF
 # Server
 PORT=8840
 ```
+
+### Wallet Architecture
+
+| Wallet | Address | Purpose |
+|--------|---------|---------|
+| **Safe Wallet** (Gnosis Safe) | `0xC8B1bEb43361bb78400071129139A37Eb5c5Dd93` | Multisig admin holding DEFAULT_ADMIN_ROLE. Governance & emergency actions. |
+| **Backend Wallet** (Operator) | `0x22A2cAcB19e77D25da063A787870a3EE6BAC8Dfe` | Hot wallet with delegated roles. Executes daily operations. |
+| **Donation Wallet** | `0x27F8233Ae2FC3945064c0bad72267e68bC28AaAa` | Community donations for gas fee sponsoring. |
 
 ### Start Server
 

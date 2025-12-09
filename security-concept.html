@@ -972,6 +972,16 @@ else:
                     <li><strong>Interaction Registry:</strong> <code>0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF</code></li>
                 </ul>
 
+                <h3>Wallet Architecture</h3>
+                <ul>
+                    <li><strong>Safe Wallet (Gnosis Safe):</strong> <code>0xC8B1bEb43361bb78400071129139A37Eb5c5Dd93</code><br>
+                        <em>→ Multisig admin wallet holding DEFAULT_ADMIN_ROLE on all contracts. Used for governance decisions and emergency actions.</em></li>
+                    <li><strong>Backend Wallet (Operator):</strong> <code>0x22A2cAcB19e77D25da063A787870a3EE6BAC8Dfe</code><br>
+                        <em>→ Hot wallet with delegated MINTER_ROLE and UPDATER_ROLE. Executes daily operations (NFT minting, score updates, interaction logging).</em></li>
+                    <li><strong>Donation Wallet:</strong> <code>0x27F8233Ae2FC3945064c0bad72267e68bC28AaAa</code><br>
+                        <em>→ Community donations for gas fee sponsoring.</em></li>
+                </ul>
+
                 <h3>Monitoring Endpoints</h3>
                 <ul>
                     <li>Health: <code>/api/health</code></li>
