@@ -1322,6 +1322,7 @@ async def verify(req: Request):
         address = data.get("address", "").lower()
         nonce = data.get("nonce", "")
         signature = data.get("signature", "")
+        message_from_frontend = data.get("message", "")  # NEW: SIWE message from frontend
         token_duration_minutes = data.get("token_duration_minutes", None)  # Token-Gültigkeitsdauer in Minuten
         owner_wallet = data.get("owner", "").lower()  # NEW: Owner for follower tracking
         display_name = data.get("display_name", "").strip()  # NEW: User-provided display name
@@ -1364,7 +1365,15 @@ async def verify(req: Request):
             from eth_account.messages import encode_defunct
             from eth_account import Account
             
-            message_text = f"Signiere diese Nachricht um dich bei AEra anzumelden:\nNonce: {nonce}"
+            # 🔐 Support both old format AND SIWE (EIP-4361) format
+            if message_from_frontend:
+                # SIWE format: Use message from frontend
+                message_text = message_from_frontend
+                log_activity("INFO", "AUTH", "Using SIWE message from frontend", address=address[:10])
+            else:
+                # Old format: Build message with nonce
+                message_text = f"Signiere diese Nachricht um dich bei AEra anzumelden:\nNonce: {nonce}"
+            
             message = encode_defunct(text=message_text)
             
             # Verifiziere Signature
@@ -1373,6 +1382,11 @@ async def verify(req: Request):
             if recovered_address.lower() != address:
                 log_activity("ERROR", "AUTH", "Signature verification FAILED", address=address[:10], recovered=recovered_address[:10])
                 return {"error": "Signature verification failed", "is_human": False}
+            
+            # 🔐 SIWE: Also verify nonce is in the message (anti-replay)
+            if message_from_frontend and nonce not in message_from_frontend:
+                log_activity("ERROR", "AUTH", "SIWE nonce mismatch", address=address[:10])
+                return {"error": "Nonce mismatch in SIWE message", "is_human": False}
             
             log_activity("INFO", "AUTH", "✓✓✓ Signature VERIFIED", address=address[:10])
             
