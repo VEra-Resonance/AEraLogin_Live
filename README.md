@@ -92,8 +92,8 @@ sudo apt install git python3-pip
 
 ```bash
 # Clone repository
-git clone https://github.com/VEra-Resonance/AEraLogIn_on_BASE.git
-cd AEraLogIn_on_BASE
+git clone https://github.com/VEra-Resonance/AEraLogin_Live.git
+cd AEraLogin_Live
 
 # Create virtual environment
 python3 -m venv venv
@@ -146,7 +146,7 @@ python server.py
 ### For Users
 
 1. **Visit Landing Page**: `http://localhost:8840`
-2. **Connect MetaMask** - Ensure you're on BASE Sepolia network
+2. **Connect MetaMask** - Ensure you're on BASE Mainnet network
 3. **Sign Authentication** - Verify wallet ownership
 4. **Receive Identity NFT** - Automatically minted on first login (gasless!)
 5. **Access Dashboard** - View your followers and Resonance Score
@@ -319,7 +319,7 @@ Apache License 2.0 - See [LICENSE](LICENSE) file for details
 
 ## 🔗 Links
 
-- **Repository**: https://github.com/VEra-Resonance/AEraLogIn_on_BASE
+- **Repository**: https://github.com/VEra-Resonance/AEraLogin_Live
 - **BASE Network**: https://base.org
 - **BASE Explorer**: https://basescan.org
 - **Coinbase L2 Docs**: https://docs.base.org
