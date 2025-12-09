@@ -12,7 +12,7 @@ import { baseSepolia } from 'viem/chains';
 // Alchemy Config - Load from environment variables!
 // NEVER commit real API keys to Git!
 const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || 'YOUR_ALCHEMY_API_KEY';
-const PAYMASTER_URL = `https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
+const PAYMASTER_URL = `https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
 
 /**
  * OnchainKit Paymaster Config
@@ -92,7 +92,7 @@ export async function sendGaslessTransaction(contract, functionName, args, userA
         });
 
         console.log('✅ Transaction sent (gasless):', hash);
-        console.log('   BaseScan:', `https://sepolia.basescan.org/tx/${hash}`);
+        console.log('   BaseScan:', `https://basescan.org/tx/${hash}`);
 
         // 3. Wait for confirmation
         const receipt = await publicClient.waitForTransactionReceipt({ 
@@ -109,7 +109,7 @@ export async function sendGaslessTransaction(contract, functionName, args, userA
             hash,
             receipt,
             gasless: true,
-            basescanUrl: `https://sepolia.basescan.org/tx/${hash}`
+            basescanUrl: `https://basescan.org/tx/${hash}`
         };
 
     } catch (error) {

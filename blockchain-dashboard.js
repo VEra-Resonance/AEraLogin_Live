@@ -73,7 +73,7 @@ window.BlockchainDashboard = (function() {
 
             if (data.has_identity && data.token_id) {
                 const tokenId = data.token_id;
-                const explorerUrl = data.basescan_url || `https://sepolia.basescan.org/nft/${data.contract_address}/${tokenId}`;
+                const explorerUrl = data.basescan_url || `https://basescan.org/nft/${data.contract_address}/${tokenId}`;
                 
                 updateElement('identityStatus', `
                     <span style="color: #4caf50;">✅</span> <span style="color: #f0f4ff;">Minted</span>
@@ -251,7 +251,7 @@ window.BlockchainDashboard = (function() {
                 html += `<td style="padding: 8px; font-size: 11px;">${timestamp}</td>`;
                 
                 if (txHash) {
-                    const txUrl = `https://sepolia.basescan.org/tx/${txHash}`;
+                    const txUrl = `https://basescan.org/tx/${txHash}`;
                     html += `<td style="padding: 8px; text-align: center;">
                         <a href="${txUrl}" target="_blank" style="color: #2196f3; text-decoration: none;">
                             🔗
