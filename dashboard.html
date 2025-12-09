@@ -1477,7 +1477,46 @@ Licensed under the Apache License, Version 2.0
                 
                 const walletAddress = accounts[0].toLowerCase();
                 
-                // 🔐 SECURITY: Step 2 - Get Challenge from Backend
+                // � Step 1.5: Switch to BASE Mainnet (Chain ID 8453)
+                const BASE_CHAIN_ID = '0x2105'; // 8453 in hex
+                try {
+                    const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    console.log('Current chain:', currentChainId);
+                    
+                    if (currentChainId !== BASE_CHAIN_ID) {
+                        console.log('🔄 Switching to BASE Mainnet...');
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: BASE_CHAIN_ID }]
+                            });
+                            console.log('✅ Switched to BASE Mainnet');
+                        } catch (switchError) {
+                            // Chain not added yet - add it
+                            if (switchError.code === 4902) {
+                                console.log('📝 Adding BASE Mainnet to wallet...');
+                                await window.ethereum.request({
+                                    method: 'wallet_addEthereumChain',
+                                    params: [{
+                                        chainId: BASE_CHAIN_ID,
+                                        chainName: 'Base Mainnet',
+                                        nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+                                        rpcUrls: ['https://mainnet.base.org'],
+                                        blockExplorerUrls: ['https://basescan.org']
+                                    }]
+                                });
+                                console.log('✅ BASE Mainnet added and switched');
+                            } else {
+                                throw switchError;
+                            }
+                        }
+                    }
+                } catch (chainError) {
+                    console.warn('⚠️ Could not switch chain:', chainError);
+                    // Continue anyway - signature will still work
+                }
+                
+                // �🔐 SECURITY: Step 2 - Get Challenge from Backend
                 console.log('� Step 2: Requesting challenge from backend...');
                 const challengeResponse = await fetch(`${API_BASE}/admin/challenge`, {
                     method: 'POST',
