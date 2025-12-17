@@ -1,0 +1,1932 @@
+[1mdiff --git a/.env.example b/.env.example[m
+[1mdeleted file mode 100644[m
+[1mindex 9ac39a2..0000000[m
+[1m--- a/.env.example[m
+[1m+++ /dev/null[m
+[36m@@ -1,89 +0,0 @@[m
+[31m-# Konfigurationsdatei für AEra Login[m
+[31m-# Kopiere diese Datei zu .env und fülle deine Werte aus[m
+[31m-[m
+[31m-# ===== SERVER KONFIGURATION =====[m
+[31m-# PRODUCTION oder DEVELOPMENT[m
+[31m-ENV=development[m
+[31m-[m
+[31m-# Host: 0.0.0.0 für extern erreichbar, 127.0.0.1 nur lokal[m
+[31m-HOST=0.0.0.0[m
+[31m-PORT=8000[m
+[31m-[m
+[31m-# Deine öffentliche Domain/IP (für QR-Codes und Deep-Links)[m
+[31m-# Beispiele: localhost:8000, aera-login.example.com, 192.168.1.100:8000[m
+[31m-PUBLIC_URL=http://localhost:8000[m
+[31m-[m
+[31m-# ===== DATENBANK =====[m
+[31m-DATABASE_PATH=./aera.db[m
+[31m-DATABASE_URL=sqlite:///aera.db[m
+[31m-[m
+[31m-# ===== SICHERHEIT =====[m
+[31m-# Erlaubte Origins (für CORS)[m
+[31m-# Für Development: "*" (alle)[m
+[31m-# Für Production: "https://aera-login.example.com,https://app.example.com"[m
+[31m-CORS_ORIGINS=*[m
+[31m-[m
+[31m-# API Secret (für zukünftige Auth)[m
+[31m-API_SECRET=change-this-to-a-secure-random-string[m
+[31m-[m
+[31m-# ===== WALLETCONNECT (optional) =====[m
+[31m-# WalletConnect Project ID (von https://cloud.walletconnect.com)[m
+[31m-WALLETCONNECT_PROJECT_ID=your-project-id-here[m
+[31m-[m
+[31m-# ===== LOGGING =====[m
+[31m-LOG_LEVEL=info[m
+[31m-# DEBUG, INFO, WARNING, ERROR, CRITICAL[m
+[31m-[m
+[31m-# ===== RESONANCE SCORE CONFIG =====[m
+[31m-# Initialer Score für neue Nutzer[m
+[31m-INITIAL_SCORE=50[m
+[31m-[m
+[31m-# Maximaler Score[m
+[31m-MAX_SCORE=100[m
+[31m-[m
+[31m-# Score-Erhöhung pro Login[m
+[31m-SCORE_INCREMENT=1[m
+[31m-[m
+[31m-# Score-Abzug pro Woche Inaktivität (optional)[m
+[31m-INACTIVITY_PENALTY=0[m
+[31m-[m
+[31m-# ===== OPTIONAL: BLOCKCHAIN INTEGRATION =====[m
+[31m-# Sepolia RPC - Get your key from https://www.alchemy.com/ or https://www.infura.io/[m
+[31m-# ⚠️ SECURITY: API keys are sensitive! Never commit real keys.[m
+[31m-SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_KEY_HERE[m
+[31m-[m
+[31m-# AEra Token Contract Adresse (Sepolia)[m
+[31m-AERA_TOKEN_ADDRESS=0x5032206396A6001eEaD2e0178C763350C794F69e[m
+[31m-[m
+[31m-# ===== AIRDROP CONFIGURATION =====[m
+[31m-# ⚠️ SECURITY WARNING ⚠️[m
+[31m-# NEVER commit real private keys to git![m
+[31m-# Use environment variables or secret management tools instead.[m
+[31m-[m
+[31m-# Admin Wallet für Airdrops (muss AEra Tokens haben)[m
+[31m-# This is a public address, safe to share[m
+[31m-ADMIN_WALLET=0xed1a95ab5b794dc20964693fbcc60a3dfb5a22c5[m
+[31m-[m
+[31m-# Private Key des Admin Wallets[m
+[31m-# ❌ DO NOT USE IN PRODUCTION - Only for local development![m
+[31m-# Generate a new key for each environment:[m
+[31m-# - Local Dev: Use a test wallet[m
+[31m-# - Staging: Use a staging wallet  [m
+[31m-# - Production: Use Gnosis Safe or hardware wallet[m
+[31m-ADMIN_PRIVATE_KEY=your-dev-private-key-here-not-real[m
+[31m-[m
+[31m-# ===== TELEGRAM BOT (optional) =====[m
+[31m-TELEGRAM_BOT_TOKEN=your-telegram-bot-token-here[m
+[31m-TELEGRAM_CHAT_ID=your-chat-id-here[m
+[31m-[m
+[31m-# ===== COMMUNITY GATE CONFIGURATION =====[m
+[31m-# NFT-gated Telegram/Discord invite links[m
+[31m-TELEGRAM_INVITE_LINK=https://t.me/+YOUR_TELEGRAM_INVITE_LINK[m
+[31m-DISCORD_INVITE_LINK=https://discord.gg/YOUR_DISCORD_INVITE_CODE[m
+[31m-[m
+[31m-# ===== EMAIL NOTIFICATIONS (optional) =====[m
+[31m-SMTP_SERVER=smtp.gmail.com[m
+[31m-SMTP_PORT=587[m
+[31m-SMTP_USER=your-email@gmail.com[m
+[31m-SMTP_PASSWORD=your-app-password[m
+[31m-SMTP_FROM=noreply@aera-login.com[m
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mdeleted file mode 100644[m
+[1mindex e4273f3..0000000[m
+[1m--- a/.gitignore[m
+[1m+++ /dev/null[m
+[36m@@ -1,76 +0,0 @@[m
+[31m-# ===== SECURITY - NEVER COMMIT THESE =====[m
+[31m-.env[m
+[31m-.env.local[m
+[31m-.env.production[m
+[31m-.env.production-backup[m
+[31m-*.env[m
+[31m-[m
+[31m-# ===== DATABASE =====[m
+[31m-*.db[m
+[31m-*.db-journal[m
+[31m-*.db.backup*[m
+[31m-*.db.old*[m
+[31m-aera.db*[m
+[31m-[m
+[31m-# ===== LOGS =====[m
+[31m-*.log[m
+[31m-logs/[m
+[31m-*.log.*[m
+[31m-[m
+[31m-# ===== PROCESS FILES =====[m
+[31m-*.pid[m
+[31m-*.sock[m
+[31m-*.lock[m
+[31m-[m
+[31m-# ===== PYTHON =====[m
+[31m-__pycache__/[m
+[31m-*.py[cod][m
+[31m-*$py.class[m
+[31m-*.so[m
+[31m-.Python[m
+[31m-build/[m
+[31m-develop-eggs/[m
+[31m-dist/[m
+[31m-downloads/[m
+[31m-eggs/[m
+[31m-.eggs/[m
+[31m-lib/[m
+[31m-lib64/[m
+[31m-parts/[m
+[31m-sdist/[m
+[31m-var/[m
+[31m-wheels/[m
+[31m-*.egg-info/[m
+[31m-.installed.cfg[m
+[31m-*.egg[m
+[31m-venv/[m
+[31m-ENV/[m
+[31m-env/[m
+[31m-.venv/[m
+[31m-[m
+[31m-# ===== IDE =====[m
+[31m-.idea/[m
+[31m-.vscode/[m
+[31m-*.swp[m
+[31m-*.swo[m
+[31m-*~[m
+[31m-.DS_Store[m
+[31m-[m
+[31m-# ===== TEMPORARY FILES =====[m
+[31m-*.tmp[m
+[31m-*.temp[m
+[31m-*.bak[m
+[31m-*.backup[m
+[31m-+%Y*[m
+[31m-=*[m
+[31m-[m
+[31m-# ===== NODE (if any) =====[m
+[31m-node_modules/[m
+[31m-npm-debug.log*[m
+[31m-[m
+[31m-# ===== SECRETS =====[m
+[31m-*secret*[m
+[31m-*private*[m
+[31m-*.pem[m
+[31m-*.key[m
+[31m-credentials.json[m
+[1mdiff --git a/IMPLEMENTATION_STATUS.md b/IMPLEMENTATION_STATUS.md[m
+[1mdeleted file mode 100644[m
+[1mindex bf8f550..0000000[m
+[1m--- a/IMPLEMENTATION_STATUS.md[m
+[1m+++ /dev/null[m
+[36m@@ -1,232 +0,0 @@[m
+[31m-# 🎉 Telegram-Gate Implementation - Abgeschlossen![m
+[31m-[m
+[31m-## ✅ Was wurde umgesetzt[m
+[31m-[m
+[31m-### 1. **Backend Endpoints** (in `server.py`)[m
+[31m-- ✅ `POST /api/check-rft` - Prüft Identity NFT Besitz[m
+[31m-- ✅ `POST /api/telegram/invite` - Gibt Telegram Invite Link zurück[m
+[31m-- ✅ `telegram_invites` Tabelle in Datenbank erstellt[m
+[31m-- ✅ Vollständige Logging-Integration[m
+[31m-[m
+[31m-### 2. **Frontend** (`join-telegram.html`)[m
+[31m-- ✅ Wallet-Connect Integration[m
+[31m-- ✅ Automatischer NFT-Check[m
+[31m-- ✅ Conditional UI:[m
+[31m-  - Mit NFT → "Join AEra Telegram" Button[m
+[31m-  - Ohne NFT → "Mint Identity NFT" Button[m
+[31m-- ✅ Responsive Design[m
+[31m-- ✅ Error Handling & Loading States[m
+[31m-[m
+[31m-### 3. **Test-Umgebung**[m
+[31m-- ✅ Eigenständiger Test-Server auf Port **8841**[m
+[31m-- ✅ Separate Test-Datenbank (`aera.db` im Test-Ordner)[m
+[31m-- ✅ Original-Server (Port 8840) bleibt unangetastet[m
+[31m-- ✅ Alle Dependencies kopiert[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🧪 Getestete Funktionalität[m
+[31m-[m
+[31m-### ✅ API-Tests erfolgreich[m
+[31m-[m
+[31m-```bash[m
+[31m-# NFT-Check Endpoint[m
+[31m-curl -X POST http://localhost:8841/api/check-rft \[m
+[31m-  -H "Content-Type: application/json" \[m
+[31m-  -d '{"address":"0x984eDaCf233b37FC2E63aBC7168bDE8652f55C65"}'[m
+[31m-[m
+[31m-# Response:[m
+[31m-{[m
+[31m-  "allowed": false,[m
+[31m-  "has_nft": false,[m
+[31m-  "reason": "No Identity NFT found",[m
+[31m-  "mint_required": true[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m-### ✅ Frontend erreichbar[m
+[31m-```bash[m
+[31m-curl http://localhost:8841/join-telegram[m
+[31m-# → HTML-Seite wird korrekt geladen[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 📂 Dateistruktur[m
+[31m-[m
+[31m-```[m
+[31m-/var/www/aeralogin+implement/aeralogin/[m
+[31m-├── server.py                      # ✅ Mit Telegram-Gate Endpoints[m
+[31m-├── join-telegram.html             # ✅ Frontend UI[m
+[31m-├── aera-chat.js                   # ✅ VERA Chat Widget[m
+[31m-├── aera-chat.css                  # ✅ Chat Widget Styles[m
+[31m-├── TELEGRAM_GATE_DEPLOYMENT.md    # ✅ Deployment Guide[m
+[31m-├── .env                           # Port 8841 (Test)[m
+[31m-├── aera.db                        # Test-Datenbank[m
+[31m-├── web3_service.py                # Kopiert[m
+[31m-├── blockchain_sync.py             # Kopiert[m
+[31m-├── nft_confirmation.py            # Kopiert[m
+[31m-├── resonance_calculator.py        # Kopiert[m
+[31m-├── logger.py                      # Kopiert[m
+[31m-└── server_test.log                # Test-Server Logs[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🔗 Endpoints Übersicht[m
+[31m-[m
+[31m-| Endpoint | Method | Port | Status |[m
+[31m-|----------|--------|------|--------|[m
+[31m-| `/join-telegram` | GET | 8841 | ✅ Live |[m
+[31m-| `/api/check-rft` | POST | 8841 | ✅ Tested |[m
+[31m-| `/api/telegram/invite` | POST | 8841 | ✅ Ready |[m
+[31m-| `/api/vera-chat` | POST | 8841 | ✅ Ready |[m
+[31m-| `/aera-chat.js` | GET | 8841 | ✅ Ready |[m
+[31m-| `/aera-chat.css` | GET | 8841 | ✅ Ready |[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🚀 Wie teste ich das System?[m
+[31m-[m
+[31m-### 1. **Test-Server Status prüfen**[m
+[31m-```bash[m
+[31m-curl http://localhost:8841/api/health[m
+[31m-```[m
+[31m-[m
+[31m-### 2. **Telegram Gate UI testen**[m
+[31m-```bash[m
+[31m-# Im Browser öffnen:[m
+[31m-http://localhost:8841/join-telegram[m
+[31m-[m
+[31m-# Oder mit curl:[m
+[31m-curl http://localhost:8841/join-telegram[m
+[31m-```[m
+[31m-[m
+[31m-### 3. **NFT-Check testen**[m
+[31m-```bash[m
+[31m-curl -X POST http://localhost:8841/api/check-rft \[m
+[31m-  -H "Content-Type: application/json" \[m
+[31m-  -d '{"address":"DEINE_WALLET_ADRESSE"}'[m
+[31m-```[m
+[31m-[m
+[31m-### 4. **Logs überwachen**[m
+[31m-```bash[m
+[31m-tail -f /var/www/aeralogin+implement/aeralogin/server_test.log[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 📋 Nächste Schritte[m
+[31m-[m
+[31m-### ☑️ Noch zu erledigen:[m
+[31m-[m
+[31m-1. **Telegram Gruppe erstellen**[m
+[31m-   - Private Telegram Gruppe anlegen[m
+[31m-   - Invite Link generieren[m
+[31m-   - In `.env` eintragen: `TELEGRAM_INVITE_LINK=https://t.me/+XXXXXX`[m
+[31m-[m
+[31m-2. **VERA-KI Server starten** (Port 8850)[m
+[31m-   ```bash[m
+[31m-   cd /var/www/aeralogin+implement/vera-ki-api[m
+[31m-   nohup python3 server.py > vera_ki.log 2>&1 &[m
+[31m-   ```[m
+[31m-[m
+[31m-3. **Production Deployment**[m
+[31m-   - Änderungen nach `/var/www/aeralogin/` kopieren[m
+[31m-   - Produktions-Server neu starten[m
+[31m-   - Live-Tests durchführen[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🔧 Server-Management[m
+[31m-[m
+[31m-### Test-Server (Port 8841)[m
+[31m-[m
+[31m-**Starten:**[m
+[31m-```bash[m
+[31m-cd /var/www/aeralogin+implement/aeralogin[m
+[31m-nohup python3 server.py > server_test.log 2>&1 &[m
+[31m-```[m
+[31m-[m
+[31m-**Stoppen:**[m
+[31m-```bash[m
+[31m-ps aux | grep "python3 server.py" | grep 8841 | awk '{print $2}' | xargs kill -9[m
+[31m-```[m
+[31m-[m
+[31m-**Logs:**[m
+[31m-```bash[m
+[31m-tail -f /var/www/aeralogin+implement/aeralogin/server_test.log[m
+[31m-```[m
+[31m-[m
+[31m-### Produktions-Server (Port 8840) - **NICHT ANFASSEN!**[m
+[31m-Läuft in `/var/www/aeralogin/` und bleibt unverändert.[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🔐 Security Features[m
+[31m-[m
+[31m-✅ **NFT-Verifikation vor jedem Zugriff**[m
+[31m-- Kein Invite Link ohne NFT-Besitz[m
+[31m-- On-Chain Verifikation via `web3_service.has_identity_nft()`[m
+[31m-[m
+[31m-✅ **Logging aller Zugriffe**[m
+[31m-- Jeder Zugangsversuch wird geloggt[m
+[31m-- Tracking in `telegram_invites` Tabelle[m
+[31m-[m
+[31m-✅ **Saubere Systemtrennung**[m
+[31m-- Telegram läuft unabhängig[m
+[31m-- Keine Datenweitergabe[m
+[31m-- Gate (AEra) ↔ Community (Telegram)[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 📊 Implementierte Features[m
+[31m-[m
+[31m-### ✅ VERA-Web (Chat System)[m
+[31m-- [x] Proxy Endpoint `/api/vera-chat`[m
+[31m-- [x] Chat Widget `aera-chat.js` + `aera-chat.css`[m
+[31m-- [x] Landing Page Integration[m
+[31m-- [x] VERA-KI Server (Port 8850) bereit[m
+[31m-[m
+[31m-### ✅ Telegram-Gate (NFT-basierter Zugang)[m
+[31m-- [x] NFT-Check Endpoint `/api/check-rft`[m
+[31m-- [x] Invite Endpoint `/api/telegram/invite`[m
+[31m-- [x] Frontend UI `/join-telegram`[m
+[31m-- [x] Datenbank-Tracking[m
+[31m-- [x] Deployment-Dokumentation[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🎯 System-Status[m
+[31m-[m
+[31m-| Component | Status | Port | Notes |[m
+[31m-|-----------|--------|------|-------|[m
+[31m-| **AEra Test-Server** | 🟢 Running | 8841 | Eigenständig, isoliert |[m
+[31m-| **Telegram-Gate Backend** | ✅ Ready | 8841 | Endpoints getestet |[m
+[31m-| **Telegram-Gate Frontend** | ✅ Ready | 8841 | UI funktional |[m
+[31m-| **VERA-Chat Proxy** | ✅ Ready | 8841 | Wartet auf VERA-KI |[m
+[31m-| **VERA-KI Server** | 🔴 Offline | 8850 | Manuell starten |[m
+[31m-| **Production Server** | 🟢 Running | 8840 | Unverändert |[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## ✨ Zusammenfassung[m
+[31m-[m
+[31m-**Du hast jetzt:**[m
+[31m-1. ✅ Einen voll funktionsfähigen Test-Server auf Port 8841[m
+[31m-2. ✅ Telegram-Gate komplett implementiert (Backend + Frontend)[m
+[31m-3. ✅ VERA-Chat Proxy bereit für Integration[m
+[31m-4. ✅ Original-System bleibt sicher und unangetastet[m
+[31m-5. ✅ Deployment-Dokumentation vorhanden[m
+[31m-[m
+[31m-**Bereit für:**[m
+[31m-- 🔗 Telegram Gruppe Setup[m
+[31m-- 🧪 End-to-End Testing[m
+[31m-- 🚀 Production Deployment[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-**Status:** ✅ **Implementierung abgeschlossen!**  [m
+[31m-**Datum:** 2025-12-06  [m
+[31m-**Test-Server:** http://localhost:8841  [m
+[31m-**Dokumentation:** `TELEGRAM_GATE_DEPLOYMENT.md`[m
+[1mdiff --git a/LICENSE b/LICENSE[m
+[1mdeleted file mode 100644[m
+[1mindex 2ae71f1..0000000[m
+[1m--- a/LICENSE[m
+[1m+++ /dev/null[m
+[36m@@ -1,154 +0,0 @@[m
+[31m-                                 Apache License[m
+[31m-                           Version 2.0, January 2004[m
+[31m-                        http://www.apache.org/licenses/[m
+[31m-[m
+[31m-   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION[m
+[31m-[m
+[31m-   1. Definitions.[m
+[31m-[m
+[31m-      "License" shall mean the terms and conditions for use, reproduction,[m
+[31m-      and distribution as defined in Sections 1 through 9 of this document.[m
+[31m-[m
+[31m-      "Licensor" shall mean the copyright owner or entity authorized by[m
+[31m-      the copyright owner that is granting the License.[m
+[31m-[m
+[31m-      "Legal Entity" shall mean the union of the acting entity and all[m
+[31m-      other entities that control, are controlled by, or are under common[m
+[31m-      control with that entity. For the purposes of this definition,[m
+[31m-      "control" means (i) the power, direct or indirect, to cause the[m
+[31m-      direction or management of such entity, whether by contract or[m
+[31m-      otherwise, or (ii) ownership of fifty percent (50%) or more of the[m
+[31m-      outstanding shares, or (iii) beneficial ownership of such entity.[m
+[31m-[m
+[31m-      "You" (or "Your") shall mean an individual or Legal Entity exercising[m
+[31m-      permissions granted by this License.[m
+[31m-[m
+[31m-      "Source" form shall mean the preferred form for making modifications,[m
+[31m-      including but not limited to software source code, documentation[m
+[31m-      source, and configuration files.[m
+[31m-[m
+[31m-      "Object" form shall mean any form resulting from mechanical[m
+[31m-      transformation or translation of a Source form, including but[m
+[31m-      not limited to compiled object code, generated documentation,[m
+[31m-      and conversions to other media types.[m
+[31m-[m
+[31m-      "Work" shall mean the work of authorship, whether in Source or Object[m
+[31m-      form, made available under the License, as indicated by a copyright[m
+[31m-      notice that is included in or attached to the work (an example is[m
+[31m-      provided in the Appendix below).[m
+[31m-[m
+[31m-      "Derivative Works" shall mean any work, whether in Source or Object[m
+[31m-      form, that is based on (or derived from) the Work and for which the[m
+[31m-      editorial revisions, annotations, elaborations, or other modifications[m
+[31m-      represent, as a whole, an original work of authorship. For the purposes[m
+[31m-      of this License, Derivative Works shall not include works that remain[m
+[31m-      separable from, or merely link (or bind by name) to the interfaces of,[m
+[31m-      the Work and Derivative Works thereof.[m
+[31m-[m
+[31m-      "Contribution" shall mean any work of authorship, including[m
+[31m-      the original Work and any Derivative Works thereof, that is[m
+[31m-      intentionally submitted to Licensor for inclusion in the Work[m
+[31m-      by the copyright owner or by an individual or Legal Entity[m
+[31m-      authorized to submit on behalf of the copyright owner. For the[m
+[31m-      purposes of this definition, "submitted" means any form of[m
+[31m-      electronic, verbal, or written communication sent to the Licensor[m
+[31m-      or its representatives.[m
+[31m-[m
+[31m-      "Contributor" shall mean Licensor and any individual or Legal[m
+[31m-      Entity on behalf of whom a Contribution has been received by Licensor[m
+[31m-      and subsequently incorporated within the Work.[m
+[31m-[m
+[31m-   2. Grant of Copyright License.[m
+[31m-[m
+[31m-      Subject to the terms and conditions of this License, each Contributor[m
+[31m-      hereby grants to You a perpetual, worldwide, non-exclusive, no-charge,[m
+[31m-      royalty-free, irrevocable copyright license to reproduce, prepare[m
+[31m-      Derivative Works of, publicly display, publicly perform, sublicense,[m
+[31m-      and distribute the Work and such Derivative Works in Source or Object[m
+[31m-      form.[m
+[31m-[m
+[31m-   3. Grant of Patent License.[m
+[31m-[m
+[31m-      Subject to the terms and conditions of this License, each Contributor[m
+[31m-      hereby grants to You a perpetual, worldwide, non-exclusive, no-charge,[m
+[31m-      royalty-free, irrevocable (except as stated in this section) patent[m
+[31m-      license to make, have made, use, offer to sell, sell, import, and[m
+[31m-      otherwise transfer the Work.[m
+[31m-[m
+[31m-   4. Redistribution.[m
+[31m-[m
+[31m-      You may reproduce and distribute copies of the Work or Derivative Works[m
+[31m-      thereof in any medium, with or without modifications, and in Source or[m
+[31m-      Object form, provided that You meet the following conditions:[m
+[31m-[m
+[31m-      (a) You must give any other recipients of the Work or Derivative Works[m
+[31m-          a copy of this License; and[m
+[31m-[m
+[31m-      (b) You must cause any modified files to carry prominent notices[m
+[31m-          stating that You changed the files; and[m
+[31m-[m
+[31m-      (c) You must retain, in the Source form of any Derivative Works[m
+[31m-          that You distribute, all copyright, patent, trademark, and[m
+[31m-          attribution notices from the Source form of the Work, excluding[m
+[31m-          those notices that do not pertain to any part of the Derivative[m
+[31m-          Works; and[m
+[31m-[m
+[31m-      (d) If the Work includes a "NOTICE" text file, then any Derivative[m
+[31m-          Works that You distribute must include a readable copy of the[m
+[31m-          attribution notices contained within such NOTICE file.[m
+[31m-[m
+[31m-   5. Submission of Contributions.[m
+[31m-[m
+[31m-      Unless You explicitly state otherwise, any Contribution intentionally[m
+[31m-      submitted for inclusion in the Work by You to Licensor shall be[m
+[31m-      under the terms and conditions of this License, without any additional[m
+[31m-      terms or conditions.[m
+[31m-[m
+[31m-   6. Trademarks.[m
+[31m-[m
+[31m-      This License does not grant permission to use the trade names, trademarks,[m
+[31m-      service marks, or product names of the Licensor, except as required for[m
+[31m-      reasonable and customary use in describing the origin of the Work and[m
+[31m-      reproducing the content of the NOTICE file.[m
+[31m-[m
+[31m-   7. Disclaimer of Warranty.[m
+[31m-[m
+[31m-      Unless required by applicable law or agreed to by Licensor in writing,[m
+[31m-      the Work is provided on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS[m
+[31m-      OF ANY KIND, either express or implied, including, without limitation,[m
+[31m-      any warranties or conditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY,[m
+[31m-      or FITNESS FOR A PARTICULAR PURPOSE.[m
+[31m-[m
+[31m-   8. Limitation of Liability.[m
+[31m-[m
+[31m-      In no event and under no legal theory, whether in tort (including[m
+[31m-      negligence), contract, or otherwise, unless required by applicable law[m
+[31m-      (such as deliberate and grossly negligent acts) or agreed to in writing,[m
+[31m-      shall any Contributor be liable to You for damages, including any[m
+[31m-      direct, indirect, special, incidental, or consequential damages of any[m
+[31m-      character arising as a result of this License or out of the use or[m
+[31m-      inability to use the Work.[m
+[31m-[m
+[31m-   9. Accepting Warranty or Additional Liability.[m
+[31m-[m
+[31m-      While redistributing the Work or Derivative Works thereof, You may[m
+[31m-      choose to offer, and charge a fee for, acceptance of support, warranty,[m
+[31m-      indemnity, or other liability obligations and/or rights consistent[m
+[31m-      with this License.[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-Copyright 2025 Karlheinz Beismann[m
+[31m-VEra-Resonance Project[m
+[31m-[m
+[31m-Licensed under the Apache License, Version 2.0 (the "License");[m
+[31m-you may not use this file except in compliance with the License.[m
+[31m-You may obtain a copy of the License at[m
+[31m-[m
+[31m-    http://www.apache.org/licenses/LICENSE-2.0[m
+[31m-[m
+[31m-Unless required by applicable law or agreed to in writing, software[m
+[31m-distributed under the License is distributed on an "AS IS" BASIS,[m
+[31m-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.[m
+[31m-See the License for the specific language governing permissions and[m
+[31m-limitations under the License.[m
+[1mdiff --git a/Logo/ChatGPT Image 1. Nov. 2025, 12_56_14.png b/Logo/ChatGPT Image 1. Nov. 2025, 12_56_14.png[m
+[1mnew file mode 100644[m
+[1mindex 0000000..4ebac3b[m
+Binary files /dev/null and b/Logo/ChatGPT Image 1. Nov. 2025, 12_56_14.png differ
+[1mdiff --git a/Logo/html/index.nginx-debian.html b/Logo/html/index.nginx-debian.html[m
+[1mnew file mode 100644[m
+[1mindex 0000000..e8f5622[m
+[1m--- /dev/null[m
+[1m+++ b/Logo/html/index.nginx-debian.html[m
+[36m@@ -0,0 +1,23 @@[m
+[32m+[m[32m<!DOCTYPE html>[m
+[32m+[m[32m<html>[m
+[32m+[m[32m<head>[m
+[32m+[m[32m<title>Welcome to nginx!</title>[m
+[32m+[m[32m<style>[m
+[32m+[m[32mhtml { color-scheme: light dark; }[m
+[32m+[m[32mbody { width: 35em; margin: 0 auto;[m
+[32m+[m[32mfont-family: Tahoma, Verdana, Arial, sans-serif; }[m
+[32m+[m[32m</style>[m
+[32m+[m[32m</head>[m
+[32m+[m[32m<body>[m
+[32m+[m[32m<h1>Welcome to nginx!</h1>[m
+[32m+[m[32m<p>If you see this page, the nginx web server is successfully installed and[m
+[32m+[m[32mworking. Further configuration is required.</p>[m
+[32m+[m
+[32m+[m[32m<p>For online documentation and support please refer to[m
+[32m+[m[32m<a href="http://nginx.org/">nginx.org</a>.<br/>[m
+[32m+[m[32mCommercial support is available at[m
+[32m+[m[32m<a href="http://nginx.com/">nginx.com</a>.</p>[m
+[32m+[m
+[32m+[m[32m<p><em>Thank you for using nginx.</em></p>[m
+[32m+[m[32m</body>[m
+[32m+[m[32m</html>[m
+[1mdiff --git a/aeralogin/logo1.png b/Logo/logo1.png[m
+[1msimilarity index 100%[m
+[1mrename from aeralogin/logo1.png[m
+[1mrename to Logo/logo1.png[m
+[1mdiff --git a/QUICKSTART.md b/QUICKSTART.md[m
+[1mdeleted file mode 100644[m
+[1mindex 3daabb2..0000000[m
+[1m--- a/QUICKSTART.md[m
+[1m+++ /dev/null[m
+[36m@@ -1,231 +0,0 @@[m
+[31m-# 🚀 Quick Start Guide - Telegram-Gate Testing[m
+[31m-[m
+[31m-## ⚡ Schnellstart (5 Minuten)[m
+[31m-[m
+[31m-### 1️⃣ Test-Server ist bereits gestartet ✅[m
+[31m-```bash[m
+[31m-# Server läuft auf Port 8841[m
+[31m-curl http://localhost:8841/api/health[m
+[31m-```[m
+[31m-[m
+[31m-### 2️⃣ Telegram Gate testen[m
+[31m-[m
+[31m-**Im Browser öffnen:**[m
+[31m-```[m
+[31m-http://localhost:8841/join-telegram[m
+[31m-```[m
+[31m-[m
+[31m-**Was passiert:**[m
+[31m-1. Seite lädt → "Connect Wallet" Button[m
+[31m-2. Wallet verbinden (MetaMask)[m
+[31m-3. System prüft automatisch NFT-Besitz[m
+[31m-4. **Mit NFT:** "Join AEra Telegram" Button erscheint[m
+[31m-5. **Ohne NFT:** "Mint Identity NFT" Button erscheint[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🧪 API-Tests mit curl[m
+[31m-[m
+[31m-### Test 1: NFT-Check (mit Wallet-Adresse)[m
+[31m-```bash[m
+[31m-curl -X POST http://localhost:8841/api/check-rft \[m
+[31m-  -H "Content-Type: application/json" \[m
+[31m-  -d '{"address":"0x984eDaCf233b37FC2E63aBC7168bDE8652f55C65"}'[m
+[31m-```[m
+[31m-[m
+[31m-**Erwartete Response (ohne NFT):**[m
+[31m-```json[m
+[31m-{[m
+[31m-  "allowed": false,[m
+[31m-  "has_nft": false,[m
+[31m-  "reason": "No Identity NFT found",[m
+[31m-  "mint_required": true[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m-**Mit NFT (wenn vorhanden):**[m
+[31m-```json[m
+[31m-{[m
+[31m-  "allowed": true,[m
+[31m-  "has_nft": true,[m
+[31m-  "token_id": 123,[m
+[31m-  "reason": "Identity NFT verified"[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m-### Test 2: Invite Link (nur mit NFT)[m
+[31m-```bash[m
+[31m-curl -X POST http://localhost:8841/api/telegram/invite \[m
+[31m-  -H "Content-Type: application/json" \[m
+[31m-  -d '{"address":"WALLET_MIT_NFT"}'[m
+[31m-```[m
+[31m-[m
+[31m-**Response (mit NFT):**[m
+[31m-```json[m
+[31m-{[m
+[31m-  "success": true,[m
+[31m-  "invite_link": "https://t.me/+XXXXXX",[m
+[31m-  "message": "Welcome to AEra Telegram community!"[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m-**Response (ohne NFT):**[m
+[31m-```json[m
+[31m-{[m
+[31m-  "success": false,[m
+[31m-  "error": "No Identity NFT found",[m
+[31m-  "mint_required": true[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 📱 Frontend-Test mit echtem Wallet[m
+[31m-[m
+[31m-### Option A: Lokaler Browser (empfohlen für erste Tests)[m
+[31m-```bash[m
+[31m-# 1. Im Browser öffnen[m
+[31m-http://localhost:8841/join-telegram[m
+[31m-[m
+[31m-# 2. MetaMask installiert haben[m
+[31m-# 3. Auf BASE Mainnet Network sein[m
+[31m-# 4. "Connect Wallet" klicken[m
+[31m-# 5. NFT-Check läuft automatisch[m
+[31m-```[m
+[31m-[m
+[31m-### Option B: Port-Forwarding für Remote-Tests[m
+[31m-```bash[m
+[31m-# Falls du von außen testen willst[m
+[31m-ssh -L 8841:localhost:8841 user@server[m
+[31m-[m
+[31m-# Dann im lokalen Browser:[m
+[31m-http://localhost:8841/join-telegram[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🔧 VERA-Chat Widget testen[m
+[31m-[m
+[31m-### Voraussetzung: VERA-KI Server starten[m
+[31m-```bash[m
+[31m-cd /var/www/aeralogin+implement/vera-ki-api[m
+[31m-nohup python3 server.py > vera_ki.log 2>&1 &[m
+[31m-[m
+[31m-# Prüfen ob läuft[m
+[31m-curl http://localhost:8850/[m
+[31m-```[m
+[31m-[m
+[31m-### Test im Browser[m
+[31m-```bash[m
+[31m-# Landing Page mit Chat Widget öffnen[m
+[31m-http://localhost:8841/[m
+[31m-[m
+[31m-# Chat-Button sollte unten rechts erscheinen[m
+[31m-# Klick öffnet Chat-Popup[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 📊 Logs überwachen[m
+[31m-[m
+[31m-### Test-Server Logs (live)[m
+[31m-```bash[m
+[31m-tail -f /var/www/aeralogin+implement/aeralogin/server_test.log[m
+[31m-```[m
+[31m-[m
+[31m-### Nach Telegram-Gate Aktivitäten filtern[m
+[31m-```bash[m
+[31m-grep "TELEGRAM_GATE" /var/www/aeralogin+implement/aeralogin/server_test.log[m
+[31m-```[m
+[31m-[m
+[31m-### VERA-Chat Logs[m
+[31m-```bash[m
+[31m-grep "VERA-Chat" /var/www/aeralogin+implement/aeralogin/server_test.log[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🗄️ Datenbank checken[m
+[31m-[m
+[31m-### Telegram Invites abrufen[m
+[31m-```bash[m
+[31m-sqlite3 /var/www/aeralogin+implement/aeralogin/aera.db \[m
+[31m-  "SELECT * FROM telegram_invites ORDER BY invited_at DESC LIMIT 5;"[m
+[31m-```[m
+[31m-[m
+[31m-### User mit NFTs prüfen[m
+[31m-```bash[m
+[31m-sqlite3 /var/www/aeralogin+implement/aeralogin/aera.db \[m
+[31m-  "SELECT address, identity_status, identity_nft_token_id FROM users WHERE identity_status='active' LIMIT 5;"[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🛠️ Troubleshooting[m
+[31m-[m
+[31m-### Problem: Server antwortet nicht[m
+[31m-```bash[m
+[31m-# Prozess prüfen[m
+[31m-ps aux | grep "python3 server.py"[m
+[31m-[m
+[31m-# Logs prüfen[m
+[31m-tail -50 /var/www/aeralogin+implement/aeralogin/server_test.log[m
+[31m-[m
+[31m-# Neu starten[m
+[31m-cd /var/www/aeralogin+implement/aeralogin[m
+[31m-nohup python3 server.py > server_test.log 2>&1 &[m
+[31m-```[m
+[31m-[m
+[31m-### Problem: "Not Found" bei /join-telegram[m
+[31m-```bash[m
+[31m-# Prüfe ob Route registriert ist[m
+[31m-grep "join-telegram" /var/www/aeralogin+implement/aeralogin/server.py[m
+[31m-[m
+[31m-# Prüfe ob HTML-Datei existiert[m
+[31m-ls -la /var/www/aeralogin+implement/aeralogin/join-telegram.html[m
+[31m-```[m
+[31m-[m
+[31m-### Problem: NFT-Check schlägt fehl[m
+[31m-```bash[m
+[31m-# Prüfe web3_service[m
+[31m-grep "web3_service" /var/www/aeralogin+implement/aeralogin/server_test.log[m
+[31m-[m
+[31m-# Prüfe Contract-Adressen in .env[m
+[31m-grep "IDENTITY_NFT_ADDRESS" /var/www/aeralogin+implement/aeralogin/.env[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## ✅ Checkliste für vollständigen Test[m
+[31m-[m
+[31m-- [ ] Test-Server läuft (Port 8841)[m
+[31m-- [ ] Health-Check erfolgreich[m
+[31m-- [ ] `/join-telegram` Seite lädt[m
+[31m-- [ ] "Connect Wallet" funktioniert[m
+[31m-- [ ] NFT-Check läuft durch[m
+[31m-- [ ] UI zeigt korrekten Status (mit/ohne NFT)[m
+[31m-- [ ] Logs zeigen TELEGRAM_GATE Einträge[m
+[31m-- [ ] Datenbank-Eintrag in `telegram_invites` erscheint[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🎯 Nächster Schritt: Production[m
+[31m-[m
+[31m-Wenn alle Tests erfolgreich sind:[m
+[31m-[m
+[31m-```bash[m
+[31m-# 1. Telegram Gruppe erstellen & Invite Link holen[m
+[31m-# 2. .env anpassen: TELEGRAM_INVITE_LINK=https://t.me/+XXXXXX[m
+[31m-# 3. Dateien nach /var/www/aeralogin/ kopieren[m
+[31m-# 4. Produktions-Server neu starten[m
+[31m-# 5. Live-Tests durchführen[m
+[31m-```[m
+[31m-[m
+[31m-Siehe: `TELEGRAM_GATE_DEPLOYMENT.md` für Details[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-**Test-Server:** http://localhost:8841  [m
+[31m-**Status:** 🟢 Ready  [m
+[31m-**Dokumentation:** Vollständig  [m
+[31m-**Bereit für:** Production Deployment[m
+[1mdiff --git a/README.md b/README.md[m
+[1mdeleted file mode 100644[m
+[1mindex fe8ecce..0000000[m
+[1m--- a/README.md[m
+[1m+++ /dev/null[m
+[36m@@ -1,361 +0,0 @@[m
+[31m-# AEra Identity & Resonance System[m
+[31m-[m
+[31m-**AEra LogIn — Human-verified identity and on-chain resonance scoring on Coinbase's BASE L2.**[m
+[31m-[m
+[31m-A Web3 authentication and reputation system built on Coinbase's BASE Layer 2 network, featuring Identity NFTs, Resonance Scores, and multi-platform follower tracking.[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🌐 Live on BASE Mainnet[m
+[31m-[m
+[31m-This project is deployed on **BASE Mainnet** (Chain ID: 8453) - Coinbase's Ethereum Layer 2 solution - for:[m
+[31m-[m
+[31m-- **⚡ 99.97% Lower Gas Costs** - NFT minting ~$0.0003 vs $1.00 on Ethereum[m
+[31m-- **🚀 Faster Transactions** - Sub-second confirmation times[m
+[31m-- **🔗 EVM Compatible** - All Ethereum tools work seamlessly[m
+[31m-- **🛡️ Ethereum Security** - Inherits Ethereum's security guarantees[m
+[31m-[m
+[31m-### Network Information[m
+[31m-- **Network**: BASE Mainnet[m
+[31m-- **Chain ID**: 8453[m
+[31m-- **RPC URL**: https://mainnet.base.org[m
+[31m-- **Block Explorer**: https://basescan.org[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🎯 Features[m
+[31m-[m
+[31m-### Identity System[m
+[31m-- ✅ **Identity NFTs** - Soul-bound ERC-721 tokens for verified users[m
+[31m-- ✅ **MetaMask Authentication** - Sign-in with Ethereum (EIP-4361)[m
+[31m-- ✅ **Auto-Minting** - First-time users automatically receive Identity NFTs[m
+[31m-- ✅ **Token ID Tracking** - Each user gets a unique, non-transferable NFT[m
+[31m-[m
+[31m-### Reputation System (HYBRID Model)[m
+[31m-- ✅ **Resonance Score** - On-chain reputation tracking (0-100+ scale)[m
+[31m-- ✅ **Blockchain Sync** - Real-time score updates via milestone system (every 2 points)[m
+[31m-- ✅ **HYBRID Score System** - Database-driven with pending_bonus mechanism[m
+[31m-  - Follow Bonus: +2 pending points on follow[m
+[31m-  - Login Activation: +1 base + pending bonus on creator login[m
+[31m-  - Prevents double-minting while rewarding engagement[m
+[31m-- ✅ **Score Evolution** - Dynamic scoring based on platform interactions[m
+[31m-- ✅ **Transparent Verification** - All scores verifiable on-chain[m
+[31m-[m
+[31m-### Social Features[m
+[31m-- ✅ **Multi-Platform Tracking** - Twitter, Discord, Telegram, Direct links[m
+[31m-- ✅ **Follower Dashboard** - Track verified followers and their scores[m
+[31m-- ✅ **On-Chain Interactions** - All interactions recorded via recordInteraction()[m
+[31m-  - FOLLOW interactions with weight=1 (contract validation compliant)[m
+[31m-  - InteractionRecorded events emitted on blockchain[m
+[31m-  - Complete interaction history queryable via events[m
+[31m-- ✅ **Blockchain History Display** - Real-time interaction timeline with icons (👥📤💬🤝🏆)[m
+[31m-- ✅ **Platform Integration** - Easy embedding with referral links[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🏗️ Architecture[m
+[31m-[m
+[31m-### Smart Contracts (BASE Mainnet)[m
+[31m-[m
+[31m-| Contract | Address | Purpose | Explorer |[m
+[31m-|---------|---------|---------|----------|[m
+[31m-| **AEraIdentityNFT** | `0xF9ff5DC523927B9632049bd19e17B610E9197d53` | Soul-bound Identity NFT | [View on Basescan](https://basescan.org/address/0xF9ff5DC523927B9632049bd19e17B610E9197d53) |[m
+[31m-| **AEraResonanceScore** | `0x9A814DBF7E2352CE9eA6293b4b731B2a24800102` | On-chain reputation score | [View on Basescan](https://basescan.org/address/0x9A814DBF7E2352CE9eA6293b4b731B2a24800102) |[m
+[31m-| **AEraResonanceRegistry** | `0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF` | Interaction & follower log | [View on Basescan](https://basescan.org/address/0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF) |[m
+[31m-[m
+[31m-### Backend Components[m
+[31m-[m
+[31m-- **FastAPI Server** (`server.py`) - REST API, dashboard backend & HYBRID score system[m
+[31m-- **Web3 Service** (`web3_service.py`) - Full blockchain integration with all 3 smart contracts[m
+[31m-  - Identity NFT minting & queries[m
+[31m-  - Resonance Score updates (adminAdjust)[m
+[31m-  - Interaction recording & history (recordInteraction)[m
+[31m-- **Airdrop Worker** (`airdrop_worker.py`) - Background task processor[m
+[31m-- **Logger** (`logger.py`) - Centralized logging system[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🚀 Quick Start[m
+[31m-[m
+[31m-### Prerequisites[m
+[31m-[m
+[31m-```bash[m
+[31m-# Python 3.9+ required[m
+[31m-python --version[m
+[31m-[m
+[31m-# Git and pip[m
+[31m-sudo apt update[m
+[31m-sudo apt install git python3-pip[m
+[31m-```[m
+[31m-[m
+[31m-### Installation[m
+[31m-[m
+[31m-```bash[m
+[31m-# Clone repository[m
+[31m-git clone https://github.com/VEra-Resonance/AEraLogin_Live.git[m
+[31m-cd AEraLogin_Live[m
+[31m-[m
+[31m-# Create virtual environment[m
+[31m-python3 -m venv venv[m
+[31m-source venv/bin/activate[m
+[31m-[m
+[31m-# Install dependencies[m
+[31m-pip install -r requirements.txt[m
+[31m-```[m
+[31m-[m
+[31m-### Configuration[m
+[31m-[m
+[31m-Create a `.env` file (copy from `.env.example`):[m
+[31m-[m
+[31m-```bash[m
+[31m-cp .env.example .env[m
+[31m-```[m
+[31m-[m
+[31m-Required environment variables:[m
+[31m-[m
+[31m-```env[m
+[31m-# BASE Mainnet RPC[m
+[31m-BASE_RPC_URL=https://mainnet.base.org[m
+[31m-[m
+[31m-# Backend Wallet (Operator - with delegated MINTER_ROLE, UPDATER_ROLE)[m
+[31m-# This wallet executes daily operations like NFT minting and score updates[m
+[31m-PRIVATE_KEY=your_private_key_here[m
+[31m-[m
+[31m-# Smart Contracts[m
+[31m-IDENTITY_NFT_ADDRESS=0xF9ff5DC523927B9632049bd19e17B610E9197d53[m
+[31m-RESONANCE_SCORE_ADDRESS=0x9A814DBF7E2352CE9eA6293b4b731B2a24800102[m
+[31m-RESONANCE_REGISTRY_ADDRESS=0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF[m
+[31m-[m
+[31m-# Server[m
+[31m-PORT=8840[m
+[31m-```[m
+[31m-[m
+[31m-### Wallet Architecture[m
+[31m-[m
+[31m-| Wallet | Address | Purpose |[m
+[31m-|--------|---------|---------|[m
+[31m-| **Safe Wallet** (Gnosis Safe) | `0xC8B1bEb43361bb78400071129139A37Eb5c5Dd93` | Multisig admin holding DEFAULT_ADMIN_ROLE. Governance & emergency actions. |[m
+[31m-| **Backend Wallet** (Operator) | `0x22A2cAcB19e77D25da063A787870a3EE6BAC8Dfe` | Hot wallet with delegated roles. Executes daily operations. |[m
+[31m-| **Donation Wallet** | `0x27F8233Ae2FC3945064c0bad72267e68bC28AaAa` | Community donations for gas fee sponsoring. |[m
+[31m-[m
+[31m-### Start Server[m
+[31m-[m
+[31m-```bash[m
+[31m-# Development mode[m
+[31m-source venv/bin/activate[m
+[31m-python server.py[m
+[31m-```[m
+[31m-[m
+[31m-**Server will start on**: http://localhost:8840[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 📖 Usage[m
+[31m-[m
+[31m-### For Users[m
+[31m-[m
+[31m-1. **Visit Landing Page**: `http://localhost:8840`[m
+[31m-2. **Connect MetaMask** - Ensure you're on BASE Mainnet network[m
+[31m-3. **Sign Authentication** - Verify wallet ownership[m
+[31m-4. **Receive Identity NFT** - Automatically minted on first login (gasless!)[m
+[31m-5. **Access Dashboard** - View your followers and Resonance Score[m
+[31m-[m
+[31m-### For Developers[m
+[31m-[m
+[31m-#### API Endpoints[m
+[31m-[m
+[31m-**Authentication:**[m
+[31m-```bash[m
+[31m-# Get challenge[m
+[31m-GET /admin/challenge[m
+[31m-[m
+[31m-# Verify signature[m
+[31m-POST /admin/verify-signature[m
+[31m-{[m
+[31m-  "address": "0x...",[m
+[31m-  "signature": "0x...",[m
+[31m-  "message": "..."[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m-**Identity NFT:**[m
+[31m-```bash[m
+[31m-# Check NFT status[m
+[31m-GET /api/blockchain/identity/{address}[m
+[31m-[m
+[31m-# Returns:[m
+[31m-{[m
+[31m-  "has_identity": true,[m
+[31m-  "token_id": 15,[m
+[31m-  "status": "active",[m
+[31m-  "contract_address": "0xF9ff5DC523927B9632049bd19e17B610E9197d53",[m
+[31m-  "basescan_url": "https://basescan.org/nft/..."[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m-**Resonance Score:**[m
+[31m-```bash[m
+[31m-# Get score[m
+[31m-GET /api/blockchain/score/{address}[m
+[31m-[m
+[31m-# Returns:[m
+[31m-{[m
+[31m-  "db_score": 50,[m
+[31m-  "blockchain_score": 50,[m
+[31m-  "last_synced": "2025-12-01T10:30:00Z"[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m-**Blockchain Interactions:**[m
+[31m-```bash[m
+[31m-# Get interaction history[m
+[31m-GET /api/blockchain/interactions/{address}[m
+[31m-[m
+[31m-# Returns:[m
+[31m-{[m
+[31m-  "interactions": [[m
+[31m-    {[m
+[31m-      "interaction_type": 0,[m
+[31m-      "interaction_type_name": "FOLLOW",[m
+[31m-      "initiator": "0x1234...",[m
+[31m-      "responder": "0x5678...",[m
+[31m-      "timestamp": 1733068883,[m
+[31m-      "tx_hash": "0xabcd...",[m
+[31m-      "block_number": 34417098[m
+[31m-    }[m
+[31m-  ],[m
+[31m-  "total": 5[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m-**Blockchain Stats:**[m
+[31m-```bash[m
+[31m-# Get blockchain health status[m
+[31m-GET /api/blockchain/stats[m
+[31m-[m
+[31m-# Returns:[m
+[31m-{[m
+[31m-  "identity_nft": "✅ Connected",[m
+[31m-  "resonance_score": "✅ Connected",[m
+[31m-  "resonance_registry": "✅ Connected",[m
+[31m-  "backend_wallet": "0x22A2...",[m
+[31m-  "network": "BASE Mainnet"[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🔧 Development[m
+[31m-[m
+[31m-### Project Structure[m
+[31m-[m
+[31m-```[m
+[31m-├── server.py                 # FastAPI backend (2800+ lines)[m
+[31m-├── web3_service.py          # Blockchain integration (579 lines)[m
+[31m-├── airdrop_worker.py        # Background tasks[m
+[31m-├── logger.py                # Logging system[m
+[31m-├── index.html               # Landing page[m
+[31m-├── dashboard.html           # User dashboard with blockchain history[m
+[31m-├── blockchain-dashboard.js  # Frontend blockchain interactions[m
+[31m-├── requirements.txt         # Python dependencies[m
+[31m-├── .env.example            # Environment template[m
+[31m-├── .gitignore              # Security protection (extended)[m
+[31m-└── backups/                 # Local backups (not in git)[m
+[31m-```[m
+[31m-[m
+[31m-### Technology Stack[m
+[31m-[m
+[31m-- **Backend**: FastAPI, Python 3.13+[m
+[31m-- **Blockchain**: Web3.py, eth-account[m
+[31m-- **Frontend**: Vanilla JS, Web3.js, MetaMask[m
+[31m-- **Database**: SQLite[m
+[31m-- **Network**: BASE Mainnet (L2)[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🛡️ Security[m
+[31m-[m
+[31m-### What's Protected[m
+[31m-[m
+[31m-✅ **Private keys never stored** - Only in `.env` (gitignored)  [m
+[31m-✅ **Database excluded** - No user data in repository  [m
+[31m-✅ **Logs excluded** - No sensitive information leaked  [m
+[31m-✅ **Minimal data collection** - Only wallet addresses and scores  [m
+[31m-✅ **EIP-4361 signatures** - Industry-standard authentication  [m
+[31m-✅ **Dedicated system-role wallet** - AEra uses a dedicated system-role wallet for backend operations — no user keys are ever stored or processed[m
+[31m-[m
+[31m-### Best Practices[m
+[31m-[m
+[31m-1. **Never commit `.env` files**[m
+[31m-2. **Keep private keys secure**[m
+[31m-3. **Verify all contracts on Basescan**[m
+[31m-4. **Regular security audits**[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🌟 Why BASE Mainnet?[m
+[31m-[m
+[31m-### Cost Comparison[m
+[31m-[m
+[31m-| Operation | Ethereum Mainnet | BASE Mainnet | Savings |[m
+[31m-|-----------|-----------------|--------------|---------|[m
+[31m-| NFT Mint | ~$1.00 | ~$0.0003 | 99.97% |[m
+[31m-| Score Update | ~$0.50 | ~$0.0002 | 99.96% |[m
+[31m-| Registry Entry | ~$0.75 | ~$0.0002 | 99.97% |[m
+[31m-[m
+[31m-### Technical Benefits[m
+[31m-[m
+[31m-- **Ethereum Compatibility** - All Solidity contracts work without changes[m
+[31m-- **Fast Finality** - Transactions confirm in seconds[m
+[31m-- **Low Fees** - Enable micro-transactions and frequent updates[m
+[31m-- **Coinbase Support** - Backed by major crypto exchange[m
+[31m-- **Growing Ecosystem** - Active developer community[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🛣️ Roadmap[m
+[31m-[m
+[31m-- **Dashboard V2 with cross-platform resonance analytics** - Enhanced user insights[m
+[31m-- **Optional Miniapp integration** - Once SIWE is supported natively in Base Miniapps[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 📝 License[m
+[31m-[m
+[31m-Apache License 2.0 - See [LICENSE](LICENSE) file for details[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🔗 Links[m
+[31m-[m
+[31m-- **Repository**: https://github.com/VEra-Resonance/AEraLogin_Live[m
+[31m-- **BASE Network**: https://base.org[m
+[31m-- **BASE Explorer**: https://basescan.org[m
+[31m-- **Coinbase L2 Docs**: https://docs.base.org[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🤝 Contributing[m
+[31m-[m
+[31m-This is an open-source project. Contributions are welcome![m
+[31m-[m
+[31m-### Development Setup[m
+[31m-[m
+[31m-1. Fork the repository[m
+[31m-2. Create a feature branch[m
+[31m-3. Make your changes[m
+[31m-4. Test locally[m
+[31m-5. Submit a pull request[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 📞 Support[m
+[31m-[m
+[31m-For issues, questions, or feature requests:[m
+[31m-- Open an issue on GitHub[m
+[31m-- Review smart contracts on Basescan[m
+[31m-- Check BASE network status[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-**Built with ❤️ on BASE Mainnet - Coinbase's Ethereum L2 Solution**[m
+[1mdiff --git a/TELEGRAM_BOT_SETUP.md b/TELEGRAM_BOT_SETUP.md[m
+[1mdeleted file mode 100644[m
+[1mindex e776af4..0000000[m
+[1m--- a/TELEGRAM_BOT_SETUP.md[m
+[1m+++ /dev/null[m
+[36m@@ -1,184 +0,0 @@[m
+[31m-# 🤖 Telegram Bot Setup für Echte Einmal-Links[m
+[31m-[m
+[31m-## Übersicht[m
+[31m-[m
+[31m-Der Telegram Bot ermöglicht es, **echte Einmal-Links** zu generieren, die:[m
+[31m-- ✅ Nur von **EINER Person** verwendet werden können[m
+[31m-- ✅ Nach 5 Minuten automatisch ablaufen[m
+[31m-- ✅ **Kein Kopieren und Weiterleiten** mehr möglich![m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🚀 Schnellstart[m
+[31m-[m
+[31m-### 1. Bot bei @BotFather erstellen[m
+[31m-[m
+[31m-1. Öffne Telegram und suche nach `@BotFather`[m
+[31m-2. Schreibe `/newbot`[m
+[31m-3. Wähle einen Namen (z.B. `VEra Community Bot`)[m
+[31m-4. Wähle einen Username (z.B. `vera_community_bot`)[m
+[31m-5. **Kopiere den Token** (sieht so aus: `7123456789:AAHqP...xyz`)[m
+[31m-[m
+[31m-### 2. Bot als Admin zur Gruppe hinzufügen[m
+[31m-[m
+[31m-1. Öffne deine private Telegram Gruppe[m
+[31m-2. Gehe zu **Gruppeninfo → Administratoren → Admin hinzufügen**[m
+[31m-3. Suche nach deinem Bot (@vera_community_bot)[m
+[31m-4. **WICHTIG:** Aktiviere die Berechtigung **"Nutzer über Links einladen"**[m
+[31m-5. Speichern[m
+[31m-[m
+[31m-### 3. Group ID herausfinden[m
+[31m-[m
+[31m-**Option A: Web Telegram**[m
+[31m-1. Öffne die Gruppe in [web.telegram.org](https://web.telegram.org)[m
+[31m-2. Die URL zeigt die ID: `https://web.telegram.org/k/#-1001234567890`[m
+[31m-3. Die Group ID ist: `-1001234567890` (mit dem Minus!)[m
+[31m-[m
+[31m-**Option B: Bot API**[m
+[31m-1. Schreibe eine Nachricht in die Gruppe[m
+[31m-2. Rufe auf: `https://api.telegram.org/bot<TOKEN>/getUpdates`[m
+[31m-3. Suche nach `"chat":{"id":-1001234567890...}`[m
+[31m-[m
+[31m-### 4. In .env eintragen[m
+[31m-[m
+[31m-```env[m
+[31m-# Telegram Bot für echte Einmal-Links[m
+[31m-TELEGRAM_BOT_TOKEN=7123456789:AAHqP...xyz[m
+[31m-TELEGRAM_GROUP_ID=-1001234567890[m
+[31m-```[m
+[31m-[m
+[31m-### 5. Server neustarten[m
+[31m-[m
+[31m-```bash[m
+[31m-# Im aeralogin Ordner[m
+[31m-source venv/bin/activate[m
+[31m-pkill -f "uvicorn.*8840"[m
+[31m-python server.py &[m
+[31m-```[m
+[31m-[m
+[31m-### 6. Status prüfen[m
+[31m-[m
+[31m-```bash[m
+[31m-curl http://localhost:8840/api/telegram-bot/status[m
+[31m-```[m
+[31m-[m
+[31m-Erwartete Antwort bei erfolgreicher Konfiguration:[m
+[31m-```json[m
+[31m-{[m
+[31m-  "configured": true,[m
+[31m-  "ready": true,[m
+[31m-  "bot_username": "@vera_community_bot",[m
+[31m-  "can_create_one_time_links": true,[m
+[31m-  "message": "✅ Bot @vera_community_bot ready!"[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## ⚙️ Wie es funktioniert[m
+[31m-[m
+[31m-```[m
+[31m-┌─────────────────┐[m
+[31m-│  User verifies  │[m
+[31m-│  with MetaMask  │[m
+[31m-└────────┬────────┘[m
+[31m-         │[m
+[31m-         ▼[m
+[31m-┌─────────────────┐[m
+[31m-│ /api/telegram/  │[m
+[31m-│    invite       │[m
+[31m-└────────┬────────┘[m
+[31m-         │[m
+[31m-         ▼[m
+[31m-┌─────────────────────────────────────┐[m
+[31m-│  Telegram Bot configured?           │[m
+[31m-│                                     │[m
+[31m-│  YES → Create one-time link         │[m
+[31m-│        (member_limit=1, 5min expiry)│[m
+[31m-│                                     │[m
+[31m-│  NO → Fallback to static link       │[m
+[31m-│       from TELEGRAM_INVITE_LINK     │[m
+[31m-└────────┬────────────────────────────┘[m
+[31m-         │[m
+[31m-         ▼[m
+[31m-┌─────────────────┐[m
+[31m-│ One-time Token  │[m
+[31m-│ generated       │[m
+[31m-│ (30 sec valid)  │[m
+[31m-└────────┬────────┘[m
+[31m-         │[m
+[31m-         ▼[m
+[31m-┌─────────────────┐[m
+[31m-│ User clicks     │[m
+[31m-│ redirect link   │[m
+[31m-└────────┬────────┘[m
+[31m-         │[m
+[31m-         ▼[m
+[31m-┌─────────────────────────────────────┐[m
+[31m-│ HTTP 302 Redirect to Telegram       │[m
+[31m-│                                     │[m
+[31m-│ Link works ONCE and expires in 5min │[m
+[31m-└─────────────────────────────────────┘[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🔐 Sicherheitsvorteile[m
+[31m-[m
+[31m-| Feature | Statischer Link | Bot Einmal-Link |[m
+[31m-|---------|----------------|-----------------|[m
+[31m-| Kopieren möglich | ✅ Ja | ❌ Nein |[m
+[31m-| Weiterleiten | ✅ Ja | ❌ Nein |[m
+[31m-| Multi-Use | ✅ Unbegrenzt | ❌ 1x |[m
+[31m-| Gültigkeit | ♾️ Für immer | ⏰ 5 Minuten |[m
+[31m-| Tracking | ❌ Nein | ✅ Ja |[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🔧 Fehlerbehebung[m
+[31m-[m
+[31m-### "Bot lacks invite permissions"[m
+[31m-→ Bot ist nicht Admin oder hat keine Invite-Berechtigung[m
+[31m-→ Lösung: Bot als Admin hinzufügen mit "Nutzer einladen" Recht[m
+[31m-[m
+[31m-### "TELEGRAM_GROUP_ID not set"[m
+[31m-→ Group ID fehlt in .env[m
+[31m-→ Lösung: ID herausfinden (siehe Schritt 3) und eintragen[m
+[31m-[m
+[31m-### "Connection error"[m
+[31m-→ Netzwerkproblem oder ungültiger Token[m
+[31m-→ Lösung: Token prüfen, ggf. bei @BotFather neu generieren[m
+[31m-[m
+[31m-### Bot funktioniert nicht, aber statische Links schon[m
+[31m-→ System fällt automatisch auf TELEGRAM_INVITE_LINK zurück[m
+[31m-→ Das ist das gewollte Fallback-Verhalten[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 📋 Checkliste[m
+[31m-[m
+[31m-- [ ] Bot bei @BotFather erstellt[m
+[31m-- [ ] Token in .env unter `TELEGRAM_BOT_TOKEN` eingetragen[m
+[31m-- [ ] Bot als Admin zur Gruppe hinzugefügt[m
+[31m-- [ ] "Nutzer über Links einladen" aktiviert[m
+[31m-- [ ] Group ID in .env unter `TELEGRAM_GROUP_ID` eingetragen[m
+[31m-- [ ] Server neugestartet[m
+[31m-- [ ] `/api/telegram-bot/status` zeigt `"ready": true`[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🧪 Manueller Test[m
+[31m-[m
+[31m-```bash[m
+[31m-# Bot-Status prüfen[m
+[31m-curl http://localhost:8840/api/telegram-bot/status[m
+[31m-[m
+[31m-# Einmal-Link direkt testen (mit Python)[m
+[31m-cd /var/local/aeralogin+imp.../aeralogin+implement/aeralogin[m
+[31m-source venv/bin/activate[m
+[31m-python telegram_bot_service.py[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-*VEra-Resonance © 2025*[m
+[1mdiff --git a/TELEGRAM_GATE_DEPLOYMENT.md b/TELEGRAM_GATE_DEPLOYMENT.md[m
+[1mdeleted file mode 100644[m
+[1mindex 6e404a0..0000000[m
+[1m--- a/TELEGRAM_GATE_DEPLOYMENT.md[m
+[1m+++ /dev/null[m
+[36m@@ -1,290 +0,0 @@[m
+[31m-# 🔐 Telegram-Gate Deployment Guide[m
+[31m-[m
+[31m-## Übersicht[m
+[31m-[m
+[31m-Das **Telegram-Gate** ist ein NFT-basiertes Zugangsystem für eine private Telegram-Gruppe. Nur User mit einem **AEra Identity NFT** erhalten Zugang zur Community.[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🎯 Funktionsprinzip[m
+[31m-[m
+[31m-```[m
+[31m-User → /join-telegram Seite[m
+[31m-       ↓[m
+[31m-   Wallet Connect[m
+[31m-       ↓[m
+[31m-   NFT-Check via /api/check-rft[m
+[31m-       ↓[m
+[31m-   ✅ Hat NFT? → /api/telegram/invite → Telegram Invite Link[m
+[31m-   ❌ Kein NFT? → Mint-Flow auf Landing Page[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 📋 Setup-Schritte[m
+[31m-[m
+[31m-### 1. Telegram Gruppe erstellen[m
+[31m-[m
+[31m-1. **Private Telegram Gruppe erstellen**[m
+[31m-   - Öffne Telegram[m
+[31m-   - Erstelle neue Gruppe: "AEra Resonance Community"[m
+[31m-   - Setze auf "Private Group"[m
+[31m-[m
+[31m-2. **Invite Link generieren**[m
+[31m-   - Gehe zu Gruppeneinstellungen[m
+[31m-   - `Invite Links` → `Create a new link`[m
+[31m-   - Wähle "Link can be used unlimited times"[m
+[31m-   - Optional: "Users joining via this link need to be approved by admins" aktivieren[m
+[31m-   - Kopiere den Link: `https://t.me/+XXXXXXXXXX`[m
+[31m-[m
+[31m-3. **Link in .env eintragen**[m
+[31m-   ```bash[m
+[31m-   cd /var/www/aeralogin+implement/aeralogin[m
+[31m-   nano .env[m
+[31m-   ```[m
+[31m-   [m
+[31m-   Ersetze:[m
+[31m-   ```env[m
+[31m-   TELEGRAM_INVITE_LINK=https://t.me/+XXXXXXXXXX[m
+[31m-   ```[m
+[31m-   [m
+[31m-   Mit deinem echten Invite Link.[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-### 2. Datenbank aktualisieren[m
+[31m-[m
+[31m-Die neue `telegram_invites` Tabelle wird automatisch bei Server-Start erstellt.[m
+[31m-[m
+[31m-Falls manuell nötig:[m
+[31m-```bash[m
+[31m-cd /var/www/aeralogin+implement/aeralogin[m
+[31m-source venv/bin/activate[m
+[31m-python3 -c "from server import init_db; init_db()"[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-### 3. AEra Server neu starten[m
+[31m-[m
+[31m-```bash[m
+[31m-# Server-Prozess finden[m
+[31m-ps aux | grep server.py[m
+[31m-[m
+[31m-# Alten Prozess beenden[m
+[31m-kill -9 <PID>[m
+[31m-[m
+[31m-# Neuen Server starten[m
+[31m-cd /var/www/aeralogin+implement/aeralogin[m
+[31m-source venv/bin/activate[m
+[31m-nohup python3 server.py > server.log 2>&1 &[m
+[31m-[m
+[31m-# Server-Status prüfen[m
+[31m-curl http://localhost:8840/api/health[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🧪 Testing[m
+[31m-[m
+[31m-### Test 1: NFT-Check Endpoint[m
+[31m-[m
+[31m-```bash[m
+[31m-curl -X POST http://localhost:8840/api/check-rft \[m
+[31m-  -H "Content-Type: application/json" \[m
+[31m-  -d '{"address":"0xYOUR_ADDRESS_WITH_NFT"}'[m
+[31m-```[m
+[31m-[m
+[31m-**Erwartete Response (mit NFT):**[m
+[31m-```json[m
+[31m-{[m
+[31m-  "allowed": true,[m
+[31m-  "has_nft": true,[m
+[31m-  "token_id": 123,[m
+[31m-  "reason": "Identity NFT verified"[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m-**Erwartete Response (ohne NFT):**[m
+[31m-```json[m
+[31m-{[m
+[31m-  "allowed": false,[m
+[31m-  "has_nft": false,[m
+[31m-  "reason": "No Identity NFT found",[m
+[31m-  "mint_required": true[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-### Test 2: Invite Link Endpoint[m
+[31m-[m
+[31m-```bash[m
+[31m-curl -X POST http://localhost:8840/api/telegram/invite \[m
+[31m-  -H "Content-Type: application/json" \[m
+[31m-  -d '{"address":"0xYOUR_ADDRESS_WITH_NFT"}'[m
+[31m-```[m
+[31m-[m
+[31m-**Erwartete Response (mit NFT):**[m
+[31m-```json[m
+[31m-{[m
+[31m-  "success": true,[m
+[31m-  "invite_link": "https://t.me/+XXXXXXXXXX",[m
+[31m-  "message": "Welcome to AEra Telegram community!"[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m-**Erwartete Response (ohne NFT):**[m
+[31m-```json[m
+[31m-{[m
+[31m-  "success": false,[m
+[31m-  "error": "No Identity NFT found",[m
+[31m-  "mint_required": true[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-### Test 3: Frontend UI[m
+[31m-[m
+[31m-1. Öffne Browser: `https://aeralogin.com/join-telegram`[m
+[31m-2. Klicke "Connect Wallet"[m
+[31m-3. Verbinde MetaMask[m
+[31m-4. System prüft NFT automatisch[m
+[31m-5. **Mit NFT:** Button "Join AEra Telegram" erscheint[m
+[31m-6. **Ohne NFT:** Button "Mint Identity NFT" erscheint[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🔒 Security Features[m
+[31m-[m
+[31m-### ✅ Implementierte Sicherheit[m
+[31m-[m
+[31m-1. **NFT-Verifikation vor jedem Zugriff**[m
+[31m-   - Kein Invite Link ohne NFT-Besitz[m
+[31m-   - On-Chain Verifikation via `web3_service.has_identity_nft()`[m
+[31m-[m
+[31m-2. **Logging aller Zugriffe**[m
+[31m-   - Jeder Zugangsversuch wird geloggt[m
+[31m-   - Tracking in `telegram_invites` Tabelle[m
+[31m-[m
+[31m-3. **Keine Telegram API Integration nötig**[m
+[31m-   - Telegram läuft komplett unabhängig[m
+[31m-   - Keine Datenweitergabe zwischen Systemen[m
+[31m-   - Saubere Trennung: Gate (AEra) ↔ Community (Telegram)[m
+[31m-[m
+[31m-4. **Rate Limiting**[m
+[31m-   - Frontend: Disabled Button während Request[m
+[31m-   - Backend: Async/await verhindert Race Conditions[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 📊 Monitoring[m
+[31m-[m
+[31m-### Logs überprüfen[m
+[31m-[m
+[31m-```bash[m
+[31m-# Live Logs[m
+[31m-tail -f /var/www/aeralogin+implement/aeralogin/logs/aera.log[m
+[31m-[m
+[31m-# Telegram Gate Logs filtern[m
+[31m-grep "TELEGRAM_GATE" /var/www/aeralogin+implement/aeralogin/logs/aera.log[m
+[31m-```[m
+[31m-[m
+[31m-### Telegram Invites aus DB abrufen[m
+[31m-[m
+[31m-```bash[m
+[31m-cd /var/www/aeralogin+implement/aeralogin[m
+[31m-sqlite3 aera.db "SELECT * FROM telegram_invites ORDER BY invited_at DESC LIMIT 10;"[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🚀 Deployment Checklist[m
+[31m-[m
+[31m-- [x] Telegram Gruppe erstellt[m
+[31m-- [x] Invite Link generiert[m
+[31m-- [ ] `TELEGRAM_INVITE_LINK` in `.env` eingetragen[m
+[31m-- [ ] AEra Server neu gestartet[m
+[31m-- [ ] NFT-Check Endpoint getestet[m
+[31m-- [ ] Invite Endpoint getestet[m
+[31m-- [ ] Frontend UI getestet (mit & ohne NFT)[m
+[31m-- [ ] Logs überprüft[m
+[31m-- [ ] Telegram Gruppe auf "Private" gestellt[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🔗 API Endpoints[m
+[31m-[m
+[31m-| Endpoint | Method | Beschreibung |[m
+[31m-|----------|--------|--------------|[m
+[31m-| `/join-telegram` | GET | Frontend UI für Telegram Gate |[m
+[31m-| `/api/check-rft` | POST | Prüft NFT-Besitz |[m
+[31m-| `/api/telegram/invite` | POST | Gibt Invite Link zurück |[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🐛 Troubleshooting[m
+[31m-[m
+[31m-### Problem: "Telegram invite link not configured"[m
+[31m-[m
+[31m-**Lösung:**[m
+[31m-```bash[m
+[31m-nano /var/www/aeralogin+implement/aeralogin/.env[m
+[31m-# Setze TELEGRAM_INVITE_LINK=https://t.me/+XXXXXXXXXX[m
+[31m-# Server neu starten[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-### Problem: NFT-Check schlägt fehl[m
+[31m-[m
+[31m-**Prüfen:**[m
+[31m-1. Blockchain Service läuft: `curl http://localhost:8840/api/health`[m
+[31m-2. Contract Address korrekt: `IDENTITY_NFT_ADDRESS` in `.env`[m
+[31m-3. User hat wirklich NFT: Basescan überprüfen[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-### Problem: Frontend zeigt "Access Denied" obwohl NFT vorhanden[m
+[31m-[m
+[31m-**Debug:**[m
+[31m-```bash[m
+[31m-# Logs prüfen[m
+[31m-grep "TELEGRAM_GATE" logs/aera.log[m
+[31m-[m
+[31m-# Manueller API Test[m
+[31m-curl -X POST http://localhost:8840/api/check-rft \[m
+[31m-  -H "Content-Type: application/json" \[m
+[31m-  -d '{"address":"0xYOUR_ADDRESS"}'[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 📝 Integration mit Landing Page[m
+[31m-[m
+[31m-Optional: Link zum Telegram Gate auf Landing Page hinzufügen:[m
+[31m-[m
+[31m-```html[m
+[31m-<!-- In landing.html, z.B. im Footer -->[m
+[31m-<a href="/join-telegram" class="telegram-cta">[m
+[31m-  🔐 Join Private Telegram[m
+[31m-</a>[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🎉 Fertig![m
+[31m-[m
+[31m-Das Telegram-Gate ist jetzt einsatzbereit:[m
+[31m-[m
+[31m-✅ NFT-basierter Zugang  [m
+[31m-✅ Bot-freie Community  [m
+[31m-✅ Proof-of-Human verifiziert  [m
+[31m-✅ Saubere Systemtrennung  [m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-**Dokumentation erstellt:** 2025-12-06  [m
+[31m-**System:** AEra LogIn + Telegram Gate  [m
+[31m-**Version:** 1.0[m
+[1mdiff --git a/TELEGRAM_GATE_PERSONAL_LINK.md b/TELEGRAM_GATE_PERSONAL_LINK.md[m
+[1mdeleted file mode 100644[m
+[1mindex 47789de..0000000[m
+[1m--- a/TELEGRAM_GATE_PERSONAL_LINK.md[m
+[1m+++ /dev/null[m
+[36m@@ -1,292 +0,0 @@[m
+[31m-# 🔐 Personal Telegram Gate Link - Feature Documentation[m
+[31m-[m
+[31m-## ✨ Feature Overview[m
+[31m-[m
+[31m-Jeder AEra User kann jetzt seinen **eigenen NFT-gated Telegram-Link** erstellen und teilen![m
+[31m-[m
+[31m-### 🎯 Use Cases:[m
+[31m-- **Influencer**: Teile deinen persönlichen Gate-Link mit deiner Community[m
+[31m-- **Content Creator**: Monetarisiere deine Telegram-Gruppe mit NFT-Zugang[m
+[31m-- **Owner Tracking**: Sehe wer über deinen Link beigetreten ist[m
+[31m-- **Statistics**: Dashboard zeigt Anzahl der Invites über deinen Link[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🔧 Implementation[m
+[31m-[m
+[31m-### 1. **Dashboard: Personal Link Generator**[m
+[31m-[m
+[31m-**Location**: `dashboard.html` (Zeile ~850)[m
+[31m-[m
+[31m-**Features**:[m
+[31m-- ✅ Generate Telegram Gate Link Button[m
+[31m-- ✅ Copy to Clipboard[m
+[31m-- ✅ Real-time Statistics (invite count)[m
+[31m-- ✅ Ähnlich wie Follower-Link Design[m
+[31m-[m
+[31m-**Code**:[m
+[31m-```html[m
+[31m-<h2>✈️ Your Telegram Gate Link</h2>[m
+[31m-<button onclick="generateGateLink()">[m
+[31m-    🔐 Generate Telegram Gate Link[m
+[31m-</button>[m
+[31m-<input id="generatedGateLink" readonly>[m
+[31m-<button onclick="copyGateLink()">Copy</button>[m
+[31m-<div id="gateStats">[m
+[31m-    <span id="gateInviteCount">0</span> users joined via your link[m
+[31m-</div>[m
+[31m-```[m
+[31m-[m
+[31m-**JavaScript**:[m
+[31m-```javascript[m
+[31m-async function generateGateLink() {[m
+[31m-    const owner = walletAddress;[m
+[31m-    const gateLink = `${window.location.origin}/join-telegram?owner=${owner}`;[m
+[31m-    [m
+[31m-    // Fetch Statistics[m
+[31m-    const statsResponse = await fetch(`/api/telegram-gate/stats/${owner}`);[m
+[31m-    const statsData = await statsResponse.json();[m
+[31m-    [m
+[31m-    if (statsData.success) {[m
+[31m-        document.getElementById('gateInviteCount').textContent = statsData.invite_count;[m
+[31m-    }[m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-### 2. **Backend: Gate Statistics API**[m
+[31m-[m
+[31m-**Endpoint**: `GET /api/telegram-gate/stats/{owner}`[m
+[31m-[m
+[31m-**Location**: `server.py` (Zeile ~935)[m
+[31m-[m
+[31m-**Response**:[m
+[31m-```json[m
+[31m-{[m
+[31m-    "success": true,[m
+[31m-    "owner": "0x...",[m
+[31m-    "invite_count": 5,[m
+[31m-    "recent_invites": [[m
+[31m-        {[m
+[31m-            "address": "0x123...",[m
+[31m-            "invited_at": "2025-12-06T15:30:00"[m
+[31m-        }[m
+[31m-    ][m
+[31m-}[m
+[31m-```[m
+[31m-[m
+[31m-**Database Query**:[m
+[31m-```sql[m
+[31m-SELECT COUNT(*) FROM telegram_invites [m
+[31m-WHERE owner_wallet = ?[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-### 3. **Join-Telegram: Owner Tracking**[m
+[31m-[m
+[31m-**Location**: `join-telegram.html` (Zeile ~475)[m
+[31m-[m
+[31m-**Flow**:[m
+[31m-1. User öffnet: `https://aeralogin.com/join-telegram?owner=0xABC...`[m
+[31m-2. JavaScript extrahiert `owner` Parameter aus URL[m
+[31m-3. Bei Invite-Request wird `owner_wallet` mitgeschickt[m
+[31m-4. Backend speichert in `telegram_invites` Tabelle[m
+[31m-[m
+[31m-**Code**:[m
+[31m-```javascript[m
+[31m-// Extract owner from URL[m
+[31m-function getOwnerFromURL() {[m
+[31m-    const urlParams = new URLSearchParams(window.location.search);[m
+[31m-    const owner = urlParams.get('owner');[m
+[31m-    if (owner && owner.startsWith('0x') && owner.length === 42) {[m
+[31m-        ownerWallet = owner.toLowerCase();[m
+[31m-    }[m
+[31m-}[m
+[31m-[m
+[31m-// Send to Backend[m
+[31m-await fetch('/api/telegram/invite', {[m
+[31m-    method: 'POST',[m
+[31m-    body: JSON.stringify({[m
+[31m-        address: userAddress,[m
+[31m-        owner_wallet: ownerWallet  // ← NEW![m
+[31m-    })[m
+[31m-});[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-### 4. **Database Schema**[m
+[31m-[m
+[31m-**Table**: `telegram_invites`[m
+[31m-[m
+[31m-```sql[m
+[31m-CREATE TABLE telegram_invites ([m
+[31m-    id INTEGER PRIMARY KEY AUTOINCREMENT,[m
+[31m-    address TEXT UNIQUE,           -- User der beigetreten ist[m
+[31m-    invited_at TEXT,               -- Zeitstempel[m
+[31m-    granted BOOLEAN DEFAULT 1,     -- Access granted[m
+[31m-    owner_wallet TEXT              -- ← NEW: Wer hat den Link geteilt[m
+[31m-);[m
+[31m-```[m
+[31m-[m
+[31m-**Migration** (bereits ausgeführt):[m
+[31m-```sql[m
+[31m-ALTER TABLE telegram_invites ADD COLUMN owner_wallet TEXT;[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 📊 Statistics Dashboard[m
+[31m-[m
+[31m-### Owner Stats:[m
+[31m-- **Total Invites**: Anzahl Users die über deinen Link beigetreten sind[m
+[31m-- **Recent Activity**: Liste der letzten 10 Invites[m
+[31m-- **Zeitstempel**: Wann jeder User beigetreten ist[m
+[31m-[m
+[31m-### Example Dashboard View:[m
+[31m-```[m
+[31m-┌─────────────────────────────────────────────┐[m
+[31m-│  ✈️ Your Telegram Gate Link                │[m
+[31m-├─────────────────────────────────────────────┤[m
+[31m-│  🔐 Generate Telegram Gate Link [Button]   │[m
+[31m-│                                             │[m
+[31m-│  Link: http://72.60.38.143:8841/           │[m
+[31m-│        join-telegram?owner=0x984eDa...     │[m
+[31m-│                           [Copy Button]     │[m
+[31m-│                                             │[m
+[31m-│  Gate Statistics:                           │[m
+[31m-│  • 5 users joined via your link            │[m
+[31m-│  • Recent: 0x123..., 0x456..., 0x789...    │[m
+[31m-└─────────────────────────────────────────────┘[m
+[31m-```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🧪 Testing[m
+[31m-[m
+[31m-### Test Flow:[m
+[31m-[m
+[31m-1. **Generate Personal Link**:[m
+[31m-   ```[m
+[31m-   http://72.60.38.143:8841/dashboard[m
+[31m-   → Login with MetaMask[m
+[31m-   → Scroll to "Your Telegram Gate Link"[m
+[31m-   → Click "Generate Telegram Gate Link"[m
+[31m-   → Copy Link[m
+[31m-   ```[m
+[31m-[m
+[31m-2. **Share Link** (z.B. über Twitter/Discord):[m
+[31m-   ```[m
+[31m-   http://72.60.38.143:8841/join-telegram?owner=0x984eDaCf233b37FC2E63aBC7168bDE8652f55C65[m
+[31m-   ```[m
+[31m-[m
+[31m-3. **New User Flow**:[m
+[31m-   ```[m
+[31m-   User öffnet deinen Link[m
+[31m-   → Connect Wallet[m
+[31m-   → NFT Check (✅ wenn Identity NFT vorhanden)[m
+[31m-   → Join Telegram Button[m
+[31m-   → Redirect zu Telegram Gruppe[m
+[31m-   → Backend speichert: address + owner_wallet in DB[m
+[31m-   ```[m
+[31m-[m
+[31m-4. **Check Statistics**:[m
+[31m-   ```[m
+[31m-   Zurück zum Dashboard[m
+[31m-   → Click "Generate Telegram Gate Link" erneut[m
+[31m-   → Statistik zeigt: "1 user joined via your link"[m
+[31m-   ```[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🔒 Security Features[m
+[31m-[m
+[31m-✅ **Owner Validation**: Owner-Wallet muss valide Ethereum-Adresse sein (0x... + 42 chars)[m
+[31m-✅ **NFT Verification**: Nur User mit Identity NFT bekommen Zugang[m
+[31m-✅ **Database Tracking**: Jeder Invite wird mit owner_wallet geloggt[m
+[31m-✅ **No Self-Invites**: System verhindert dass Owner sich selbst einlädt[m
+[31m-✅ **Unique Addresses**: Jede Adresse kann nur 1x beitreten (UNIQUE constraint)[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## 🚀 Production Deployment[m
+[31m-[m
+[31m-### Checklist:[m
+[31m-- [x] Database Schema aktualisiert (`owner_wallet` Spalte)[m
+[31m-- [x] Backend Endpoints implementiert (`/api/telegram-gate/stats/{owner}`)[m
+[31m-- [x] Frontend Dashboard erweitert (Gate Link Generator)[m
+[31m-- [x] join-telegram.html erweitert (Owner Tracking)[m
+[31m-- [x] Test-Server läuft (Port 8841)[m
+[31m-- [ ] Production Deployment (/var/www/aeralogin)[m
+[31m-[m
+[31m-### Deployment Ste
