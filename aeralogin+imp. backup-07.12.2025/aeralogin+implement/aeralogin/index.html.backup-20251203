@@ -1,0 +1,832 @@
+<!--
+VEra-Resonance — Decentralized Proof-of-Human System
+© 2025 Karlheinz Beismann — VEra-Resonance Project
+Licensed under the Apache License, Version 2.0
+Platform: {{ platform_name }}
+-->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VEra-Resonance — {{ platform_name }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: {{ platform_gradient }};
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        /* Platform Badge */
+        .platform-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: {{ platform_color }};
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo { 
+            font-size: 48px; 
+            margin-bottom: 10px; 
+        }
+        .title { 
+            font-size: 24px; 
+            font-weight: bold; 
+            background: {{ platform_gradient }};
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px; 
+        }
+        .tagline { 
+            font-size: 12px; 
+            color: #999; 
+        }
+        .button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            background: {{ platform_gradient }};
+            color: white;
+        }
+        .button:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 20px {{ platform_color }}66;
+        }
+        .button:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .status {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+            font-size: 14px;
+        }
+        .status.show { display: block; }
+        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .info-box {
+            background: {{ platform_color }}11;
+            border-left: 4px solid {{ platform_color }};
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            display: none;
+        }
+        .details.show { display: block; }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: #666; font-weight: 600; }
+        .detail-value { color: #333; text-align: right; flex: 1; margin-left: 10px; word-break: break-all; }
+        .score-badge {
+            background: {{ platform_gradient }};
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            color: #999;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+        .debug-info {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            color: #666;
+            font-family: monospace;
+            margin-top: 16px;
+            max-height: 150px;
+            overflow-y: auto;
+            display: none;
+        }
+        .debug-info.show { display: block; }
+        
+        /* Return button for platform-specific styling */
+        .return-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: {{ platform_color }}22;
+            color: {{ platform_color }};
+            border: 1px solid {{ platform_color }};
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .return-button:hover {
+            background: {{ platform_color }};
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Platform Badge (nur wenn nicht "direct") -->
+    {% if platform_source != "direct" %}
+    <div class="platform-badge">
+        {{ platform_emoji }} {{ platform_badge }}
+    </div>
+    {% endif %}
+    
+    <div class="container">
+        <div class="header">
+            <div class="logo">{{ platform_emoji }}</div>
+            <div class="title">AEra Login</div>
+            <div class="tagline">Proof of Human via Resonance</div>
+        </div>
+        
+        <div class="info-box">
+            💡 Verbinde deine Wallet – ohne KYC, ohne Klardaten, ohne Datenverlust
+        </div>
+        
+        <div id="status" class="status"></div>
+        
+        <!-- Name Input Field -->
+        <div id="nameInputSection" style="display: none; margin-bottom: 16px;">
+            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #333;">👤 Dein Name (optional):</label>
+            <input type="text" id="nameInput" placeholder="z.B. Max Mustermann" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit;">
+        </div>
+        
+        <div id="desktopView">
+            <button id="connectBtn" class="button">🔗 Wallet Verbinden</button>
+            <button id="verifyBtn" class="button" style="display: none;">✓ Verifizieren</button>
+            <button id="confirmFollowBtn" class="button" style="display: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" disabled>📋 Follow Anfrage bestätigen</button>
+            <button id="disconnectBtn" class="button" style="display: none; background: #999;">✕ Trennen</button>
+        </div>
+        
+        <div id="details" class="details">
+            <div class="detail-row">
+                <span class="detail-label">Status:</span>
+                <span class="detail-value" id="statusValue">—</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Wallet:</span>
+                <span class="detail-value" id="addressValue">—</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Score:</span>
+                <span class="detail-value" id="scoreValue">—</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Logins:</span>
+                <span class="detail-value" id="loginCountValue">—</span>
+            </div>
+        </div>
+        
+        <!-- Return to platform button (nur für bekannte Plattformen) -->
+        {% if platform_source == "twitter" %}
+        <div style="text-align: center;">
+            <a href="https://twitter.com" class="return-button">
+                ← Zurück zu {{ platform_name }}
+            </a>
+        </div>
+        {% elif platform_source == "telegram" %}
+        <div style="text-align: center;">
+            <a href="https://t.me" class="return-button">
+                ← Zurück zu {{ platform_name }}
+            </a>
+        </div>
+        {% elif platform_source == "discord" %}
+        <div style="text-align: center;">
+            <a href="https://discord.com" class="return-button">
+                ← Zurück zu {{ platform_name }}
+            </a>
+        </div>
+        {% elif platform_source == "instagram" %}
+        <div style="text-align: center;">
+            <a href="https://instagram.com" class="return-button">
+                ← Zurück zu {{ platform_name }}
+            </a>
+        </div>
+        {% elif platform_source == "linkedin" %}
+        <div style="text-align: center;">
+            <a href="https://linkedin.com" class="return-button">
+                ← Zurück zu {{ platform_name }}
+            </a>
+        </div>
+        {% endif %}
+        
+        <div id="debugInfo" class="debug-info"></div>
+        
+        <div class="footer">
+            AEra Login © 2025 | Powered by {{ platform_name }}
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = window.location.origin;
+        const PLATFORM = "{{ platform_source }}";
+        const SESSION_TIMEOUT_MINUTES = 2;  // 2 Minuten Session-Timeout
+        const SESSION_TIMEOUT_MS = SESSION_TIMEOUT_MINUTES * 60 * 1000;  // In Millisekunden
+        
+        let connectBtn, verifyBtn, disconnectBtn, statusDiv, detailsDiv, debugInfo;
+        let currentAddress = null;
+        let currentToken = null;
+        let sessionTimeoutId = null;
+        
+        /**
+         * Startet den Session-Timeout-Timer neu
+         * Nach 2 Minuten wird die Session automatisch beendet
+         */
+        function resetSessionTimeout() {
+            if (sessionTimeoutId) {
+                clearTimeout(sessionTimeoutId);
+            }
+            
+            sessionTimeoutId = setTimeout(() => {
+                log('⏰ SESSION TIMEOUT: 2 Minuten inaktiv');
+                showStatus('⏰ Session abgelaufen - Automatisches Logout', 'info');
+                disconnectWallet();
+            }, SESSION_TIMEOUT_MS);
+            
+            log(`🕐 Session-Timeout aktualisiert (${SESSION_TIMEOUT_MINUTES} min)`);
+        }
+        
+        function log(msg) {
+            console.log('[AEra]', msg);
+            if (debugInfo) {
+                debugInfo.classList.add('show');
+                debugInfo.innerHTML = msg + '<br>' + debugInfo.innerHTML;
+                if (debugInfo.children.length > 50) {
+                    debugInfo.innerHTML = debugInfo.innerHTML.substring(0, debugInfo.innerHTML.lastIndexOf('<br>', debugInfo.innerHTML.length - 100));
+                }
+            }
+        }
+        
+        function showStatus(message, type = 'info') {
+            if (statusDiv) {
+                statusDiv.textContent = message;
+                statusDiv.className = `status ${type} show`;
+            }
+            log(`[${type}] ${message}`);
+        }
+        
+        async function autoLoginWithToken() {
+            const savedToken = localStorage.getItem('aera_token');
+            const savedAddress = localStorage.getItem('aera_address');
+            if (!savedToken || !savedAddress) {
+                log('ℹ️ Kein gespeichertes Token gefunden');
+                return false;
+            }
+            
+            try {
+                log('🔐 Versuche Auto-Login mit echtem MetaMask-Check...');
+                
+                if (typeof window.ethereum === 'undefined') {
+                    log('❌ MetaMask nicht installiert - Auto-Login blockiert');
+                    localStorage.removeItem('aera_token');
+                    localStorage.removeItem('aera_address');
+                    return false;
+                }
+                
+                let accounts = [];
+                try {
+                    // WICHTIG: eth_accounts LIEST nur die Accounts, öffnet KEIN Popup!
+                    accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                } catch (e) {
+                    log('❌ MetaMask nicht aktiv: ' + e.message);
+                    localStorage.removeItem('aera_token');
+                    localStorage.removeItem('aera_address');
+                    return false;
+                }
+                
+                if (!accounts || accounts.length === 0) {
+                    log('ℹ️ Keine Wallet-Konten verfügbar - User muss manuell verbinden');
+                    return false;
+                }
+                
+                const currentWallet = accounts[0].toLowerCase();
+                const savedWallet = savedAddress.toLowerCase();
+                
+                if (currentWallet !== savedWallet) {
+                    log('❌ WALLET MISMATCH - Auto-Login blockiert');
+                    localStorage.removeItem('aera_token');
+                    localStorage.removeItem('aera_address');
+                    return false;
+                }
+                
+                log('✓ MetaMask-Sicherheitsprüfung bestanden');
+                
+                // Nonce anfordern
+                const nonceResponse = await fetch(`${API_BASE}/api/nonce`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: currentWallet }),
+                    signal: AbortSignal.timeout(5000)
+                });
+                
+                if (!nonceResponse.ok) throw new Error(`Nonce Request HTTP ${nonceResponse.status}`);
+                
+                const nonceData = await nonceResponse.json();
+                if (!nonceData.success) throw new Error('Nonce generation failed');
+                
+                const messageToSign = nonceData.message;
+                log('✓ Nonce empfangen');
+                
+                // MetaMask Signatur
+                let signature;
+                try {
+                    signature = await window.ethereum.request({
+                        method: 'personal_sign',
+                        params: [messageToSign, currentWallet]
+                    });
+                } catch (signError) {
+                    log('❌ Signierung abgelehnt: ' + signError.message);
+                    localStorage.removeItem('aera_token');
+                    localStorage.removeItem('aera_address');
+                    return false;
+                }
+                
+                if (!signature) {
+                    log('❌ Keine Signatur erhalten');
+                    localStorage.removeItem('aera_token');
+                    localStorage.removeItem('aera_address');
+                    return false;
+                }
+                
+                log('✓ Signatur erhalten');
+                
+                // Token verifizieren
+                const response = await fetch(`${API_BASE}/api/verify-token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: savedToken,
+                        address: currentWallet,
+                        nonce: nonceData.nonce,
+                        message: messageToSign,
+                        signature: signature
+                    }),
+                    signal: AbortSignal.timeout(5000)
+                });
+                
+                const data = await response.json();
+                
+                if (!data.valid) {
+                    log('⚠️ Token ungültig oder abgelaufen');
+                    localStorage.removeItem('aera_token');
+                    localStorage.removeItem('aera_address');
+                    return false;
+                }
+                
+                currentAddress = data.address;
+                currentToken = savedToken;
+                
+                log('✅ Auto-Login erfolgreich!');
+                showStatus(`✓ Auto-Login erfolgreich - Session: ${SESSION_TIMEOUT_MINUTES} min`, 'success');
+                
+                document.getElementById('addressValue').textContent = currentAddress;
+                document.getElementById('statusValue').textContent = '✅ Auto-Login';
+                document.getElementById('scoreValue').innerHTML = 
+                    `<span class="score-badge">${data.resonance_score}/100</span>`;
+                document.getElementById('loginCountValue').textContent = data.login_count;
+                
+                connectBtn.style.display = 'none';
+                verifyBtn.style.display = 'none';
+                disconnectBtn.style.display = 'block';
+                detailsDiv.classList.add('show');
+                
+                // 🔐 WICHTIG: Starte Session-Timeout (2 Minuten)
+                resetSessionTimeout();
+                
+                return true;
+                
+            } catch (error) {
+                log('❌ Auto-Login: ' + error.message);
+                localStorage.removeItem('aera_token');
+                localStorage.removeItem('aera_address');
+                return false;
+            }
+        }
+        
+        async function connectWallet() {
+            try {
+                log('⏳ Wallet-Verbindung startet...');
+                
+                if (typeof window.ethereum === 'undefined') {
+                    log('❌ MetaMask nicht installiert');
+                    showStatus('❌ MetaMask nicht installiert!', 'error');
+                    return;
+                }
+                
+                connectBtn.disabled = true;
+                
+                log('🔍 MetaMask-Verbindung wird aufgebaut...');
+                showStatus('⏳ Warte auf MetaMask...', 'info');
+                
+                let accounts = [];
+                try {
+                    accounts = await window.ethereum.request({ 
+                        method: 'eth_requestAccounts'
+                    });
+                } catch (popupError) {
+                    log('❌ MetaMask Popup abgelehnt: ' + popupError.message);
+                    showStatus('❌ MetaMask nicht verfügbar!', 'error');
+                    connectBtn.disabled = false;
+                    return;
+                }
+                
+                if (!accounts || accounts.length === 0) {
+                    log('❌ Keine Wallet in MetaMask');
+                    showStatus('❌ Keine Wallet gefunden!', 'error');
+                    connectBtn.disabled = false;
+                    return;
+                }
+                
+                currentAddress = accounts[0];
+                log('✅ MetaMask verbunden: ' + currentAddress);
+                
+                showStatus(`✓ Wallet verbunden. Jetzt "Verifizieren" klicken!`, 'success');
+                
+                document.getElementById('addressValue').textContent = currentAddress;
+                document.getElementById('statusValue').textContent = '🔗 Verbunden';
+                
+                // Show name input field
+                document.getElementById('nameInputSection').style.display = 'block';
+                
+                connectBtn.style.display = 'none';
+                verifyBtn.style.display = 'block';
+                verifyBtn.disabled = false;
+                disconnectBtn.style.display = 'block';
+                detailsDiv.classList.add('show');
+                
+            } catch (error) {
+                log('❌ connectWallet: ' + error.message);
+                showStatus('❌ Fehler: ' + error.message, 'error');
+                connectBtn.disabled = false;
+            }
+        }
+        
+        async function verifyWallet() {
+            if (!currentAddress) {
+                log('❌ Keine Wallet verbunden');
+                return;
+            }
+            
+            // Check if name is provided
+            const nameInput = document.getElementById('nameInput').value.trim();
+            if (!nameInput) {
+                log('❌ Bitte gib deinen Namen ein!');
+                showStatus('❌ Bitte gib deinen Namen ein!', 'error');
+                document.getElementById('nameInput').focus();
+                document.getElementById('nameInput').style.borderColor = '#ff6b6b';
+                return;
+            }
+            
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    log('❌ MetaMask nicht verfügbar');
+                    showStatus('❌ MetaMask nicht verfügbar!', 'error');
+                    return;
+                }
+                
+                log('🔐 Sicherheitsprüfung...');
+                
+                let accounts = [];
+                try {
+                    accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                } catch (e) {
+                    log('❌ MetaMask nicht aktiv: ' + e.message);
+                    showStatus('❌ MetaMask nicht aktiv!', 'error');
+                    return;
+                }
+                
+                if (!accounts || accounts.length === 0) {
+                    log('❌ Keine Wallet verfügbar');
+                    showStatus('❌ MetaMask nicht aktiv!', 'error');
+                    return;
+                }
+                
+                if (accounts[0].toLowerCase() !== currentAddress.toLowerCase()) {
+                    log('❌ Wallet gewechselt');
+                    showStatus('❌ Wallet wurde gewechselt!', 'error');
+                    return;
+                }
+                
+                log('✓ Sicherheitsprüfung bestanden');
+                verifyBtn.disabled = true;
+                showStatus('⏳ Verifizierung läuft...', 'info');
+                
+                // Nonce anfordern
+                const nonceResponse = await fetch(`${API_BASE}/api/nonce`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: currentAddress }),
+                    signal: AbortSignal.timeout(5000)
+                });
+                
+                if (!nonceResponse.ok) throw new Error(`Nonce Request HTTP ${nonceResponse.status}`);
+                
+                const nonceData = await nonceResponse.json();
+                if (!nonceData.success) throw new Error('Nonce generation failed');
+                
+                const messageToSign = nonceData.message;
+                log('✓ Nonce empfangen');
+                
+                // MetaMask Signatur
+                let signature;
+                try {
+                    signature = await window.ethereum.request({
+                        method: 'personal_sign',
+                        params: [messageToSign, currentAddress]
+                    });
+                } catch (signError) {
+                    log('❌ Signierung abgelehnt: ' + signError.message);
+                    showStatus('❌ Signierung abgelehnt!', 'error');
+                    verifyBtn.disabled = false;
+                    return;
+                }
+                
+                if (!signature) {
+                    log('❌ Keine Signatur erhalten');
+                    showStatus('❌ Keine Signatur!', 'error');
+                    verifyBtn.disabled = false;
+                    return;
+                }
+                
+                log('✓ Signatur erhalten');
+                
+                // Get owner parameter from URL if present
+                const urlParams = new URLSearchParams(window.location.search);
+                const ownerParam = urlParams.get('owner');
+                
+                // Verifizieren
+                const verifyPayload = {
+                    address: currentAddress,
+                    nonce: nonceData.nonce,
+                    message: messageToSign,
+                    signature: signature,
+                    display_name: nameInput  // NEW: Include user-provided name
+                };
+                
+                // Add owner if provided (for follower tracking)
+                if (ownerParam) {
+                    verifyPayload.owner = ownerParam;
+                    log(`👥 Owner Account: ${ownerParam.substring(0, 10)}...`);
+                }
+                
+                // Add source platform from URL or use PLATFORM constant
+                const sourceParam = new URLSearchParams(window.location.search).get('source');
+                if (sourceParam) {
+                    verifyPayload.source = sourceParam;
+                    log(`📱 Platform Source: ${sourceParam}`);
+                }
+                
+                const response = await fetch(`${API_BASE}/api/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(verifyPayload),
+                    signal: AbortSignal.timeout(5000)
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                
+                if (data.error) throw new Error(data.error);
+                if (!data.is_human) throw new Error('Signaturverifikation fehlgeschlagen');
+                
+                log('✅ Verifizierung erfolgreich!');
+                
+                document.getElementById('scoreValue').innerHTML = 
+                    `<span class="score-badge">${data.resonance_score}/100</span>`;
+                document.getElementById('statusValue').textContent = '✅ Verifiziert';
+                document.getElementById('loginCountValue').textContent = data.login_count;
+                
+                showStatus(`✓ Score: ${data.resonance_score}/100 - Session: ${SESSION_TIMEOUT_MINUTES} min`, 'success');
+                verifyBtn.textContent = '✓ Verifiziert';
+                verifyBtn.disabled = true;
+                
+                // 🔐 WICHTIG: Starte Session-Timeout (2 Minuten)
+                resetSessionTimeout();
+                
+                // Enable follow confirmation button if owner is present
+                if (ownerParam) {
+                    const confirmBtn = document.getElementById('confirmFollowBtn');
+                    confirmBtn.style.display = 'block';
+                    confirmBtn.disabled = false;
+                    log('✓ Follow-Bestätigung verfügbar');
+                }
+                
+                if (data.token) {
+                    currentToken = data.token;
+                    localStorage.setItem('aera_token', data.token);
+                    localStorage.setItem('aera_address', currentAddress);
+                    log('💾 Token gespeichert');
+                }
+                
+            } catch (error) {
+                log('❌ Fehler: ' + error.message);
+                showStatus('Fehler: ' + error.message, 'error');
+                verifyBtn.textContent = '✓ Verifizieren';
+            } finally {
+                verifyBtn.disabled = false;
+            }
+        }
+        
+        function disconnectWallet() {
+            // 🔐 Stoppe Session-Timeout
+            if (sessionTimeoutId) {
+                clearTimeout(sessionTimeoutId);
+                sessionTimeoutId = null;
+            }
+            
+            currentAddress = null;
+            currentToken = null;
+            
+            localStorage.removeItem('aera_token');
+            localStorage.removeItem('aera_address');
+            
+            document.getElementById('addressValue').textContent = '—';
+            document.getElementById('statusValue').textContent = '—';
+            document.getElementById('scoreValue').textContent = '—';
+            document.getElementById('loginCountValue').textContent = '—';
+            
+            // Hide name input
+            document.getElementById('nameInputSection').style.display = 'none';
+            document.getElementById('nameInput').value = '';
+            document.getElementById('nameInput').style.borderColor = '#e0e0e0';
+            
+            connectBtn.style.display = 'block';
+            verifyBtn.style.display = 'none';
+            disconnectBtn.style.display = 'none';
+            verifyBtn.textContent = '✓ Verifizieren';
+            verifyBtn.disabled = false;
+            detailsDiv.classList.remove('show');
+            
+            showStatus('✓ Wallet getrennt', 'info');
+            log('🗑️ Session gelöscht');
+        }
+        
+        async function confirmFollow() {
+            if (!currentAddress) {
+                log('❌ Keine Wallet verbunden');
+                return;
+            }
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const ownerParam = urlParams.get('owner');
+            
+            if (!ownerParam) {
+                log('❌ Kein Owner in URL');
+                return;
+            }
+            
+            const confirmBtn = document.getElementById('confirmFollowBtn');
+            confirmBtn.disabled = true;
+            showStatus('⏳ Follow-Anfrage wird bestätigt...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/confirm-follower`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        owner: ownerParam,
+                        follower: currentAddress
+                    }),
+                    signal: AbortSignal.timeout(5000)
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                
+                if (!data.success) throw new Error(data.error || 'Follow confirmation failed');
+                
+                log('✅ Follow-Anfrage bestätigt!');
+                showStatus('✅ Follow-Anfrage bestätigt! 🎉', 'success');
+                confirmBtn.textContent = '✓ Bestätigt';
+                confirmBtn.disabled = true;
+                
+            } catch (error) {
+                log('❌ Fehler: ' + error.message);
+                showStatus('❌ Fehler: ' + error.message, 'error');
+                confirmBtn.disabled = false;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                connectBtn = document.getElementById('connectBtn');
+                verifyBtn = document.getElementById('verifyBtn');
+                disconnectBtn = document.getElementById('disconnectBtn');
+                statusDiv = document.getElementById('status');
+                detailsDiv = document.getElementById('details');
+                debugInfo = document.getElementById('debugInfo');
+                
+                log(`=== AEra Login (${PLATFORM}) ===`);
+                log('API: ' + API_BASE);
+                log('Platform: {{ platform_name }}');
+                
+                connectBtn.addEventListener('click', connectWallet);
+                verifyBtn.addEventListener('click', verifyWallet);
+                disconnectBtn.addEventListener('click', disconnectWallet);
+                
+                // Add event listener for confirm follow button
+                const confirmFollowBtn = document.getElementById('confirmFollowBtn');
+                if (confirmFollowBtn) {
+                    confirmFollowBtn.addEventListener('click', confirmFollow);
+                }
+                
+                // Auto-Login versuchen (ABER NICHT bei Follower-Links!)
+                (async () => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const ownerParam = urlParams.get('owner');
+                    
+                    // Bei Follower-Links: Kein Auto-Login, immer frischer Start
+                    if (ownerParam) {
+                        log('📋 Follower-Link erkannt - kein Auto-Login, frischer Start');
+                        // Clear any old tokens for clean experience
+                        localStorage.removeItem('aera_token');
+                        localStorage.removeItem('aera_address');
+                        return;
+                    }
+                    
+                    if (typeof window.ethereum !== 'undefined') {
+                        log('MetaMask installiert - versuche Auto-Login...');
+                        setTimeout(async () => {
+                            try {
+                                await autoLoginWithToken();
+                            } catch (error) {
+                                log('❌ Auto-Login: ' + error.message);
+                            }
+                        }, 300);
+                    } else {
+                        log('⚠️ MetaMask nicht installiert');
+                    }
+                })();
+            } catch (error) {
+                console.error('INIT ERROR:', error);
+                log('❌ INIT FEHLER: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

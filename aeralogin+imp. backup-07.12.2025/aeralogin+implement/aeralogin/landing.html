@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEraLogIn - Decentralized Social Identity on BASE</title>
+    <meta name="description" content="The first Web3 Social Identity System on BASE L2 with Resonance Scoring and Soul-Bound NFTs">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0052ff;
+            --secondary: #00d4ff;
+            --dark: #0a0e27;
+            --darker: #050814;
+            --light: #f0f4ff;
+            --accent: #6366f1;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: var(--light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .bg-animation canvas {
+            display: block;
+        }
+
+        /* Header */
+        header {
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 39, 0.8);
+            width: 100%;
+            margin: 0;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            font-size: 3rem;
+            background: none !important;
+            -webkit-background-clip: unset !important;
+            background-clip: unset !important;
+            -webkit-text-fill-color: currentColor !important;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            opacity: 0.8;
+            cursor: pointer;
+        }
+
+        nav a:hover {
+            color: var(--secondary);
+            opacity: 1;
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--light);
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            z-index: 1001;
+        }
+
+        .menu-toggle:hover {
+            color: var(--secondary);
+        }
+
+        /* Mobile Menu Overlay */
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-menu.mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 300px;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            backdrop-filter: blur(20px);
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 5rem 2rem 2rem;
+            gap: 1.5rem;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
+            border-left: 1px solid rgba(99, 102, 241, 0.3);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .nav-menu.mobile-menu.active {
+            right: 0;
+        }
+
+        .nav-menu.mobile-menu a {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .nav-menu.mobile-menu a:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        /* Menu Backdrop */
+        .menu-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-backdrop.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 82, 255, 0.4);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 4rem 5%;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff, var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .hero .subtitle {
+            font-size: 1.5rem;
+            color: rgba(240, 244, 255, 0.8);
+            margin-bottom: 3rem;
+            font-weight: 300;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            padding: 1.2rem 3rem;
+            font-size: 1.2rem;
+            border-radius: 12px;
+        }
+
+        .cta-secondary {
+            background: transparent;
+            border: 2px solid var(--secondary);
+            color: var(--secondary);
+            padding: 1.2rem 3rem;
+            font-size: 1.2rem;
+            border-radius: 12px;
+        }
+
+        .cta-secondary:hover {
+            background: var(--secondary);
+            color: var(--dark);
+        }
+
+        /* Stats Section */
+        .stats {
+            padding: 4rem 5%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--secondary);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: rgba(240, 244, 255, 0.7);
+            margin-top: 0.5rem;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: rgba(240, 244, 255, 0.7);
+            margin-bottom: 4rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2.5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--secondary);
+            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        .feature-card p {
+            color: rgba(240, 244, 255, 0.8);
+            line-height: 1.8;
+        }
+
+        /* Tech Stack Section */
+        .tech-stack {
+            padding: 6rem 5%;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tech-item {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .tech-item:hover {
+            transform: scale(1.05);
+            border-color: var(--accent);
+        }
+
+        .tech-logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .tech-name {
+            font-weight: 600;
+            color: var(--light);
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 6rem 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 3rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+        }
+
+        .timeline-item {
+            margin-bottom: 4rem;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -3.5rem;
+            top: 0;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background: var(--secondary);
+            border: 3px solid var(--dark);
+            box-shadow: 0 0 20px var(--secondary);
+        }
+
+        .timeline-item h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        .timeline-item p {
+            color: rgba(240, 244, 255, 0.8);
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 6rem 5%;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .cta-section p {
+            font-size: 1.3rem;
+            color: rgba(240, 244, 255, 0.8);
+            margin-bottom: 3rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 5%;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            color: rgba(240, 244, 255, 0.6);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: rgba(240, 244, 255, 0.6);
+            text-decoration: none;
+            transition: color 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .footer-links a:hover {
+            color: var(--secondary);
+        }
+
+        /* Wallet Link Hover */
+        .feature-card a:hover {
+            color: var(--primary) !important;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% { 
+                transform: scale(1.05);
+                opacity: 0.85;
+            }
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: block;
+            transform-origin: center center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                padding: 0.75rem 3%;
+            }
+
+            .logo {
+                font-size: 1.8rem;
+            }
+
+            .logo-icon {
+                font-size: 2rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .hero-cta {
+                flex-direction: column;
+            }
+
+            .cta-primary, .cta-secondary {
+                width: 100%;
+            }
+
+            /* Show mobile menu toggle */
+            .menu-toggle {
+                display: block;
+            }
+
+            /* Hide desktop nav, show mobile menu */
+            .nav-menu:not(.mobile-menu) {
+                display: none;
+            }
+        }
+
+        /* Desktop: Always show nav, hide mobile elements */
+        @media (min-width: 769px) {
+            .menu-toggle {
+                display: none !important;
+            }
+
+            .nav-menu.mobile-menu {
+                display: none !important;
+            }
+
+            .menu-backdrop {
+                display: none !important;
+            }
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid var(--success);
+            margin-bottom: 2rem;
+        }
+
+        .beta-badge {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="bg-animation" id="bgCanvas"></div>
+
+    <!-- Menu Backdrop -->
+    <div class="menu-backdrop" id="menuBackdrop"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <span class="logo-icon" style="color: #3b82f6; animation: pulse 2s ease-in-out infinite;">🌀</span>
+            <span>AEraLogIn</span>
+        </div>
+        
+        <!-- Desktop Navigation -->
+        <nav class="nav-menu">
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How it Works</a>
+            <a href="#get-wallet">Get Wallet</a>
+            <a href="#tech">Technology</a>
+            <a href="/security-concept.html" target="_blank">Security</a>
+            <a href="https://github.com/VEra-Resonance/AEraLogin_Live" target="_blank">GitHub</a>
+            <a href="/join-telegram">Telegram</a>
+            <a href="/logo.html">Logo</a>
+            <a href="/dashboard.html">Dashboard</a>
+        </nav>
+
+        <!-- Mobile Menu Toggle -->
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+            ☰
+        </button>
+
+    </header>
+
+    <!-- Mobile Navigation (outside header for proper z-index stacking) -->
+    <nav class="nav-menu mobile-menu" id="mobileMenu">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it Works</a>
+        <a href="#get-wallet">Get Wallet</a>
+        <a href="#tech">Technology</a>
+        <a href="/security-concept.html" target="_blank">Security</a>
+        <a href="https://github.com/VEra-Resonance/AEraLogin_Live" target="_blank">GitHub</a>
+        <a href="/join-telegram">Telegram</a>
+        <a href="/logo.html">Logo</a>
+        <a href="/dashboard.html">Dashboard</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="status-badge beta-badge">🚀 Live on BASE Mainnet</div>
+            <h1>The Future of Social Identity on BASE</h1>
+            <p class="subtitle">
+                Decentralized authentication with Soul-Bound NFTs, 
+                dynamic Resonance Scoring, and blockchain-verified social reputation.
+            </p>
+            <div style="margin: 2rem auto; padding: 1rem; background: rgba(0, 212, 255, 0.1); border-radius: 12px; border: 1px solid var(--secondary); max-width: 700px;">
+                <p style="font-size: 1.1rem; font-weight: 600; color: var(--secondary); margin-bottom: 0.5rem;">
+                    🌍 Multi-Platform Ready
+                </p>
+                <p style="font-size: 0.95rem; color: rgba(240, 244, 255, 0.8);">
+                    Share your AEraLogIn link anywhere - X/Twitter, Telegram, Discord, Farcaster, WhatsApp, Instagram.
+                    Works in profiles, groups, channels, and DMs. One link, all platforms! 🔗
+                </p>
+            </div>
+            <div class="hero-cta">
+                <a href="#how-it-works" class="cta-button cta-primary">Learn More</a>
+                <a href="#tech" class="cta-button cta-secondary">Technology</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- NFT-Gated Community CTA Banner -->
+    <section style="padding: 3rem 5%;">
+        <div style="max-width: 700px; margin: 0 auto;">
+            <!-- Community Box -->
+            <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 2rem; text-align: center; backdrop-filter: blur(10px);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔐</div>
+                
+                <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--light);">
+                    Join Our Private Communities
+                </h3>
+                
+                <p style="font-size: 1rem; color: rgba(240, 244, 255, 0.8); margin-bottom: 1.5rem; line-height: 1.6;">
+                    🔐 <strong>NFT-Gated Access</strong> – Only Identity NFT holders can join!<br>
+                    Connect with verified humans and get exclusive updates.
+                </p>
+                
+                <!-- Two Buttons: Telegram & Discord -->
+                <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                    <a href="/join-telegram?source=telegram" class="cta-button cta-primary" style="font-size: 1.1rem; padding: 0.9rem 2rem; background: linear-gradient(135deg, #0088cc, #00aced); display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <span>✈️ Join Telegram</span>
+                        <span>→</span>
+                    </a>
+                    <a href="/join-telegram?source=discord" class="cta-button cta-primary" style="font-size: 1.1rem; padding: 0.9rem 2rem; background: linear-gradient(135deg, #5865F2, #7289da); display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <span>🎮 Join Discord</span>
+                        <span>→</span>
+                    </a>
+                </div>
+                
+                <p style="font-size: 0.875rem; color: rgba(240, 244, 255, 0.6); margin-top: 1rem;">
+                    Don't have an Identity NFT? <a href="/dashboard" style="color: var(--secondary); text-decoration: underline;">Mint yours here</a> (gasless & free!)
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stat-card">
+            <div class="stat-number">🎨</div>
+            <div class="stat-label">Soul-Bound NFTs</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" style="color: #3b82f6; animation: pulse 2s ease-in-out infinite;">🌀</div>
+            <div class="stat-label">Gasless Minting</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">⛓️</div>
+            <div class="stat-label">On-Chain Scoring</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">🔐</div>
+            <div class="stat-label">Web3 Auth</div>
+        </div>
+    </section>
+
+    <!-- Platform Support Section -->
+    <section style="padding: 4rem 5%;">
+        <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem; color: var(--light);">
+                🌍 Share Your Link Anywhere
+            </h2>
+            <p style="font-size: 1.1rem; color: rgba(240, 244, 255, 0.7); margin-bottom: 3rem; max-width: 700px; margin-left: auto; margin-right: auto;">
+                One custom link that works perfectly on every social media platform.<br>
+                Share in profiles, groups, channels, DMs, stories - anywhere you want!
+            </p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1.5rem; max-width: 1100px; margin: 0 auto;">
+                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">𝕏</div>
+                    <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">X / Twitter</div>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✈️</div>
+                    <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">Telegram</div>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💬</div>
+                    <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">Discord</div>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎭</div>
+                    <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">Farcaster</div>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💚</div>
+                    <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">WhatsApp</div>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📸</div>
+                    <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">Instagram</div>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎵</div>
+                    <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">TikTok</div>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💼</div>
+                    <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">LinkedIn</div>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📘</div>
+                    <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">Facebook</div>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔴</div>
+                    <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">YouTube</div>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💬</div>
+                    <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">Slack</div>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎮</div>
+                    <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">Twitch</div>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🐻</div>
+                    <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">VK</div>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💬</div>
+                    <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">WeChat</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 3rem; padding: 2rem; background: linear-gradient(135deg, rgba(0, 82, 255, 0.1), rgba(99, 102, 241, 0.1)); border-radius: 16px; border: 1px solid rgba(99, 102, 241, 0.3); max-width: 700px; margin-left: auto; margin-right: auto;">
+                <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--accent);">
+                    ✨ How It Works
+                </h3>
+                <p style="color: rgba(240, 244, 255, 0.8); line-height: 1.8;">
+                    Get your custom link like <code style="background: rgba(0, 0, 0, 0.3); padding: 0.2rem 0.5rem; border-radius: 4px; color: var(--secondary);">aeralogin.com/follow?ref=yourResonanceWallet</code>
+                    <br><br>
+                    Share it in your <strong>bio</strong>, <strong>pinned messages</strong>, <strong>group descriptions</strong>, <strong>channel info</strong>, or send directly in <strong>DMs</strong>.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <h2 class="section-title">🚀 Features</h2>
+        <p class="section-subtitle">
+            A complete Web3 Social Identity System with innovative blockchain features
+        </p>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🎨</span>
+                <h3>Soul-Bound Identity NFTs</h3>
+                <p>
+                    Non-transferable NFTs as digital identity. Every user automatically receives
+                    an Identity NFT on first login - completely free, gas costs covered by community donations! 💙
+                </p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📊</span>
+                <h3>Resonance Score System</h3>
+                <p>
+                    Hybrid scoring combines personal activity with follower reputation.
+                    Formula: Resonance = Own Score + Avg Follower Score. 
+                    Automatic blockchain sync every 2 points.
+                </p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon" style="color: #3b82f6; animation: pulse 2s ease-in-out infinite;">🌀</span>
+                <h3>Community-Funded Gasless Minting</h3>
+                <p>
+                    <strong>We are a community project!</strong> Users pay no gas fees for NFT minting.
+                    Gas costs are covered by community donations. 
+                    <br><br>
+                    🎁 <strong>Support us:</strong> <a href="https://basescan.org/address/0x27F8233Ae2FC3945064c0bad72267e68bC28AaAa" target="_blank" style="color: var(--secondary); text-decoration: underline;">Donation Wallet</a>
+                    <br>
+                    Every contribution helps onboard more users into Web3! 💙
+                </p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🔗</span>
+                <h3>On-Chain Registry</h3>
+                <p>
+                    All social interactions (Follow, Share, Engage) are stored in the 
+                    Resonance Registry Smart Contract and transparently verifiable.
+                </p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🔐</span>
+                <h3>Web3 Signature Auth</h3>
+                <p>
+                    Authentication via wallet signature (EIP-191). No password needed,
+                    full control over your identity through your private key.
+                </p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📱</span>
+                <h3>Multi-Platform Support</h3>
+                <p>
+                    Share your custom AEraLogIn link <strong>anywhere</strong>: X/Twitter, Telegram, 
+                    Discord, Farcaster, WhatsApp, Instagram, LinkedIn, TikTok.
+                    <br><br>
+                    Works in: <strong>Profiles</strong> • <strong>Groups</strong> • <strong>Channels</strong> • <strong>DMs</strong> • <strong>Stories</strong>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Get Wallet Section -->
+    <section class="features" id="get-wallet">
+        <h2 class="section-title">💼 Get Your Free Web3 Wallet in 2 Minutes</h2>
+        <p class="section-subtitle">
+            No costs, no fees - just download, create, and you're ready to go!<br>
+            Choose from the most trusted wallet providers in Web3
+        </p>
+        <div class="feature-grid">
+            <div class="feature-card" style="cursor: pointer;" onclick="window.open('https://metamask.io', '_blank')">
+                <span class="feature-icon">🦊</span>
+                <h3>MetaMask</h3>
+                <p>
+                    <strong>Most Popular</strong><br><br>
+                    Browser extension & mobile app. Works with all Web3 sites.
+                    Over 30 million users worldwide. Perfect for beginners.
+                </p>
+                <a href="https://metamask.io" target="_blank" style="color: var(--secondary); font-weight: 600; text-decoration: none;">
+                    Download MetaMask →
+                </a>
+            </div>
+            <div class="feature-card" style="cursor: pointer;" onclick="window.open('https://www.coinbase.com/wallet', '_blank')">
+                <span class="feature-icon">🔷</span>
+                <h3>Coinbase Wallet</h3>
+                <p>
+                    <strong>BASE Native</strong><br><br>
+                    Official Coinbase wallet with seamless BASE integration.
+                    Easy onramp from fiat to crypto. Best for BASE ecosystem.
+                </p>
+                <a href="https://www.coinbase.com/wallet" target="_blank" style="color: var(--secondary); font-weight: 600; text-decoration: none;">
+                    Download Coinbase Wallet →
+                </a>
+            </div>
+            <div class="feature-card" style="cursor: pointer;" onclick="window.open('https://rainbow.me', '_blank')">
+                <span class="feature-icon">🌈</span>
+                <h3>Rainbow</h3>
+                <p>
+                    <strong>Beautiful & Simple</strong><br><br>
+                    Mobile-first design with stunning UI. Perfect for NFT collectors.
+                    Easy to use, no compromises on security.
+                </p>
+                <a href="https://rainbow.me" target="_blank" style="color: var(--secondary); font-weight: 600; text-decoration: none;">
+                    Download Rainbow →
+                </a>
+            </div>
+        </div>
+        
+        <div style="max-width: 800px; margin: 4rem auto 0; padding: 2rem; background: rgba(99, 102, 241, 0.1); border-radius: 16px; border: 1px solid var(--accent);">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--accent);">
+                ✅ Quick Setup Guide (2 Minutes)
+            </h3>
+            <ol style="text-align: left; color: rgba(240, 244, 255, 0.8); line-height: 2; padding-left: 1.5rem;">
+                <li><strong>Download</strong> - Choose any wallet above and install the app or browser extension</li>
+                <li><strong>Create</strong> - Click "Create New Wallet" and set a password</li>
+                <li><strong>Backup</strong> - Write down your 12-word recovery phrase (NEVER share this!)</li>
+                <li><strong>Done!</strong> - You now have a Web3 wallet. Connect to AEraLogin and get your free NFT!</li>
+            </ol>
+            <p style="margin-top: 1.5rem; font-size: 0.9rem; color: rgba(240, 244, 255, 0.6);">
+                💡 <strong>Pro Tip:</strong> With AEraLogin's gasless minting, you don't need any crypto to get started!
+                Your wallet just needs to be connected - gas fees are covered by our community donations. 
+                Consider <a href="https://basescan.org/address/0x27F8233Ae2FC3945064c0bad72267e68bC28AaAa" target="_blank" style="color: var(--secondary); text-decoration: underline;">supporting us</a> to help onboard more users! 💙
+            </p>
+        </div>
+
+        <div style="max-width: 900px; margin: 3rem auto 0; text-align: center;">
+            <h3 style="font-size: 1.3rem; margin-bottom: 1.5rem; color: var(--light);">
+                More Wallet Options
+            </h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center;">
+                <a href="https://walletconnect.com" target="_blank" style="color: var(--secondary); text-decoration: none; font-weight: 500; padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    🔗 WalletConnect
+                </a>
+                <a href="https://phantom.app" target="_blank" style="color: var(--secondary); text-decoration: none; font-weight: 500; padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    👻 Phantom
+                </a>
+                <a href="https://trustwallet.com" target="_blank" style="color: var(--secondary); text-decoration: none; font-weight: 500; padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    🛡️ Trust Wallet
+                </a>
+                <a href="https://www.ledger.com" target="_blank" style="color: var(--secondary); text-decoration: none; font-weight: 500; padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                    🔐 Ledger (Hardware)
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works" id="how-it-works">
+        <h2 class="section-title">⚙️ How It Works</h2>
+        <p class="section-subtitle">
+            The complete user journey from signup to on-chain reputation
+        </p>
+        <div class="timeline">
+            <div class="timeline-item">
+                <h3>1. Wallet Connect & Signup</h3>
+                <p>
+                    Users connect their wallet (MetaMask, Coinbase Wallet, WalletConnect).
+                    The system generates a challenge message that the user signs.
+                    No passwords, no emails - your wallet is your identity.
+                </p>
+            </div>
+            <div class="timeline-item">
+                <h3>2. Identity NFT Minting (Gasless)</h3>
+                <p>
+                    On first login, users automatically receive a Soul-Bound Identity NFT.
+                    Minting is completely gasless - users pay nothing! Gas costs are covered by our community through donations.
+                    The NFT is non-transferable and serves as permanent on-chain identity.
+                    <br><br>
+                    💙 <strong>Support the community:</strong> Help us onboard more users by donating to our <a href="https://basescan.org/address/0x27F8233Ae2FC3945064c0bad72267e68bC28AaAa" target="_blank" style="color: var(--secondary); text-decoration: underline;">community wallet</a>
+                </p>
+            </div>
+            <div class="timeline-item">
+                <h3>3. Social Interactions & Scoring</h3>
+                <p>
+                    Users can follow others, share content, and engage.
+                    Each interaction increases the score in the database (instant) and is
+                    stored in the Registry Contract (on-chain verification).
+                </p>
+            </div>
+            <div class="timeline-item">
+                <h3>4. Resonance Calculation</h3>
+                <p>
+                    The Resonance Score combines Own Score with average Follower Scores.
+                    Creates a network effect: Creators with engaged followers have higher Resonance.
+                    Example: Own 54 + Avg Follower 66 = Total Resonance 120.
+                </p>
+            </div>
+            <div class="timeline-item">
+                <h3>5. Automatic Blockchain Sync</h3>
+                <p>
+                    A background process syncs scores to blockchain every 30 seconds.
+                    Milestone system: Sync occurs every 2 points (e.g. 50 → 52 → 54).
+                    Users see live status in dashboard: "✅ Synced" or "⏳ Pending (+X)".
+                </p>
+            </div>
+            <div class="timeline-item">
+                <h3>6. Dashboard & Analytics</h3>
+                <p>
+                    Users have access to a complete dashboard with:
+                    Follower list, NFT status, Blockchain Score comparison, Interaction history,
+                    and direct links to BaseScan for every transaction.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack Section -->
+    <section class="tech-stack" id="tech">
+        <h2 class="section-title">🛠️ Technology Stack</h2>
+        <p class="section-subtitle">
+            Built with cutting-edge Web3 technologies on Coinbase's BASE L2
+        </p>
+        <div class="tech-grid">
+            <div class="tech-item">
+                <div class="tech-logo">🔷</div>
+                <div class="tech-name">BASE Mainnet</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-logo">📜</div>
+                <div class="tech-name">Solidity 0.8.20</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-logo">🐍</div>
+                <div class="tech-name">Python 3.13</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-logo" style="color: #3b82f6; animation: pulse 2s ease-in-out infinite;">🌀</div>
+                <div class="tech-name">FastAPI</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-logo">🌐</div>
+                <div class="tech-name">Web3.py</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-logo">🔐</div>
+                <div class="tech-name">EIP-191 Auth</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-logo">🎨</div>
+                <div class="tech-name">ERC-721 NFTs</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-logo">�</div>
+                <div class="tech-name">Community Funded</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-logo">🔍</div>
+                <div class="tech-name">Blockscout API</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-logo">💾</div>
+                <div class="tech-name">SQLite</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-logo">🔄</div>
+                <div class="tech-name">AsyncIO</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-logo">📡</div>
+                <div class="tech-name">REST API</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Smart Contracts Info -->
+    <section class="features">
+        <h2 class="section-title">📜 Smart Contracts</h2>
+        <p class="section-subtitle">
+            Three specialized contracts on BASE Mainnet
+        </p>
+        <div class="feature-grid">
+            <a href="https://basescan.org/address/0xF9ff5DC523927B9632049bd19e17B610E9197d53" target="_blank" class="feature-card" style="text-decoration: none; color: inherit; cursor: pointer;">
+                <span class="feature-icon">🎨</span>
+                <h3>AEraIdentityNFT</h3>
+                <p>
+                    <strong>0xF9ff5D...d53</strong><br><br>
+                    ERC-721 Soul-Bound Token Contract. NFTs cannot be transferred.
+                    Only MINTER_ROLE can mint new NFTs. Each user receives exactly 1 NFT.
+                </p>
+            </a>
+            <a href="https://basescan.org/address/0x9A814DBF7E2352CE9eA6293b4b731B2a24800102" target="_blank" class="feature-card" style="text-decoration: none; color: inherit; cursor: pointer;">
+                <span class="feature-icon">📊</span>
+                <h3>AEraResonanceScore</h3>
+                <p>
+                    <strong>0x9A814D...102</strong><br><br>
+                    Stores and manages Resonance Scores on-chain. Only UPDATER_ROLE
+                    can update scores. Public read for maximum transparency.
+                </p>
+            </a>
+            <a href="https://basescan.org/address/0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF" target="_blank" class="feature-card" style="text-decoration: none; color: inherit; cursor: pointer;">
+                <span class="feature-icon">🔗</span>
+                <h3>AEraResonanceRegistry</h3>
+                <p>
+                    <strong>0xAAf30d...cdF</strong><br><br>
+                    Logs all social interactions (FOLLOW, SHARE, ENGAGE, etc.).
+                    Emitted events for complete traceability. SYSTEM_ROLE for backend.
+                </p>
+            </a>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div style="max-width: 800px; margin: 0 auto;">
+            <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 3rem 2rem; text-align: center; backdrop-filter: blur(10px); box-shadow: 0 20px 60px rgba(0, 212, 255, 0.15);">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🚀</div>
+                <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    Ready for the Web3 Social Revolution?
+                </h2>
+                <p style="font-size: 1.2rem; color: rgba(240, 244, 255, 0.8); margin-bottom: 2rem; line-height: 1.8;">
+                    AEraLogIn is now live on BASE Mainnet.<br>
+                    Join us as we redefine social identity!
+                </p>
+                <a href="/dashboard.html" class="cta-button cta-primary" style="font-size: 1.2rem; padding: 1rem 2.5rem;">
+                    Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-links">
+            <a href="https://github.com/VEra-Resonance/AEraLogin_Live" target="_blank">⭐ GitHub</a>
+            <a href="https://x.com/AEraResonant" target="_blank">𝕏 X/Twitter</a>
+            <a href="/privacy-policy" style="color: #10b981;">🔒 Privacy Policy</a>
+            <a href="https://basescan.org/address/0xF9ff5DC523927B9632049bd19e17B610E9197d53" target="_blank">Identity NFT Contract</a>
+            <a href="https://basescan.org/address/0x9A814DBF7E2352CE9eA6293b4b731B2a24800102" target="_blank">Score Contract</a>
+            <a href="https://basescan.org/address/0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF" target="_blank">Registry Contract</a>
+            <a href="https://base.org" target="_blank">BASE L2</a>
+        </div>
+        <p>
+            &copy; 2025 AEraLogIn. Built on Coinbase BASE L2.<br>
+            Community-funded project powered by Blockscout & Web3.py 💙
+        </p>
+        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.5;">
+            🚀 Live on BASE Mainnet - Production Ready
+        </p>
+    </footer>
+
+    <!-- Simple Canvas Animation -->
+    <script>
+        // Simple particle animation for background
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        document.getElementById('bgCanvas').appendChild(canvas);
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 50;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.fillStyle = 'rgba(0, 212, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            // Draw connections
+            particles.forEach((p1, i) => {
+                particles.slice(i + 1).forEach(p2 => {
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 150) {
+                        ctx.strokeStyle = `rgba(0, 212, 255, ${0.2 * (1 - distance / 150)})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                });
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href !== '#') {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                }
+            });
+        });
+
+        // Mobile Menu Toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const menuBackdrop = document.getElementById('menuBackdrop');
+
+        function toggleMenu() {
+            mobileMenu.classList.toggle('active');
+            menuBackdrop.classList.toggle('active');
+            
+            // Change icon
+            if (mobileMenu.classList.contains('active')) {
+                menuToggle.textContent = '✕';
+            } else {
+                menuToggle.textContent = '☰';
+            }
+        }
+
+        function closeMenu() {
+            mobileMenu.classList.remove('active');
+            menuBackdrop.classList.remove('active');
+            menuToggle.textContent = '☰';
+        }
+
+        // Toggle menu on button click
+        menuToggle.addEventListener('click', toggleMenu);
+
+        // Close menu on backdrop click
+        menuBackdrop.addEventListener('click', closeMenu);
+
+        // Close menu when clicking a link
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', closeMenu);
+        });
+
+        // Close menu on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mobileMenu.classList.contains('active')) {
+                closeMenu();
+            }
+        });
+    </script>
+
+    <!-- ===== AERA CHAT WIDGET ===== -->
+    <link rel="stylesheet" href="/aera-chat.css?v=20251209002">
+    <script src="/aera-chat.js?v=20251209001"></script>
+    <script>
+        // Initialize AEra Chat Widget immediately
+        if (typeof initAeraChat === 'function') {
+            initAeraChat();
+            console.log('🌀 AEra Chat Widget initialized on landing.html');
+        } else {
+            console.error('❌ initAeraChat not found');
+        }
+    </script>
+</body>
+</html>

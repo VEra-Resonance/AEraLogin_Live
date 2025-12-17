@@ -1,0 +1,1893 @@
+<!--
+VEra-Resonance — Admin Follower Dashboard
+© 2025 Karlheinz Beismann — VEra-Resonance Project
+Licensed under the Apache License, Version 2.0
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEraLogIn — Resonance Dashboard</title>
+    
+    <!-- NFT Minting is now handled by backend wallet (no paymaster needed) -->
+    
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        :root {
+            --primary: #0052ff;
+            --secondary: #00d4ff;
+            --dark: #0a0e27;
+            --darker: #050814;
+            --light: #f0f4ff;
+            --accent: #6366f1;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            min-height: 100vh;
+            padding: 0;
+            color: var(--light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .bg-animation canvas {
+            display: block;
+        }
+        
+        /* Animated Floating Particles */
+        .particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: rgba(0, 212, 255, 0.4);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            animation: float 20s infinite;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+        
+        .particle:nth-child(1) { left: 10%; animation-duration: 25s; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 30%; animation-duration: 30s; animation-delay: 5s; }
+        .particle:nth-child(3) { left: 50%; animation-duration: 20s; animation-delay: 2s; }
+        .particle:nth-child(4) { left: 70%; animation-duration: 28s; animation-delay: 8s; }
+        .particle:nth-child(5) { left: 85%; animation-duration: 22s; animation-delay: 3s; }
+        .particle:nth-child(6) { left: 15%; animation-duration: 26s; animation-delay: 6s; }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+                transform: translateY(90vh) scale(1);
+            }
+            90% {
+                opacity: 1;
+                transform: translateY(10vh) scale(1);
+            }
+            100% {
+                transform: translateY(0) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            padding: 0 20px 20px 20px;
+        }
+        
+        /* Header */
+        .header {
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 39, 0.8);
+            width: 100%;
+            margin: 0;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            font-size: 3rem;
+            background: none !important;
+            -webkit-background-clip: unset !important;
+            -webkit-text-fill-color: currentColor !important;
+            background-clip: unset !important;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            opacity: 0.8;
+            cursor: pointer;
+        }
+
+        nav a:hover {
+            color: var(--secondary);
+            opacity: 1;
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--light);
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            z-index: 1001;
+        }
+
+        .menu-toggle:hover {
+            color: var(--secondary);
+        }
+
+        /* Mobile Menu Overlay */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 300px;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 5rem 2rem 2rem;
+            gap: 1.5rem;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
+            border-left: 1px solid rgba(99, 102, 241, 0.3);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .mobile-menu a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .mobile-menu a:hover {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--secondary);
+        }
+
+        /* Menu Backdrop */
+        .menu-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-backdrop.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .nav-cta-button {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .nav-cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 82, 255, 0.4);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .owner-section {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 28px;
+            margin-top: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 0.6s ease-out;
+            animation-delay: 0.1s;
+            animation-fill-mode: both;
+        }
+        
+        .owner-section h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .input-group input {
+            flex: 1;
+            min-width: 250px;
+            padding: 14px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            font-size: 14px;
+            color: var(--light);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(0, 82, 255, 0.1);
+        }
+        
+        .input-group input::placeholder {
+            color: rgba(240, 244, 255, 0.4);
+        }
+        
+        .input-group button {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--primary), #6366f1);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0, 82, 255, 0.3);
+            letter-spacing: 0.3px;
+        }
+        
+        .input-group button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 82, 255, 0.4);
+        }
+        
+        .input-group button:active {
+            transform: translateY(-1px);
+        }
+        
+        .input-group button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 16px rgba(0, 82, 255, 0.3);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 18px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 10px 36px rgba(0, 212, 255, 0.2);
+        }
+        
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--light);
+        }
+        
+        /* Ensure emoji spans keep their inline colors */
+        .stat-card .value span[style*="color"] {
+            display: inline;
+        }
+        
+        .stat-card .label {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(240, 244, 255, 0.7);
+            letter-spacing: 0.3px;
+        }
+        
+        .link-section {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .link-section p {
+            font-size: 14px;
+            color: rgba(240, 244, 255, 0.7);
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+        
+        .link-display {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .link-display input {
+            flex: 1;
+            padding: 14px 18px;
+            background: rgba(0, 82, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 12px;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            color: var(--secondary);
+            transition: all 0.3s ease;
+        }
+        
+        .link-display input:focus {
+            outline: none;
+            background: rgba(0, 82, 255, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 82, 255, 0.1);
+        }
+        
+        .link-display button {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--primary), #6366f1);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0, 82, 255, 0.3);
+        }
+        
+        .link-display button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0, 82, 255, 0.4);
+        }
+        
+        .followers-table {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            margin-bottom: 24px;
+        }
+        
+        .table-header {
+            background: linear-gradient(135deg, rgba(0, 82, 255, 0.1), rgba(0, 212, 255, 0.05));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--light);
+        }
+        
+        .table-header p {
+            font-size: 14px;
+            color: rgba(240, 244, 255, 0.6);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 16px 24px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+        }
+        
+        th {
+            background: rgba(255, 255, 255, 0.02);
+            font-weight: 600;
+            color: var(--secondary);
+            letter-spacing: 0.3px;
+        }
+        
+        td {
+            color: rgba(240, 244, 255, 0.9);
+        }
+        
+        tr:hover {
+            background: rgba(0, 82, 255, 0.05);
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .score-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0, 82, 255, 0.2);
+        }
+        
+        .platform-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--light);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        
+        .address-short {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: var(--secondary);
+            font-weight: 500;
+        }
+        
+        .status {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            animation: slideDown 0.3s ease-out;
+            backdrop-filter: blur(10px);
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .status.success {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .status.error {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .status.info {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .status.loading {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            color: rgba(240, 244, 255, 0.5);
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+        
+        .loading {
+            display: none;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary);
+            margin-right: 8px;
+            box-shadow: 0 0 10px var(--primary);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% { 
+                transform: scale(1.05);
+                opacity: 0.85;
+            }
+        }
+        
+        .export-button {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+        }
+        
+        .export-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+        }
+        
+        /* Blockchain Integration Styles */
+        .blockchain-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+        
+        .blockchain-status.connected {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .blockchain-status.disconnected {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+        
+        .blockchain-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .blockchain-card h3 {
+            margin-bottom: 20px;
+            color: var(--light);
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .nft-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 4px 16px rgba(0, 82, 255, 0.3);
+        }
+        
+        .basescan-link {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .basescan-link:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+        
+        .blockchain-info {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .blockchain-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .blockchain-info-label {
+            font-weight: 600;
+            color: rgba(240, 244, 255, 0.6);
+        }
+        
+        .blockchain-info-value {
+            color: var(--light);
+            font-weight: 500;
+        }
+        
+        /* Platform Filter Styles */
+        .filter-container {
+            padding: 20px 24px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-label {
+            font-weight: 600;
+            color: rgba(240, 244, 255, 0.7);
+            margin-right: 8px;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            color: rgba(240, 244, 255, 0.7);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 82, 255, 0.3);
+        }
+        
+        /* Collapsible Section Styles */
+        .collapse-btn {
+            background: none;
+            border: none;
+            color: var(--light);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .collapse-btn.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        .collapsible-content {
+            max-height: 5000px;
+            overflow: hidden;
+            transition: max-height 0.5s ease, opacity 0.3s ease;
+            opacity: 1;
+        }
+        
+        .collapsible-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+        
+        .table-header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                max-height: 200px;
+            }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                padding: 0.75rem 3%;
+            }
+
+            .logo {
+                font-size: 1.8rem;
+            }
+
+            .logo-icon {
+                font-size: 2rem;
+            }
+
+            /* Hide desktop nav, show hamburger */
+            .header nav {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .input-group input {
+                min-width: 100%;
+            }
+            
+            .input-group button {
+                width: 100%;
+            }
+            
+            .filter-container {
+                padding: 15px;
+            }
+            
+            .filter-btn {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+            
+            th, td {
+                padding: 12px 16px;
+                font-size: 12px;
+            }
+        }
+
+        /* Desktop: Always show nav, hide mobile elements */
+        @media (min-width: 769px) {
+            .menu-toggle {
+                display: none !important;
+            }
+
+            .mobile-menu {
+                display: none !important;
+            }
+
+            .menu-backdrop {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Particles -->
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    
+    <!-- Background Animation -->
+    <div class="bg-animation" id="bgCanvas"></div>
+    
+    <!-- Menu Backdrop -->
+    <div class="menu-backdrop" id="menuBackdrop"></div>
+    
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <span class="logo-icon" style="color: #3b82f6; animation: pulse 2s ease-in-out infinite;">🌀</span>
+            <span>AEraLogIn</span>
+        </div>
+        <nav>
+            <a onclick="scrollToSection('stats')">Stats</a>
+            <a onclick="scrollToSection('followers')">Followers</a>
+            <a onclick="scrollToSection('blockchain')">Blockchain</a>
+            <a href="/logo.html">Logo</a>
+            <a href="/">Home</a>
+        </nav>
+        
+        <!-- Mobile Menu Toggle -->
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+            ☰
+        </button>
+    </header>
+
+    <!-- Mobile Navigation (outside header for proper z-index stacking) -->
+    <nav class="mobile-menu" id="mobileMenu">
+        <a onclick="scrollToSection('stats'); closeMenu();">Stats</a>
+        <a onclick="scrollToSection('followers'); closeMenu();">Followers</a>
+        <a onclick="scrollToSection('blockchain'); closeMenu();">Blockchain</a>
+        <a href="/logo.html">Logo</a>
+        <a href="/">Home</a>
+    </nav>
+    
+    <div class="container">
+        <div class="owner-section">
+            <h2>💼 Dashboard - Your Account - Connect Wallet</h2>
+            <div class="input-group">
+                <input type="text" id="ownerInput" placeholder="Enter your wallet address (0x...)" value="">
+                <button id="metamaskBtn" onclick="connectMetaMask()" style="background: linear-gradient(135deg, var(--primary), var(--accent));">
+                    🔗 Connect Web3 Wallet
+                </button>
+                <button onclick="loadDashboard()">Load Dashboard</button>
+            </div>
+            <div id="statusMessage"></div>
+            <div style="margin-top: 10px; padding: 12px; background: #f0f0f0; border-radius: 6px; font-size: 12px; color: #666; display: none;" id="walletInfo">
+                <span id="walletAddress"></span>
+                <button onclick="disconnectWallet()" style="float: right; padding: 4px 8px; font-size: 11px;">Disconnect</button>
+            </div>
+        </div>
+        
+        <!-- Follower Link Generation (ALWAYS VISIBLE) -->
+        <div class="owner-section">
+            <h2>📤 Share Your Follower Link</h2>
+            <div class="link-section">
+                <p>Generate a custom link to share with your followers on social media</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600;">Select Platform:</label>
+                        <select id="platformSelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+                            <option value="direct">⚡ Direct Link</option>
+                            <option value="twitter">𝕏 X / Twitter</option>
+                            <option value="reddit">🤖 Reddit</option>
+                            <option value="telegram">✈️ Telegram</option>
+                            <option value="discord">💬 Discord</option>
+                            <option value="signal">🔒 Signal</option>
+                            <option value="slack">💬 Slack</option>
+                            <option value="farcaster">🎭 Farcaster</option>
+                            <option value="whatsapp">💚 WhatsApp</option>
+                            <option value="vk">🐻 VK</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button onclick="generateLink()" style="width: 100%; padding: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 30px rgba(0, 82, 255, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">Generate Link</button>
+                    </div>
+                </div>
+                <div class="link-display" id="linkDisplay" style="display: none;">
+                    <input type="text" id="generatedLink" readonly>
+                    <button onclick="copyToClipboard()">Copy</button>
+                </div>
+            </div>
+            
+            <!-- 🎯 NFT-Gated Private Group Link -->
+            <h2 style="margin-top: 32px;">🔐 Your NFT-Gated Group Link</h2>
+            <div class="link-section">
+                <p>Create platform-specific NFT-gated links for your private communities</p>
+                
+                <!-- Configure Private Group -->
+                <div style="margin-bottom: 20px; padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 14px; color: var(--secondary);">🔧 Configure Your Private Group</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Select Platform:</label>
+                            <select id="gateplatformSelect" onchange="showPlatformWarning()" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                                <optgroup label="⭐ Recommended for NFT-Gating">
+                                    <option value="telegram">✈️ Telegram (Best for communities)</option>
+                                    <option value="discord">💬 Discord (Ideal for Web3)</option>
+                                    <option value="signal">🔒 Signal (Privacy-focused)</option>
+                                </optgroup>
+                                <optgroup label="✅ Also Supported">
+                                    <option value="slack">💬 Slack (Professional)</option>
+                                    <option value="farcaster">🎭 Farcaster (Web3-native)</option>
+                                    <option value="vk">🐻 VK</option>
+                                </optgroup>
+                                <optgroup label="⚠️ Limited Support">
+                                    <option value="whatsapp">💚 WhatsApp (Max 1024 members)</option>
+                                </optgroup>
+                            </select>
+                            <div id="platformWarning" style="display: none; margin-top: 8px; padding: 8px; background: rgba(255, 165, 0, 0.1); border-left: 3px solid #FFA500; border-radius: 4px; font-size: 11px; color: #FFA500;"></div>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Group Name (optional):</label>
+                            <input type="text" id="privateGroupName" placeholder="My Private Group" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Group Invite Link:</label>
+                            <input type="text" id="privateGroupInviteLink" placeholder="https://..." style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                        </div>
+                    </div>
+                    <button onclick="savePrivateGroup()" style="width: 100%; padding: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 30px rgba(99, 102, 241, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                        💾 Save Group Configuration
+                    </button>
+                    <div id="privateGroupConfigStatus" style="margin-top: 8px; font-size: 12px; display: none;"></div>
+                </div>
+                
+                <!-- Generate & Share Link -->
+                <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <button onclick="generateGateLink()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 30px rgba(99, 102, 241, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            🔐 Generate NFT-Gated Link
+                        </button>
+                    </div>
+                </div>
+                <div class="link-display" id="gateLinkDisplay" style="display: none;">
+                    <input type="text" id="generatedGateLink" readonly>
+                    <button onclick="copyGateLink()">Copy</button>
+                </div>
+                <div id="gateStats" style="margin-top: 16px; padding: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; display: none;">
+                    <p style="font-size: 13px; color: rgba(240, 244, 255, 0.7); margin: 0;">
+                        <strong style="color: var(--secondary);">Access Statistics:</strong> 
+                        <span id="gateInviteCount">0</span> users joined via your link
+                        <span id="gateGroupInfo" style="display: block; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.15);"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="dashboardContent" style="display: none;">
+            <!-- Owner Stats -->
+            <div id="stats" class="stats-grid">
+                <div class="stat-card">
+                    <div class="value" id="followerCount">0</div>
+                    <div class="label">Verified Followers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="avgScore">0</div>
+                    <div class="label">Average Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="yourScore">0</div>
+                    <div class="label">Your Score</div>
+                </div>
+            </div>
+            
+            <!-- Blockchain Stats Grid -->
+            <div id="blockchain" class="stats-grid" id="blockchainStats" style="margin-top: 16px;">
+                <div class="stat-card">
+                    <div class="value" id="identityStatus">
+                        <span class="loading"></span>
+                    </div>
+                    <div class="label">Identity NFT Status</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="blockchainScore">
+                        <span class="loading"></span>
+                    </div>
+                    <div class="label">Blockchain Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="syncStatus">
+                        <span class="loading"></span>
+                    </div>
+                    <div class="label">Sync Status</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="blockchainHealth">
+                        <span class="loading"></span>
+                    </div>
+                    <div class="label">Blockchain Health</div>
+                </div>
+            </div>
+            
+            <!-- Followers Table -->
+            <div id="followers" class="followers-table">
+                <div class="table-header">
+                    <div class="table-header-controls">
+                        <h2>🌀 Your Followers</h2>
+                        <button class="collapse-btn" onclick="toggleCollapse('followersTable')">▼</button>
+                    </div>
+                    <p id="followerCount2">0 verified followers</p>
+                </div>
+                <div class="filter-container">
+                    <span class="filter-label">Filter by Platform:</span>
+                    <button class="filter-btn active" data-platform="all" onclick="filterByPlatform('all')">All</button>
+                    <button class="filter-btn" data-platform="twitter" onclick="filterByPlatform('twitter')">🐦 Twitter</button>
+                    <button class="filter-btn" data-platform="telegram" onclick="filterByPlatform('telegram')">✈️ Telegram</button>
+                    <button class="filter-btn" data-platform="discord" onclick="filterByPlatform('discord')">🎮 Discord</button>
+                    <button class="filter-btn" data-platform="facebook" onclick="filterByPlatform('facebook')">👍 Facebook</button>
+                    <button class="filter-btn" data-platform="reddit" onclick="filterByPlatform('reddit')">🤖 Reddit</button>
+                    <button class="filter-btn" data-platform="direct" onclick="filterByPlatform('direct')">🔗 Direct</button>
+                </div>
+                <div id="followersTable" class="collapsible-content">
+                    <div id="followersContainer">
+                        <div style="text-align: center; padding: 40px; color: #999;">
+                            <div class="loading"></div> Loading followers...
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Blockchain Interaction History -->
+            <div class="followers-table" id="interactionHistory" style="margin-top: 20px;">
+                <div class="table-header">
+                    <div class="table-header-controls">
+                        <h2>⛓️ Blockchain Interaction History</h2>
+                        <button class="collapse-btn" onclick="toggleCollapse('interactionsTable')">▼</button>
+                    </div>
+                    <p id="interactionCount">Loading...</p>
+                </div>
+                <div id="interactionsTable" class="collapsible-content">
+                    <div id="interactionsContainer">
+                        <div style="text-align: center; padding: 40px; color: #999;">
+                            <div class="loading"></div> Loading blockchain data...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Blockchain Dashboard Integration - MUST load before inline scripts -->
+    <script src="blockchain-dashboard.js?v=20251204-2"></script>
+    
+    <script>
+        // ✅ Define API_BASE globally
+        const API_BASE = window.location.origin || 'http://localhost:8840';
+        
+        async function loadDashboard() {
+            const owner = document.getElementById('ownerInput').value.toLowerCase().trim();
+            const statusDiv = document.getElementById('statusMessage');
+            
+            if (!owner || !owner.startsWith('0x') || owner.length !== 42) {
+                statusDiv.innerHTML = '<div class="status error">❌ Please enter a valid wallet address</div>';
+                return;
+            }
+            
+            // ✅ Check if user already connected with Web3 wallet
+            if (!dashboardToken || connectedWallet !== owner) {
+                statusDiv.innerHTML = '<div class="status error">❌ Please connect your Web3 wallet first (🔗 Connect Web3 Wallet button)</div>';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<div class="status loading">⏳ Loading dashboard...</div>';
+            
+            try {
+                // ✅ No Web3 wallet needed here - user already verified via connectMetaMask()
+                // Just load the dashboard
+                console.log('📊 Loading dashboard with stored token...');
+                
+                const response = await fetch(`${API_BASE}/admin/followers?owner=${owner}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load dashboard');
+                }
+                
+                displayDashboard(data);
+                statusDiv.innerHTML = '<div class="status success">✓ Dashboard loaded successfully</div>';
+                console.log('✓ Dashboard loaded!');
+                
+                // ===== BLOCKCHAIN: Load blockchain data =====
+                // ⚠️ IMPORTANT: Load blockchain data for CONNECTED WALLET, not owner from input field
+                // The input field is for viewing OTHER people's followers
+                // But YOUR blockchain stats (NFT, Score) should be shown for YOUR wallet
+                try {
+                    console.log('[Dashboard] Checking for BlockchainDashboard module...');
+                    console.log('[Dashboard] window.BlockchainDashboard =', typeof window.BlockchainDashboard);
+                    
+                    if (window.BlockchainDashboard) {
+                        console.log('🔗 [Dashboard] Loading blockchain data for CONNECTED wallet:', connectedWallet);
+                        await window.BlockchainDashboard.loadBlockchainData(connectedWallet);
+                        console.log('✓ [Dashboard] Blockchain data loaded!');
+                    } else {
+                        console.error('❌ [Dashboard] BlockchainDashboard module not found!');
+                        console.log('[Dashboard] Available window properties:', Object.keys(window).filter(k => k.includes('Blockchain')));
+                    }
+                } catch (blockchainError) {
+                    console.error('❌ [Dashboard] Blockchain data load failed:', blockchainError);
+                    console.error('[Dashboard] Stack trace:', blockchainError.stack);
+                    // Non-critical - dashboard still works without blockchain data
+                }
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                statusDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+                document.getElementById('dashboardContent').style.display = 'none';
+            }
+        }
+        
+        function displayDashboard(data) {
+            // Update stats
+            document.getElementById('followerCount').textContent = data.total_followers;
+            document.getElementById('followerCount2').textContent = `${data.total_followers} verified followers`;
+            document.getElementById('avgScore').textContent = data.statistics.average_score;
+            document.getElementById('yourScore').textContent = data.owner_score || '—';
+            
+            // Build followers table
+            const container = document.getElementById('followersContainer');
+            
+            if (data.followers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No verified followers yet</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Share your custom link to get followers!</p>
+                    </div>
+                `;
+                // ✅ Show dashboard even with 0 followers - user is registered and has NFT
+                document.getElementById('dashboardContent').style.display = 'block';
+                return;
+            }
+            
+            const tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Follower Address</th>
+                            <th>Score</th>
+                            <th>Platform</th>
+                            <th>Verified At</th>
+                            <th>Logins</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.followers.map(f => `
+                            <tr>
+                                <td>${f.display_name || f.follower_address.substring(0, 10) + '...' + f.follower_address.substring(38)}</td>
+                                <td><span class="score-badge">${f.resonance_score}/100</span></td>
+                                <td><span class="platform-badge">${f.source_platform || 'unknown'}</span></td>
+                                <td style="font-size: 12px;">${new Date(f.verified_at).toLocaleDateString()}</td>
+                                <td>${f.login_count}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = tableHTML;
+            
+            // Platform distribution
+            const platformHtml = Object.entries(data.statistics.by_platform)
+                .map(([p, c]) => `<span class="platform-badge">${p}: ${c}</span>`)
+                .join(' ');
+            
+            // Show dashboard
+            document.getElementById('dashboardContent').style.display = 'block';
+        }
+        
+        async function generateLink() {
+            const owner = document.getElementById('ownerInput').value.toLowerCase().trim();
+            const platform = document.getElementById('platformSelect').value;
+            const linkDisplay = document.getElementById('linkDisplay');
+            const linkInput = document.getElementById('generatedLink');
+            
+            if (!owner || !owner.startsWith('0x')) {
+                alert('Please enter a valid wallet address first');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/follower-link?owner=${owner}&source=${platform}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error);
+                }
+                
+                linkInput.value = data.follower_link;
+                linkDisplay.style.display = 'flex';
+                
+            } catch (error) {
+                alert('Error generating link: ' + error.message);
+            }
+        }
+        
+        function copyToClipboard() {
+            const linkInput = document.getElementById('generatedLink');
+            linkInput.select();
+            document.execCommand('copy');
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Copied!';
+            setTimeout(() => btn.textContent = originalText, 2000);
+        }
+        
+        // ===== NEW: Telegram Gate Link Functions =====
+        async function generateGateLink() {
+            const owner = document.getElementById('ownerInput').value.toLowerCase().trim();
+            const linkDisplay = document.getElementById('gateLinkDisplay');
+            const linkInput = document.getElementById('generatedGateLink');
+            const statsDiv = document.getElementById('gateStats');
+            
+            if (!owner || !owner.startsWith('0x')) {
+                alert('Please enter a valid wallet address first');
+                return;
+            }
+            
+            try {
+                // Generate Gate Link (client-side - no backend needed)
+                const baseUrl = window.location.origin;
+                const gateLink = `${baseUrl}/join-telegram?owner=${owner}`;
+                
+                linkInput.value = gateLink;
+                linkDisplay.style.display = 'flex';
+                
+                // Fetch Gate Statistics from Backend
+                const statsResponse = await fetch(`${API_BASE}/api/telegram-gate/stats/${owner}`);
+                const statsData = await statsResponse.json();
+                
+                if (statsData.success) {
+                    document.getElementById('gateInviteCount').textContent = statsData.invite_count;
+                    
+                    // Show group info if configured
+                    const groupInfoDiv = document.getElementById('gateGroupInfo');
+                    if (statsData.has_configured_group) {
+                        groupInfoDiv.innerHTML = `
+                            <strong>🔗 Your Telegram Group:</strong> 
+                            ${statsData.group_name || 'Unnamed Group'}<br>
+                            <span style="font-size: 11px; opacity: 0.7;">${statsData.telegram_link}</span>
+                        `;
+                        
+                        // Pre-fill form with current config
+                        document.getElementById('telegramGroupName').value = statsData.group_name || '';
+                        document.getElementById('telegramInviteLink').value = statsData.telegram_link || '';
+                    } else {
+                        groupInfoDiv.innerHTML = `
+                            <strong style="color: #f59e0b;">⚠️ No Telegram group configured yet</strong><br>
+                            <span style="font-size: 11px;">Configure your group above to start using this gate link</span>
+                        `;
+                    }
+                    
+                    statsDiv.style.display = 'block';
+                } else {
+                    // Stats not available yet - hide
+                    statsDiv.style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('Error generating gate link:', error);
+                // Non-critical error - link still works
+                linkDisplay.style.display = 'flex';
+            }
+        }
+        
+        // Show platform-specific warnings
+        function showPlatformWarning() {
+            const platform = document.getElementById('gateplatformSelect').value;
+            const warningDiv = document.getElementById('platformWarning');
+            
+            const warnings = {
+                'whatsapp': '⚠️ WhatsApp groups are limited to 1024 members maximum. Consider Telegram or Discord for larger communities.',
+                'farcaster': 'ℹ️ Farcaster is a decentralized social network. Make sure your community is familiar with Web3 platforms.',
+                'slack': 'ℹ️ Slack is great for professional communities but requires a workspace setup.'
+            };
+            
+            if (warnings[platform]) {
+                warningDiv.textContent = warnings[platform];
+                warningDiv.style.display = 'block';
+            } else {
+                warningDiv.style.display = 'none';
+            }
+        }
+        
+        async function savePrivateGroup() {
+            const owner = document.getElementById('ownerInput').value.toLowerCase().trim();
+            const platform = document.getElementById('gateplatformSelect').value;
+            const groupName = document.getElementById('privateGroupName').value.trim();
+            const inviteLink = document.getElementById('privateGroupInviteLink').value.trim();
+            const statusDiv = document.getElementById('privateGroupConfigStatus');
+            
+            if (!owner || !owner.startsWith('0x')) {
+                alert('Please enter a valid wallet address first');
+                return;
+            }
+            
+            if (!inviteLink || !inviteLink.startsWith('https://')) {
+                statusDiv.textContent = '❌ Invalid invite link. Must start with https://';
+                statusDiv.style.color = '#ef4444';
+                statusDiv.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/telegram-gate/set-group`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        owner: owner,
+                        telegram_link: inviteLink,  // Backend erwartet diesen Key
+                        group_name: groupName || `${platform} Group`,
+                        platform: platform  // Zusätzliche Platform-Info
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    statusDiv.textContent = '✅ Group configured successfully!';
+                    statusDiv.style.color = '#10b981';
+                    statusDiv.style.display = 'block';
+                    
+                    // Refresh stats
+                    setTimeout(() => generateGateLink(), 500);
+                } else {
+                    statusDiv.textContent = '❌ ' + (data.error || 'Failed to save configuration');
+                    statusDiv.style.color = '#ef4444';
+                    statusDiv.style.display = 'block';
+                }
+                
+            } catch (error) {
+                console.error('Error saving private group:', error);
+                statusDiv.textContent = '❌ Failed to save: ' + error.message;
+                statusDiv.style.color = '#ef4444';
+                statusDiv.style.display = 'block';
+            }
+        }
+        
+        function copyGateLink() {
+            const linkInput = document.getElementById('generatedGateLink');
+            linkInput.select();
+            document.execCommand('copy');
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Copied!';
+            setTimeout(() => btn.textContent = originalText, 2000);
+        }
+        
+        // ===== NEW: Web3 Wallet Integration =====
+        // Store verified token in memory (not localStorage for security)
+        let dashboardToken = null;
+        let connectedWallet = null;
+        
+        async function connectMetaMask() {
+            const statusDiv = document.getElementById('statusMessage');
+            if (typeof window.ethereum === 'undefined') {
+                statusDiv.innerHTML = '<div class="status error">❌ No Web3 wallet detected! Please install MetaMask, Coinbase Wallet or Rabby.</div>';
+                return;
+            }
+            statusDiv.innerHTML = '<div class="status loading">⏳ Connecting wallet...</div>';
+            
+            try {
+                console.log('🔗 Step 1: Requesting Web3 wallet access...');
+                
+                // Request account access
+                const accounts = await window.ethereum.request({
+                    method: 'eth_requestAccounts'
+                });
+                
+                console.log('✅ Account received:', accounts[0]);
+                statusDiv.innerHTML = '<div class="status loading">⏳ Setting up wallet connection...</div>';
+                
+                const walletAddress = accounts[0].toLowerCase();
+                
+                // � Step 1.5: Switch to BASE Mainnet (Chain ID 8453)
+                const BASE_CHAIN_ID = '0x2105'; // 8453 in hex
+                try {
+                    const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    console.log('Current chain:', currentChainId);
+                    
+                    if (currentChainId !== BASE_CHAIN_ID) {
+                        statusDiv.innerHTML = '<div class="status loading">⏳ Switching to BASE Mainnet...</div>';
+                        console.log('🔄 Switching to BASE Mainnet...');
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: BASE_CHAIN_ID }]
+                            });
+                            console.log('✅ Switched to BASE Mainnet');
+                        } catch (switchError) {
+                            // Chain not added yet - add it
+                            if (switchError.code === 4902) {
+                                statusDiv.innerHTML = '<div class="status loading">⏳ Adding BASE Mainnet to wallet...</div>';
+                                console.log('📝 Adding BASE Mainnet to wallet...');
+                                await window.ethereum.request({
+                                    method: 'wallet_addEthereumChain',
+                                    params: [{
+                                        chainId: BASE_CHAIN_ID,
+                                        chainName: 'Base Mainnet',
+                                        nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+                                        rpcUrls: ['https://mainnet.base.org'],
+                                        blockExplorerUrls: ['https://basescan.org']
+                                    }]
+                                });
+                                console.log('✅ BASE Mainnet added and switched');
+                            } else {
+                                throw switchError;
+                            }
+                        }
+                    }
+                } catch (chainError) {
+                    console.warn('⚠️ Could not switch chain:', chainError);
+                    // Continue anyway - signature will still work
+                }
+                
+                // �🔐 SECURITY: Step 2 - Get Challenge from Backend
+                statusDiv.innerHTML = '<div class="status loading">⏳ Requesting login challenge from backend...</div>';
+                console.log('� Step 2: Requesting challenge from backend...');
+                const challengeResponse = await fetch(`${API_BASE}/admin/challenge`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ owner: walletAddress })
+                });
+                
+                const challengeData = await challengeResponse.json();
+                if (!challengeData.success) {
+                    throw new Error('Failed to get challenge: ' + challengeData.error);
+                }
+                
+                const nonce = challengeData.nonce;
+                console.log('✓ Challenge received:', nonce);
+                
+                // 🔐 SECURITY: Step 3 - Sign Challenge with Web3 Wallet (SIWE/EIP-4361 Format)
+                statusDiv.innerHTML = '<div class="status loading">⏳ Please sign the login request in your wallet...</div>';
+                console.log('🔐 Step 3: Requesting wallet signature (SIWE format)...');
+                const domain = window.location.host;
+                const uri = window.location.origin;
+                const issuedAt = new Date().toISOString();
+                const messageToSign = `${domain} wants you to sign in with your Ethereum account:
+${walletAddress}
+
+Sign in to AEraLogIn Dashboard
+
+URI: ${uri}
+Version: 1
+Chain ID: 8453
+Nonce: ${nonce}
+Issued At: ${issuedAt}`;
+                
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [messageToSign, walletAddress]
+                });
+                
+                // ✅ SOFORT nach MetaMask-Bestätigung: Zeige Status-Meldung
+                statusDiv.innerHTML = '<div class="status loading">⏳ Signature received! Syncing blockchain data...</div>';
+                console.log('✓ Signature received:', signature.substring(0, 20) + '...');
+                
+                // ⏱️ WICHTIG: Browser Zeit geben das DOM zu rendern!
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                // 🔐 SECURITY: Step 4 - Verify Signature on Backend (send message for SIWE verification)
+                console.log('🔐 Step 4: Verifying signature on backend...');
+                const verifyResponse = await fetch(`${API_BASE}/admin/verify-signature`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ owner: walletAddress, signature, nonce, message: messageToSign })
+                });
+                
+                const verifyData = await verifyResponse.json();
+                if (!verifyData.success || !verifyData.verified) {
+                    throw new Error('Signature verification failed: ' + verifyData.error);
+                }
+                
+                console.log('✓ Signature verified & blockchain data synced!');
+                
+                // ===== SHOW SYNC STATUS DETAILS =====
+                if (verifyData.sync_status && verifyData.sync_status.steps_completed) {
+                    const steps = verifyData.sync_status.steps_completed;
+                    const errors = verifyData.sync_status.errors || [];
+                    
+                    console.log('📊 Sync steps completed:', steps);
+                    if (errors.length > 0) {
+                        console.warn('⚠️ Sync warnings:', errors);
+                    }
+                    
+                    // Build detailed status message
+                    let statusHtml = '<div class="status success">';
+                    statusHtml += '<div style="font-weight: bold; margin-bottom: 8px;">✓ Wallet connected & synced!</div>';
+                    statusHtml += '<div style="font-size: 12px; opacity: 0.9; text-align: left; padding-left: 10px;">';
+                    steps.forEach(step => {
+                        statusHtml += `<div style="margin: 2px 0;">${step}</div>`;
+                    });
+                    if (errors.length > 0) {
+                        statusHtml += '<div style="color: #f59e0b; margin-top: 5px;">⚠️ Warnings:</div>';
+                        errors.forEach(err => {
+                            statusHtml += `<div style="color: #f59e0b; font-size: 11px;">${err}</div>`;
+                        });
+                    }
+                    statusHtml += '</div></div>';
+                    statusDiv.innerHTML = statusHtml;
+                } else {
+                    statusDiv.innerHTML = '<div class="status success">✓ Wallet connected. Now load dashboard!</div>';
+                }
+                
+                // ✅ Store token for later use (no more wallet signature needed for loadDashboard)
+                dashboardToken = signature;  // Use signature as token
+                connectedWallet = walletAddress;
+                
+                // Auto-fill input
+                document.getElementById('ownerInput').value = walletAddress;
+                
+                // Show wallet info
+                const walletInfo = document.getElementById('walletInfo');
+                walletInfo.style.display = 'block';
+                document.getElementById('walletAddress').innerHTML = 
+                    `✓ Connected: <strong>${walletAddress.substring(0, 10)}...${walletAddress.substring(38)}</strong>`;
+                // 🎯 Do NOT auto-load dashboard - user must click "Load Dashboard" button
+                // But now loadDashboard() will NOT need wallet signature confirmation
+            } catch (error) {
+                console.error('❌ Error in connectMetaMask:', error);
+                if (error.code === 4001 || error.message.includes('rejected')) {
+                    statusDiv.innerHTML = '<div class="status error">❌ You rejected the wallet signature.</div>';
+                } else {
+                    statusDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+                }
+                dashboardToken = null;
+                connectedWallet = null;
+            }
+        }
+        
+        function disconnectWallet() {
+            document.getElementById('ownerInput').value = '';
+            document.getElementById('walletInfo').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'none';
+            document.getElementById('statusMessage').innerHTML = '';
+            dashboardToken = null;
+            connectedWallet = null;
+        }
+        
+        //  SECURITY: Do NOT listen to accountsChanged for auto-connection
+        // Only disconnect when accounts are removed
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    disconnectWallet();
+                }
+                // Do NOT call loadDashboard - user must click button
+            });
+        }
+        
+        // Load from URL if owner is in params
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const owner = params.get('owner');
+            if (owner) {
+                document.getElementById('ownerInput').value = owner;
+                // Do NOT auto-load - user must click button
+            }
+        });
+        
+        // ===== Smooth Scroll Function =====
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        
+        // ===== Mobile Menu Functions =====
+        const menuToggle = document.getElementById('menuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const menuBackdrop = document.getElementById('menuBackdrop');
+
+        function toggleMenu() {
+            mobileMenu.classList.toggle('active');
+            menuBackdrop.classList.toggle('active');
+            
+            // Change icon
+            if (mobileMenu.classList.contains('active')) {
+                menuToggle.textContent = '✕';
+            } else {
+                menuToggle.textContent = '☰';
+            }
+        }
+
+        function closeMenu() {
+            mobileMenu.classList.remove('active');
+            menuBackdrop.classList.remove('active');
+            menuToggle.textContent = '☰';
+        }
+
+        // Toggle menu on button click
+        menuToggle.addEventListener('click', toggleMenu);
+
+        // Close menu on backdrop click
+        menuBackdrop.addEventListener('click', closeMenu);
+
+        // Close menu on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mobileMenu.classList.contains('active')) {
+                closeMenu();
+            }
+        });
+        
+        // ===== Platform Filter Function =====
+        function filterByPlatform(platform) {
+            console.log('🔍 Filtering by platform:', platform);
+            
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeBtn = document.querySelector(`[data-platform="${platform}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+            
+            // Filter table rows
+            const table = document.querySelector('#followersContainer table');
+            if (!table) {
+                console.warn('⚠️ Table not found');
+                return;
+            }
+            
+            const rows = table.querySelectorAll('tbody tr');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                // Platform is in the 3rd column (index 2: Address, Score, Platform)
+                const platformCell = row.querySelector('td:nth-child(3)');
+                if (!platformCell) {
+                    console.warn('⚠️ Platform cell not found in row');
+                    return;
+                }
+                
+                const rowPlatform = platformCell.textContent.trim().toLowerCase();
+                console.log('Row platform:', rowPlatform, 'Filter:', platform);
+                
+                if (platform === 'all' || rowPlatform === platform) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            console.log(`✓ Showing ${visibleCount} of ${rows.length} followers`);
+        }
+        
+        // ===== Collapse/Expand Function =====
+        function toggleCollapse(contentId) {
+            const content = document.getElementById(contentId);
+            const btn = event.target;
+            
+            if (!content) return;
+            
+            if (content.classList.contains('collapsed')) {
+                // Expand
+                content.classList.remove('collapsed');
+                btn.classList.remove('collapsed');
+                btn.textContent = '▼';
+            } else {
+                // Collapse
+                content.classList.add('collapsed');
+                btn.classList.add('collapsed');
+                btn.textContent = '▶';
+            }
+        }
+        
+        // ===== Canvas Background Animation =====
+        // Simple particle animation for background
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        document.getElementById('bgCanvas').appendChild(canvas);
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const canvasParticles = [];
+        const particleCount = 50;
+
+        class CanvasParticle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.fillStyle = 'rgba(0, 212, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            canvasParticles.push(new CanvasParticle());
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            canvasParticles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            // Draw connections
+            canvasParticles.forEach((p1, i) => {
+                canvasParticles.slice(i + 1).forEach(p2 => {
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 150) {
+                        ctx.strokeStyle = `rgba(0, 212, 255, ${0.2 * (1 - distance / 150)})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                });
+            });
+
+            requestAnimationFrame(animateCanvas);
+        }
+
+        animateCanvas();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+
+    <!-- Footer -->
+    <footer style="padding: 3rem 5%; border-top: 1px solid rgba(255, 255, 255, 0.1); text-align: center; color: rgba(240, 244, 255, 0.6); margin-top: 4rem;">
+        <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap;">
+            <a href="https://github.com/VEra-Resonance/AEraLogin_Live" target="_blank" style="color: rgba(240, 244, 255, 0.6); text-decoration: none; transition: color 0.3s; font-size: 0.85rem;">⭐ GitHub</a>
+            <a href="https://x.com/AEraResonant" target="_blank" style="color: rgba(240, 244, 255, 0.6); text-decoration: none; transition: color 0.3s; font-size: 0.85rem;">𝕏 X/Twitter</a>
+            <a href="/privacy-policy" style="color: #10b981; text-decoration: none; transition: color 0.3s; font-size: 0.85rem;">🔒 Privacy Policy</a>
+            <a href="https://basescan.org/address/0xF9ff5DC523927B9632049bd19e17B610E9197d53" target="_blank" style="color: rgba(240, 244, 255, 0.6); text-decoration: none; transition: color 0.3s; font-size: 0.85rem;">Identity NFT Contract</a>
+            <a href="https://basescan.org/address/0x9A814DBF7E2352CE9eA6293b4b731B2a24800102" target="_blank" style="color: rgba(240, 244, 255, 0.6); text-decoration: none; transition: color 0.3s; font-size: 0.85rem;">Score Contract</a>
+            <a href="https://basescan.org/address/0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF" target="_blank" style="color: rgba(240, 244, 255, 0.6); text-decoration: none; transition: color 0.3s; font-size: 0.85rem;">Registry Contract</a>
+            <a href="https://base.org" target="_blank" style="color: rgba(240, 244, 255, 0.6); text-decoration: none; transition: color 0.3s; font-size: 0.85rem;">BASE L2</a>
+        </div>
+        <p>
+            &copy; 2025 AEraLogIn. Built on Coinbase BASE L2.<br>
+            Powered by Alchemy, Blockscout & Web3.py
+        </p>
+        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;">
+            🚀 Live on BASE Mainnet
+        </p>
+    </footer>
+
+    <!-- ===== AERA CHAT WIDGET ===== -->
+    <link rel="stylesheet" href="/aera-chat.css?v=20251209002">
+    <script src="/aera-chat.js?v=20251209001"></script>
+    <script>
+        // Initialize AEra Chat Widget
+        if (typeof initAeraChat === 'function') {
+            initAeraChat();
+            console.log('🌀 AEra Chat Widget initialized');
+        }
+    </script>
+</body>
+</html>
