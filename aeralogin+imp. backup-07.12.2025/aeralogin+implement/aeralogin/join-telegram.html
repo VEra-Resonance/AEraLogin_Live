@@ -404,6 +404,39 @@ Platform: Telegram Gate
         
         .debug-info.show { display: block; }
         
+        /* Mobile Device Info */
+        .mobile-info {
+            background: rgba(0, 136, 204, 0.1);
+            border: 1px solid rgba(0, 136, 204, 0.3);
+            border-left: 4px solid #0088cc;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            color: rgba(240, 244, 255, 0.9);
+            margin-bottom: 16px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        .mobile-info.show { display: block; }
+        
+        .mobile-info.android {
+            background: rgba(61, 220, 132, 0.1);
+            border-color: rgba(61, 220, 132, 0.3);
+            border-left-color: #3DDC84;
+        }
+        
+        .mobile-info.ios {
+            background: rgba(0, 122, 255, 0.1);
+            border-color: rgba(0, 122, 255, 0.3);
+            border-left-color: #007AFF;
+        }
+        
+        .mobile-info .device-icon {
+            font-size: 16px;
+            margin-right: 8px;
+        }
+        
         /* Name Input */
         .name-input-section {
             margin-bottom: 20px;
@@ -674,6 +707,9 @@ Platform: Telegram Gate
             💡 Verify your Identity NFT to access the exclusive AEra Telegram community. Bot-free, on-chain verified members only.
         </div>
         
+        <!-- Mobile Device Info (shown dynamically) -->
+        <div id="mobileInfo" class="mobile-info"></div>
+        
         <div id="status" class="status"></div>
         
         <div id="desktopView">
@@ -773,7 +809,156 @@ Platform: Telegram Gate
             log(`[${type}] ${message}`);
         }
         
-        async function autoLoginWithToken() {
+        /**
+         * Detect device and show appropriate info to user
+         */
+        function detectAndShowMobileInfo() {
+            const ua = navigator.userAgent;
+            const isAndroid = /Android/i.test(ua);
+            const isIOS = /iPhone|iPad|iPod/i.test(ua);
+            // Extended detection for Base Wallet, Coinbase Wallet, and other Web3 wallets
+            const isInAppBrowser = /MetaMask|Trust|Coinbase|CoinbaseWallet|Base|Rainbow|Phantom|Zerion|Uniswap|1inch|Wallet/i.test(ua);
+            
+            const mobileInfoDiv = document.getElementById('mobileInfo');
+            if (!mobileInfoDiv) return;
+            
+            if (isAndroid && isInAppBrowser) {
+                mobileInfoDiv.innerHTML = `
+                    <span class="device-icon">🤖</span>
+                    <strong>Android + Wallet Browser erkannt</strong><br>
+                    <small>Telegram öffnet sich automatisch nach Verifizierung.</small>
+                `;
+                mobileInfoDiv.className = 'mobile-info android show';
+                log('📱 Device: Android + In-App Browser (Intent-Bridge ready)');
+            } else if (isIOS && isInAppBrowser) {
+                mobileInfoDiv.innerHTML = `
+                    <span class="device-icon">🍎</span>
+                    <strong>iOS + Wallet Browser erkannt</strong><br>
+                    <small>Optimierte Weiterleitung zu Telegram aktiviert.</small>
+                `;
+                mobileInfoDiv.className = 'mobile-info ios show';
+                log('📱 Device: iOS + In-App Browser (Universal Link ready)');
+            } else if (isAndroid || isIOS) {
+                log('📱 Device: Mobile Standard Browser');
+            } else {
+                log('🖥️ Device: Desktop Browser');
+            }
+        }
+        
+        /**
+         * Robust wallet signing with multiple fallback strategies
+         * Handles different wallet implementations (MetaMask, Coinbase, Base, Rainbow, etc.)
+         * 
+         * Strategy Order:
+         * 1. Base Wallet SIWE Capabilities (wallet_connect with signInWithEthereum)
+         * 2. Standard personal_sign [message, address] (MetaMask, Rainbow, Trust)
+         * 3. Reversed personal_sign [address, message] (some Coinbase versions)
+         * 4. Hex-encoded personal_sign (fallback)
+         */
+        async function robustWalletSign(message, address) {
+            const ua = navigator.userAgent.toLowerCase();
+            const isBaseWallet = ua.includes('base') || 
+                                 ua.includes('coinbasewallet') || 
+                                 (window.ethereum && window.ethereum.isCoinbaseWallet);
+            
+            log(`🔐 Attempting signature (Base/Coinbase detected: ${isBaseWallet})`);
+            
+            // Extract nonce from SIWE message (if present)
+            const nonceMatch = message.match(/Nonce: ([a-zA-Z0-9]+)/);
+            const nonce = nonceMatch ? nonceMatch[1] : Date.now().toString();
+            
+            // ========================================
+            // STRATEGY 1: Base Wallet SIWE Capabilities
+            // Uses wallet_connect with signInWithEthereum capability
+            // ========================================
+            if (isBaseWallet && window.ethereum) {
+                try {
+                    log('📱 Trying Base Wallet SIWE Capabilities...');
+                    
+                    const result = await window.ethereum.request({
+                        method: 'wallet_connect',
+                        params: [{
+                            version: '1',
+                            capabilities: {
+                                signInWithEthereum: {
+                                    nonce: nonce,
+                                    chainId: '0x2105'  // Base Mainnet (8453)
+                                }
+                            }
+                        }]
+                    });
+                    
+                    if (result && result.signature) {
+                        log('✅ Base Wallet SIWE Capabilities successful!');
+                        return result.signature;
+                    }
+                } catch (siweError) {
+                    log(`⚠️ Base SIWE Capabilities not supported: ${siweError.message}`);
+                    // Continue to fallback methods
+                }
+            }
+            
+            // ========================================
+            // STRATEGY 2: Standard personal_sign [message, address]
+            // Works for: MetaMask, Rainbow, Trust Wallet
+            // ========================================
+            try {
+                log('📝 Trying standard personal_sign [message, address]...');
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [message, address]
+                });
+                if (signature) {
+                    log('✅ Standard personal_sign successful!');
+                    return signature;
+                }
+            } catch (error1) {
+                log(`⚠️ Standard method failed: ${error1.message}`);
+                
+                // ========================================
+                // STRATEGY 3: Reversed params [address, message]
+                // Some older Coinbase/Base versions use this order
+                // ========================================
+                try {
+                    log('🔄 Trying reversed personal_sign [address, message]...');
+                    const signature = await window.ethereum.request({
+                        method: 'personal_sign',
+                        params: [address, message]
+                    });
+                    if (signature) {
+                        log('✅ Reversed personal_sign successful!');
+                        return signature;
+                    }
+                } catch (error2) {
+                    log(`⚠️ Reversed method failed: ${error2.message}`);
+                    
+                    // ========================================
+                    // STRATEGY 4: Hex-encoded message
+                    // Last resort fallback
+                    // ========================================
+                    try {
+                        log('🔢 Trying hex-encoded personal_sign...');
+                        const hexMessage = '0x' + Array.from(new TextEncoder().encode(message))
+                            .map(b => b.toString(16).padStart(2, '0')).join('');
+                        const signature = await window.ethereum.request({
+                            method: 'personal_sign',
+                            params: [hexMessage, address]
+                        });
+                        if (signature) {
+                            log('✅ Hex-encoded personal_sign successful!');
+                            return signature;
+                        }
+                    } catch (error3) {
+                        log(`❌ All signature methods failed`);
+                        throw new Error(`Signature rejected: ${error1.message}`);
+                    }
+                }
+            }
+            
+            throw new Error('No signature received');
+        }
+
+        async function tryAutoLogin() {
             const savedToken = localStorage.getItem('aera_token');
             const savedAddress = localStorage.getItem('aera_address');
             if (!savedToken || !savedAddress) {
@@ -848,13 +1033,10 @@ Nonce: ${nonceData.nonce}
 Issued At: ${issuedAt}`;
                 log('✓ Nonce received');
                 
-                // Wallet Signature
+                // Wallet Signature using robust method with multiple fallbacks
                 let signature;
                 try {
-                    signature = await window.ethereum.request({
-                        method: 'personal_sign',
-                        params: [messageToSign, currentWallet]
-                    });
+                    signature = await robustWalletSign(messageToSign, currentWallet);
                 } catch (signError) {
                     log('❌ Signature rejected: ' + signError.message);
                     localStorage.removeItem('aera_token');
@@ -1165,13 +1347,10 @@ Nonce: ${nonceData.nonce}
 Issued At: ${issuedAt}`;
                 log('✓ Nonce received');
                 
-                // Wallet Signature
+                // Wallet Signature using robust method with multiple fallbacks
                 let signature;
                 try {
-                    signature = await window.ethereum.request({
-                        method: 'personal_sign',
-                        params: [messageToSign, currentAddress]
-                    });
+                    signature = await robustWalletSign(messageToSign, currentAddress);
                 } catch (signError) {
                     log('❌ Signature rejected: ' + signError.message);
                     showStatus('❌ Signature rejected!', 'error');
@@ -1272,36 +1451,110 @@ Issued At: ${issuedAt}`;
                         body: JSON.stringify({
                             address: currentAddress,
                             owner_wallet: ownerParam || null,
-                            platform: platform
+                            platform: platform,
+                            user_agent: navigator.userAgent  // NEW: Send User-Agent for device detection
                         }),
                         signal: AbortSignal.timeout(10000)
                     });
                     
                     const inviteData = await inviteResponse.json();
                     
-                    // 🔐 SECURITY: Backend now returns a redirect_url with one-time token
-                    // The actual invite link is NEVER exposed to the frontend
-                    if (inviteData.success && inviteData.redirect_url) {
-                        log(`✅ ${platformName} secure redirect token received`);
-                        showStatus(`✅ Opening ${platformName}... Welcome to the community! 🎉`, 'success');
+                    // ========================================
+                    // NEW: HANDLE DIFFERENT RESPONSE METHODS
+                    // ========================================
+                    
+                    if (inviteData.success) {
                         
-                        // Redirect via secure token endpoint (link is hidden)
-                        setTimeout(() => {
-                            window.location.href = inviteData.redirect_url;
-                        }, 1500);  // 1.5 second delay to show success message
+                        // 🤖 INTENT-BRIDGE: Android + In-App Browser (MetaMask, Trust Wallet, etc.)
+                        if (inviteData.method === "intent_bridge") {
+                            log(`🤖 Intent-Bridge aktiviert für Android + In-App Browser`);
+                            log(`Intent URL: ${inviteData.intent_url}`);
+                            showStatus(`📱 ${platformName} wird direkt geöffnet...`, 'success');
+                            
+                            verifyBtn.textContent = `📱 Öffne ${platformName}...`;
+                            verifyBtn.disabled = true;
+                            verifyBtn.style.opacity = '0.6';
+                            verifyBtn.style.cursor = 'not-allowed';
+                            
+                            // Redirect via Android Intent (bypasses WebView limitations)
+                            setTimeout(() => {
+                                window.location.href = inviteData.intent_url;
+                            }, 500);
+                            
+                            // Fallback: After 3 seconds, open Play Store if Telegram not installed
+                            setTimeout(() => {
+                                // Only trigger if still on this page (Telegram didn't open)
+                                if (document.hasFocus()) {
+                                    log('⚠️ Telegram scheint nicht installiert zu sein, öffne Play Store...');
+                                    window.location.href = inviteData.fallback_url || "market://details?id=org.telegram.messenger";
+                                }
+                            }, 3000);
+                            
+                            return;
+                        }
                         
-                        verifyBtn.textContent = `✅ Redirecting to ${platformName}...`;
-                        verifyBtn.disabled = true;
-                        verifyBtn.style.opacity = '0.6';
-                        verifyBtn.style.cursor = 'not-allowed';
-                    } else {
-                        log(`⚠️ Could not get ${platformName} invite: ` + (inviteData.error || 'Unknown error'));
-                        showStatus(`✅ NFT Verified! Score: ${data.resonance_score}/100`, 'success');
-                        verifyBtn.textContent = '✓ Verified';
-                        verifyBtn.disabled = true;
-                        verifyBtn.style.opacity = '0.6';
-                        verifyBtn.style.cursor = 'not-allowed';
+                        // 🍎 iOS UNIVERSAL LINK: iOS + In-App Browser
+                        if (inviteData.method === "ios_universal_link") {
+                            log(`🍎 iOS Universal Link aktiviert`);
+                            showStatus(`📱 ${platformName} wird geöffnet... Welcome! 🎉`, 'success');
+                            
+                            verifyBtn.textContent = `✅ Öffne ${platformName}...`;
+                            verifyBtn.disabled = true;
+                            verifyBtn.style.opacity = '0.6';
+                            verifyBtn.style.cursor = 'not-allowed';
+                            
+                            // Redirect via secure token endpoint
+                            setTimeout(() => {
+                                window.location.href = inviteData.redirect_url;
+                            }, 1000);
+                            
+                            return;
+                        }
+                        
+                        // 🖥️ STANDARD REDIRECT: Desktop / Normal Mobile Browser
+                        if (inviteData.method === "standard_redirect" && inviteData.redirect_url) {
+                            log(`🖥️ Standard Redirect (${inviteData.device})`);
+                            log(`✅ ${platformName} secure redirect token received`);
+                            showStatus(`✅ Opening ${platformName}... Welcome to the community! 🎉`, 'success');
+                            
+                            // Redirect via secure token endpoint (link is hidden)
+                            setTimeout(() => {
+                                window.location.href = inviteData.redirect_url;
+                            }, 1500);  // 1.5 second delay to show success message
+                            
+                            verifyBtn.textContent = `✅ Redirecting to ${platformName}...`;
+                            verifyBtn.disabled = true;
+                            verifyBtn.style.opacity = '0.6';
+                            verifyBtn.style.cursor = 'not-allowed';
+                            
+                            return;
+                        }
+                        
+                        // 🔐 LEGACY FALLBACK: Old response format (redirect_url without method)
+                        if (inviteData.redirect_url) {
+                            log(`✅ ${platformName} secure redirect token received (legacy)`);
+                            showStatus(`✅ Opening ${platformName}... Welcome to the community! 🎉`, 'success');
+                            
+                            setTimeout(() => {
+                                window.location.href = inviteData.redirect_url;
+                            }, 1500);
+                            
+                            verifyBtn.textContent = `✅ Redirecting to ${platformName}...`;
+                            verifyBtn.disabled = true;
+                            verifyBtn.style.opacity = '0.6';
+                            verifyBtn.style.cursor = 'not-allowed';
+                            
+                            return;
+                        }
                     }
+                    
+                    // Error handling
+                    log(`⚠️ Could not get ${platformName} invite: ` + (inviteData.error || 'Unknown error'));
+                    showStatus(`✅ NFT Verified! Score: ${data.resonance_score}/100`, 'success');
+                    verifyBtn.textContent = '✓ Verified';
+                    verifyBtn.disabled = true;
+                    verifyBtn.style.opacity = '0.6';
+                    verifyBtn.style.cursor = 'not-allowed';
                 } catch (inviteError) {
                     log(`⚠️ ${platformName} invite error: ` + inviteError.message);
                     showStatus(`✅ NFT Verified! Score: ${data.resonance_score}/100`, 'success');
@@ -1441,6 +1694,9 @@ Issued At: ${issuedAt}`;
                 log(`=== AEraLogIn - ${platformName} Gate ===`);
                 log('API: ' + API_BASE);
                 log(`Platform: ${platformName}`);
+                
+                // 📱 NEW: Detect and show mobile device info
+                detectAndShowMobileInfo();
                 
                 connectBtn.addEventListener('click', connectWallet);
                 verifyBtn.addEventListener('click', verifyWallet);

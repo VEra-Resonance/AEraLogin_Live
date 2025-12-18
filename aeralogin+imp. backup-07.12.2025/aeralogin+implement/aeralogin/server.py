@@ -98,15 +98,17 @@ logger.info(f"✓ CORS Konfiguration: {allowed_origins}")
 class CSPMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
-        # CSP für Web3: unsafe-eval wird für Web3-Provider benötigt (MetaMask, Coinbase Wallet, etc.)
+        # CSP für Web3: unsafe-eval wird für Web3-Provider benötigt (MetaMask, Coinbase Wallet, Base Wallet, etc.)
+        # UPDATED: Added frame-ancestors and relaxed frame-src for wallet browser compatibility
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://*.coinbase.com https://*.base.org; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "img-src 'self' data: https: blob:; "
-            "connect-src 'self' https: wss: http://localhost:* https://base-sepolia.blockscout.com https://sepolia.base.org https://base-rpc.publicnode.com https://base.blockscout.com wss://base-rpc.publicnode.com https://mainnet.base.org https://api.base.org; "
+            "connect-src 'self' https: wss: http://localhost:* https://base-sepolia.blockscout.com https://sepolia.base.org https://base-rpc.publicnode.com https://base.blockscout.com wss://base-rpc.publicnode.com https://mainnet.base.org https://api.base.org https://*.coinbase.com https://*.wallet.coinbase.com wss://*.coinbase.com; "
             "font-src 'self' data: https://fonts.gstatic.com; "
-            "frame-src 'none'; "
+            "frame-src 'self' https://*.coinbase.com https://*.wallet.coinbase.com; "
+            "frame-ancestors 'self' https://*.coinbase.com https://*.wallet.coinbase.com app://*; "
             "object-src 'none'; "
             "base-uri 'self'; "
             "worker-src 'self' blob:;"
@@ -952,18 +954,45 @@ async def telegram_invite(req: Request):
     🔐 Platform-Gate: Generate invite link (only if NFT verified)
     Supports: telegram, discord, and other platforms
     
+    NEW: Automatic Intent-Bridge for Android + MetaMask Mobile
+    
     Request:
         {
             "address": "0x...",
-            "platform": "telegram" | "discord" (optional, defaults to telegram)
+            "platform": "telegram" | "discord" (optional, defaults to telegram),
+            "user_agent": "..." (optional, for device detection)
         }
     
-    Response (success):
+    Response (success - standard):
         {
             "success": true,
-            "invite_link": "https://t.me/+XXXXXX" or "https://discord.gg/XXXXX",
+            "redirect_token": "...",
+            "redirect_url": "/api/community/redirect?token=...",
             "message": "Welcome to AEra community!",
-            "platform": "telegram" | "discord"
+            "platform": "telegram" | "discord",
+            "method": "standard_redirect",
+            "device": "desktop" | "mobile_standard"
+        }
+    
+    Response (success - intent_bridge for Android + In-App Browser):
+        {
+            "success": true,
+            "method": "intent_bridge",
+            "intent_url": "intent://resolve?...",
+            "message": "Telegram wird geöffnet...",
+            "platform": "telegram",
+            "device": "android_in_app"
+        }
+    
+    Response (success - iOS Universal Link):
+        {
+            "success": true,
+            "method": "ios_universal_link",
+            "redirect_token": "...",
+            "redirect_url": "/api/community/redirect?token=...",
+            "message": "Telegram wird geöffnet...",
+            "platform": "telegram",
+            "device": "ios_in_app"
         }
     
     Response (denied):
@@ -977,6 +1006,7 @@ async def telegram_invite(req: Request):
         data = await req.json()
         address = data.get("address", "").lower()
         platform = data.get("platform", "telegram").lower()  # Default to telegram
+        user_agent = data.get("user_agent", "")  # NEW: Frontend sends User-Agent for device detection
         
         if not address or not address.startswith("0x") or len(address) != 42:
             return {
@@ -996,6 +1026,36 @@ async def telegram_invite(req: Request):
                 "error": "No Identity NFT found",
                 "mint_required": True
             }
+        
+        # ========================================
+        # NEW: DEVICE DETECTION FOR INTENT-BRIDGE
+        # ========================================
+        is_android = "Android" in user_agent
+        is_ios = "iPhone" in user_agent or "iPad" in user_agent or "iOS" in user_agent
+        is_mobile = is_android or is_ios
+        
+        # In-App Browser Detection (MetaMask, Trust Wallet, Coinbase/Base Wallet, Rainbow, etc.)
+        is_in_app_browser = any(x in user_agent.lower() for x in [
+            "metamask",
+            "trust",
+            "coinbase",
+            "coinbasewallet",
+            "base",          # Base Wallet (Coinbase)
+            "rainbow",
+            "phantom",
+            "uniswap",
+            "1inch",
+            "zerion",
+            "wallet"         # Generic wallet detection
+        ])
+        
+        log_activity("INFO", f"{platform.upper()}_GATE", "Device detected", 
+                    address=address[:10],
+                    is_android=is_android,
+                    is_ios=is_ios,
+                    is_mobile=is_mobile,
+                    is_in_app=is_in_app_browser,
+                    user_agent=user_agent[:50] if user_agent else "none")
         
         # Get invite link (owner-specific or default)
         owner_wallet = (data.get("owner_wallet") or "").lower() if isinstance(data, dict) else ""
@@ -1141,9 +1201,89 @@ async def telegram_invite(req: Request):
             # Non-critical error - invite still works
             log_activity("WARNING", f"{platform.upper()}_GATE", f"Could not log invite: {str(db_err)}")
         
+        # ========================================
+        # NEW: INTENT-BRIDGE FOR ANDROID + IN-APP BROWSER
+        # ========================================
+        if platform == "telegram" and is_android and is_in_app_browser:
+            # Extract group identifier from invite link
+            # Format: https://t.me/+XXXXXX or https://t.me/joinchat/XXXXXX
+            group_identifier = None
+            if invite_link:
+                if "/+" in invite_link:
+                    # Format: https://t.me/+ABC123
+                    group_identifier = invite_link.split("+")[-1].split("?")[0].strip()
+                elif "joinchat/" in invite_link:
+                    # Format: https://t.me/joinchat/ABC123
+                    group_identifier = invite_link.split("joinchat/")[-1].split("?")[0].strip()
+            
+            if group_identifier:
+                # Build Android Intent URL for direct Telegram opening
+                # This bypasses WebView limitations in MetaMask/Trust Wallet
+                intent_url = f"intent://resolve?domain=t.me&startapp={group_identifier}#Intent;scheme=tg;package=org.telegram.messenger;end"
+                
+                log_activity("INFO", "TELEGRAM_GATE", "🤖 Intent-Bridge activated (Android + In-App)", 
+                            address=address[:10],
+                            device="android_in_app",
+                            group_id=group_identifier[:10] + "...")
+                
+                return {
+                    "success": True,
+                    "method": "intent_bridge",
+                    "intent_url": intent_url,
+                    "fallback_url": f"market://details?id=org.telegram.messenger",
+                    "message": "Telegram wird geöffnet...",
+                    "platform": platform,
+                    "device": "android_in_app"
+                }
+        
+        # ========================================
+        # NEW: iOS UNIVERSAL LINK FALLBACK
+        # ========================================
+        if platform == "telegram" and is_ios and is_in_app_browser:
+            # iOS: Use telegram.me instead of t.me (better Universal Link support)
+            ios_link = invite_link.replace("https://t.me/", "https://telegram.me/") if invite_link else invite_link
+            
+            log_activity("INFO", "TELEGRAM_GATE", "🍎 iOS Universal Link activated", 
+                        address=address[:10],
+                        device="ios_in_app")
+            
+            # Generate one-time token for iOS redirect
+            redirect_token = secrets.token_urlsafe(32)
+            token_created_at = datetime.now(timezone.utc)
+            token_expires_at = token_created_at + timedelta(seconds=30)
+            
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute(
+                    """INSERT INTO community_redirect_tokens 
+                       (token, address, invite_link, platform, created_at, expires_at, used)
+                       VALUES (?, ?, ?, ?, ?, ?, 0)""",
+                    (redirect_token, address, ios_link, platform, 
+                     token_created_at.isoformat(), token_expires_at.isoformat())
+                )
+                conn.commit()
+                conn.close()
+            except Exception as token_err:
+                log_activity("ERROR", "TELEGRAM_GATE", f"iOS token generation failed: {str(token_err)}")
+                return {"success": False, "error": "Could not generate secure redirect"}
+            
+            return {
+                "success": True,
+                "method": "ios_universal_link",
+                "redirect_token": redirect_token,
+                "redirect_url": f"/api/community/redirect?token={redirect_token}",
+                "message": "Telegram wird geöffnet...",
+                "platform": platform,
+                "device": "ios_in_app",
+                "expires_in_seconds": 30
+            }
+        
+        # ========================================
+        # STANDARD: Desktop / Normal Mobile Browser
+        # ========================================
         # 🔐 SECURITY: Generate one-time redirect token instead of returning link directly
         # Token is valid for 30 seconds and can only be used once
-        import secrets
         redirect_token = secrets.token_urlsafe(32)  # 256-bit secure token
         token_created_at = datetime.now(timezone.utc)
         token_expires_at = token_created_at + timedelta(seconds=30)
@@ -1161,7 +1301,8 @@ async def telegram_invite(req: Request):
             conn.commit()
             conn.close()
             log_activity("INFO", f"{platform.upper()}_GATE", "✓ Secure redirect token generated", 
-                        address=address[:10], token=redirect_token[:8])
+                        address=address[:10], token=redirect_token[:8],
+                        device="desktop" if not is_mobile else "mobile_standard")
         except Exception as token_err:
             log_activity("ERROR", f"{platform.upper()}_GATE", f"Token generation failed: {str(token_err)}")
             return {
@@ -1173,10 +1314,12 @@ async def telegram_invite(req: Request):
         platform_name = "Discord" if platform == "discord" else "Telegram"
         return {
             "success": True,
+            "method": "standard_redirect",
             "redirect_token": redirect_token,  # Token instead of direct link
             "redirect_url": f"/api/community/redirect?token={redirect_token}",
             "message": f"Welcome to AEra {platform_name} community!",
             "platform": platform,
+            "device": "desktop" if not is_mobile else "mobile_standard",
             "expires_in_seconds": 30
         }
         
