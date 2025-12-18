@@ -802,6 +802,100 @@ Platform: {{ platform_name }}
             }
         }
         
+        /**
+         * Detects mobile environment and in-app browsers
+         */
+        function detectMobileEnvironment() {
+            const ua = navigator.userAgent.toLowerCase();
+            const isAndroid = /android/i.test(ua);
+            const isIOS = /iphone|ipad|ipod/i.test(ua);
+            const isCoinbaseWallet = /coinbase/i.test(ua) || /cbwallet/i.test(ua);
+            const isMetaMaskMobile = /metamask/i.test(ua);
+            const isBaseWallet = /base wallet/i.test(ua) || (window.ethereum?.isBase);
+            const isTrustWallet = /trust/i.test(ua);
+            const isInAppBrowser = isCoinbaseWallet || isMetaMaskMobile || isBaseWallet || isTrustWallet;
+            
+            return {
+                isMobile: isAndroid || isIOS,
+                isAndroid,
+                isIOS,
+                isInAppBrowser,
+                isCoinbaseWallet,
+                isMetaMaskMobile,
+                isBaseWallet,
+                isTrustWallet,
+                walletName: isBaseWallet ? 'Base Wallet' : 
+                            isCoinbaseWallet ? 'Coinbase Wallet' :
+                            isMetaMaskMobile ? 'MetaMask Mobile' :
+                            isTrustWallet ? 'Trust Wallet' : 'Unknown'
+            };
+        }
+        
+        /**
+         * Robust wallet signing function with multiple fallback strategies
+         * Works with MetaMask, Base Wallet, Coinbase Wallet, and other providers
+         */
+        async function robustWalletSign(message, address) {
+            const mobileEnv = detectMobileEnvironment();
+            log(`🔐 robustWalletSign called for ${address.substring(0,10)}...`);
+            log(`📱 Mobile: ${mobileEnv.isMobile}, InApp: ${mobileEnv.isInAppBrowser}, Wallet: ${mobileEnv.walletName}`);
+            
+            const strategies = [
+                {
+                    name: 'Standard personal_sign [message, address]',
+                    fn: async () => {
+                        return await window.ethereum.request({
+                            method: 'personal_sign',
+                            params: [message, address]
+                        });
+                    }
+                },
+                {
+                    name: 'Reversed personal_sign [address, message]',
+                    fn: async () => {
+                        return await window.ethereum.request({
+                            method: 'personal_sign',
+                            params: [address, message]
+                        });
+                    }
+                },
+                {
+                    name: 'Hex-encoded personal_sign',
+                    fn: async () => {
+                        const hexMessage = '0x' + Array.from(new TextEncoder().encode(message))
+                            .map(b => b.toString(16).padStart(2, '0')).join('');
+                        return await window.ethereum.request({
+                            method: 'personal_sign',
+                            params: [hexMessage, address]
+                        });
+                    }
+                }
+            ];
+            
+            let lastError;
+            for (const strategy of strategies) {
+                try {
+                    log(`🔄 Trying: ${strategy.name}`);
+                    const signature = await strategy.fn();
+                    if (signature) {
+                        log(`✅ Success with: ${strategy.name}`);
+                        return signature;
+                    }
+                } catch (err) {
+                    log(`⚠️ ${strategy.name} failed: ${err.message}`);
+                    lastError = err;
+                    
+                    // User rejected - don't try other strategies
+                    if (err.code === 4001 || err.message?.includes('rejected') || 
+                        err.message?.includes('denied') || err.message?.includes('cancelled')) {
+                        throw err;
+                    }
+                }
+            }
+            
+            throw lastError || new Error('All signing strategies failed');
+        }
+        
         function showStatus(message, type = 'info') {
             if (statusDiv) {
                 statusDiv.textContent = message;
@@ -885,13 +979,10 @@ Nonce: ${nonceData.nonce}
 Issued At: ${issuedAt}`;
                 log('✓ Nonce received');
                 
-                // Wallet Signature
+                // Wallet Signature using robust method
                 let signature;
                 try {
-                    signature = await window.ethereum.request({
-                        method: 'personal_sign',
-                        params: [messageToSign, currentWallet]
-                    });
+                    signature = await robustWalletSign(messageToSign, currentWallet);
                 } catch (signError) {
                     log('❌ Signature rejected: ' + signError.message);
                     localStorage.removeItem('aera_token');
@@ -1213,13 +1304,10 @@ Nonce: ${nonceData.nonce}
 Issued At: ${issuedAt}`;
                 log('✓ Nonce received');
                 
-                // Wallet Signature
+                // Wallet Signature using robust method
                 let signature;
                 try {
-                    signature = await window.ethereum.request({
-                        method: 'personal_sign',
-                        params: [messageToSign, currentAddress]
-                    });
+                    signature = await robustWalletSign(messageToSign, currentAddress);
                 } catch (signError) {
                     log('❌ Signature rejected: ' + signError.message);
                     showStatus('❌ Signature rejected!', 'error');

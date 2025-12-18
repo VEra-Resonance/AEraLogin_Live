@@ -945,6 +945,17 @@ Licensed under the Apache License, Version 2.0
     </nav>
     
     <div class="container">
+        <!-- Mobile/In-App Browser Info Banner -->
+        <div id="mobileInfoBanner" style="display: none; margin-bottom: 15px; padding: 12px 15px; background: linear-gradient(135deg, #1e40af, #3b82f6); border-radius: 10px; font-size: 13px; border: 1px solid #60a5fa;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 20px;" id="mobileIcon">📱</span>
+                <div>
+                    <div style="font-weight: 600;" id="mobileTitle">Mobile Wallet Detected</div>
+                    <div style="opacity: 0.9; font-size: 12px;" id="mobileSubtitle">In-App Browser ready for signing</div>
+                </div>
+            </div>
+        </div>
+        
         <div class="owner-section">
             <h2>💼 Dashboard - Your Account - Connect Wallet</h2>
             <div class="input-group">
@@ -1464,6 +1475,112 @@ Licensed under the Apache License, Version 2.0
             setTimeout(() => btn.textContent = originalText, 2000);
         }
         
+        // ===== MOBILE DEVICE & IN-APP BROWSER DETECTION =====
+        function detectMobileEnvironment() {
+            const ua = navigator.userAgent.toLowerCase();
+            const isAndroid = /android/i.test(ua);
+            const isIOS = /iphone|ipad|ipod/i.test(ua);
+            const isMobile = isAndroid || isIOS;
+            
+            // Detect In-App Browsers (Wallet WebViews)
+            const inAppBrowserKeywords = [
+                'metamask', 'trust', 'coinbase', 'coinbasewallet', 'base',
+                'rainbow', 'phantom', 'uniswap', '1inch', 'zerion', 'wallet'
+            ];
+            const isInAppBrowser = inAppBrowserKeywords.some(keyword => ua.includes(keyword));
+            const isBaseWallet = ua.includes('base') || ua.includes('coinbasewallet') || 
+                                 (window.ethereum && window.ethereum.isCoinbaseWallet);
+            
+            return {
+                isAndroid,
+                isIOS,
+                isMobile,
+                isInAppBrowser,
+                isBaseWallet,
+                userAgent: ua
+            };
+        }
+        
+        function log(message) {
+            console.log(`[Dashboard] ${message}`);
+        }
+        
+        /**
+         * Robust wallet signing with multiple fallback strategies
+         * Handles different wallet implementations (MetaMask, Coinbase, Base, Rainbow, etc.)
+         * 
+         * Strategy Order:
+         * 1. Standard personal_sign [message, address] (MetaMask, Rainbow, Trust, Base)
+         * 2. Reversed personal_sign [address, message] (some Coinbase versions)
+         * 3. Hex-encoded personal_sign (fallback)
+         * 
+         * NOTE: Base Wallet SIWE Capabilities removed - causes signature verification issues
+         */
+        async function robustWalletSign(message, address) {
+            const env = detectMobileEnvironment();
+            
+            log(`🔐 Attempting signature (Base/Coinbase detected: ${env.isBaseWallet})`);
+            
+            // ========================================
+            // STRATEGY 1: Standard personal_sign [message, address]
+            // Works for: MetaMask, Rainbow, Trust Wallet, Base Wallet
+            // ========================================
+            try {
+                log('📝 Trying standard personal_sign [message, address]...');
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [message, address]
+                });
+                if (signature) {
+                    log('✅ Standard personal_sign successful!');
+                    return signature;
+                }
+            } catch (error1) {
+                log(`⚠️ Standard method failed: ${error1.message}`);
+                
+                // ========================================
+                // STRATEGY 2: Reversed params [address, message]
+                // Some older Coinbase/Base versions use this order
+                // ========================================
+                try {
+                    log('🔄 Trying reversed personal_sign [address, message]...');
+                    const signature = await window.ethereum.request({
+                        method: 'personal_sign',
+                        params: [address, message]
+                    });
+                    if (signature) {
+                        log('✅ Reversed personal_sign successful!');
+                        return signature;
+                    }
+                } catch (error2) {
+                    log(`⚠️ Reversed method failed: ${error2.message}`);
+                    
+                    // ========================================
+                    // STRATEGY 3: Hex-encoded message
+                    // Last resort fallback
+                    // ========================================
+                    try {
+                        log('🔢 Trying hex-encoded personal_sign...');
+                        const hexMessage = '0x' + Array.from(new TextEncoder().encode(message))
+                            .map(b => b.toString(16).padStart(2, '0')).join('');
+                        const signature = await window.ethereum.request({
+                            method: 'personal_sign',
+                            params: [hexMessage, address]
+                        });
+                        if (signature) {
+                            log('✅ Hex-encoded personal_sign successful!');
+                            return signature;
+                        }
+                    } catch (error3) {
+                        log(`❌ All signature methods failed`);
+                        throw new Error(`Signature rejected: ${error1.message}`);
+                    }
+                }
+            }
+            
+            throw new Error('No signature received');
+        }
+
         // ===== NEW: Web3 Wallet Integration =====
         // Store verified token in memory (not localStorage for security)
         let dashboardToken = null;
@@ -1471,24 +1588,74 @@ Licensed under the Apache License, Version 2.0
         
         async function connectMetaMask() {
             const statusDiv = document.getElementById('statusMessage');
+            const env = detectMobileEnvironment();
+            
+            console.log('🔗 [Dashboard] Starting wallet connection...');
+            console.log('🔗 [Dashboard] Environment:', JSON.stringify(env));
+            console.log('🔗 [Dashboard] window.ethereum:', typeof window.ethereum);
+            
             if (typeof window.ethereum === 'undefined') {
                 statusDiv.innerHTML = '<div class="status error">❌ No Web3 wallet detected! Please install MetaMask, Coinbase Wallet or Rabby.</div>';
                 return;
             }
+            
+            // Log wallet provider info
+            console.log('🔗 [Dashboard] Wallet provider info:', {
+                isMetaMask: window.ethereum.isMetaMask,
+                isCoinbaseWallet: window.ethereum.isCoinbaseWallet,
+                isRainbow: window.ethereum.isRainbow,
+                isTrust: window.ethereum.isTrust
+            });
+            
             statusDiv.innerHTML = '<div class="status loading">⏳ Connecting wallet...</div>';
             
             try {
                 console.log('🔗 Step 1: Requesting Web3 wallet access...');
                 
-                // Request account access
-                const accounts = await window.ethereum.request({
-                    method: 'eth_requestAccounts'
-                });
+                // Request account access - handle Base Wallet differently
+                let accounts;
+                try {
+                    accounts = await window.ethereum.request({
+                        method: 'eth_requestAccounts'
+                    });
+                } catch (requestError) {
+                    console.log('⚠️ eth_requestAccounts failed, trying eth_accounts...');
+                    // Fallback for some wallets
+                    accounts = await window.ethereum.request({
+                        method: 'eth_accounts'
+                    });
+                }
                 
-                console.log('✅ Account received:', accounts[0]);
+                console.log('📋 [Dashboard] Accounts response:', accounts);
+                console.log('📋 [Dashboard] Accounts type:', typeof accounts);
+                console.log('📋 [Dashboard] Accounts length:', accounts ? accounts.length : 'null');
+                
+                // Validate accounts response
+                if (!accounts || accounts.length === 0) {
+                    throw new Error('No accounts returned from wallet. Please unlock your wallet and try again.');
+                }
+                
+                const rawAddress = accounts[0];
+                console.log('📋 [Dashboard] Raw address:', rawAddress);
+                console.log('📋 [Dashboard] Raw address type:', typeof rawAddress);
+                
+                // Validate address format
+                if (!rawAddress || typeof rawAddress !== 'string') {
+                    throw new Error('Invalid address format received from wallet');
+                }
+                
+                const walletAddress = rawAddress.toLowerCase();
+                console.log('✅ Account received:', walletAddress);
+                
+                // Validate Ethereum address format
+                if (!walletAddress.startsWith('0x') || walletAddress.length !== 42) {
+                    throw new Error(`Invalid Ethereum address: ${walletAddress}`);
+                }
+                
                 statusDiv.innerHTML = '<div class="status loading">⏳ Setting up wallet connection...</div>';
                 
-                const walletAddress = accounts[0].toLowerCase();
+                // Update input field immediately so user sees it
+                document.getElementById('ownerInput').value = walletAddress;
                 
                 // � Step 1.5: Switch to BASE Mainnet (Chain ID 8453)
                 const BASE_CHAIN_ID = '0x2105'; // 8453 in hex
@@ -1565,10 +1732,9 @@ Chain ID: 8453
 Nonce: ${nonce}
 Issued At: ${issuedAt}`;
                 
-                const signature = await window.ethereum.request({
-                    method: 'personal_sign',
-                    params: [messageToSign, walletAddress]
-                });
+                // Use robust signing method with multiple fallback strategies
+                // Supports: MetaMask, Base Wallet, Coinbase, Rainbow, Trust Wallet, etc.
+                const signature = await robustWalletSign(messageToSign, walletAddress);
                 
                 // ✅ SOFORT nach MetaMask-Bestätigung: Zeige Status-Meldung
                 console.log('🚨 SIGNATURE RECEIVED - updating status NOW');
@@ -1640,8 +1806,18 @@ Issued At: ${issuedAt}`;
                 // But now loadDashboard() will NOT need wallet signature confirmation
             } catch (error) {
                 console.error('❌ Error in connectMetaMask:', error);
+                console.error('❌ Error details:', {
+                    code: error.code,
+                    message: error.message,
+                    stack: error.stack
+                });
+                
                 if (error.code === 4001 || error.message.includes('rejected')) {
                     statusDiv.innerHTML = '<div class="status error">❌ You rejected the wallet signature.</div>';
+                } else if (error.message.includes('No accounts')) {
+                    statusDiv.innerHTML = '<div class="status error">❌ No wallet accounts found. Please unlock your wallet and try again.</div>';
+                } else if (error.message.includes('Invalid Ethereum address')) {
+                    statusDiv.innerHTML = `<div class="status error">❌ ${error.message}. Please try with a different wallet.</div>`;
                 } else {
                     statusDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
                 }
@@ -1670,6 +1846,61 @@ Issued At: ${issuedAt}`;
             });
         }
         
+        // ===== Mobile/In-App Browser Detection & Banner =====
+        function showMobileInfoBanner() {
+            const env = detectMobileEnvironment();
+            const banner = document.getElementById('mobileInfoBanner');
+            const icon = document.getElementById('mobileIcon');
+            const title = document.getElementById('mobileTitle');
+            const subtitle = document.getElementById('mobileSubtitle');
+            
+            if (!banner) return;
+            
+            if (env.isInAppBrowser) {
+                banner.style.display = 'block';
+                
+                if (env.isBaseWallet) {
+                    icon.textContent = '🔵';
+                    title.textContent = 'Base Wallet Browser';
+                    subtitle.textContent = 'SIWE signing enabled - tap Connect to sign in';
+                    banner.style.background = 'linear-gradient(135deg, #0052ff, #3b82f6)';
+                } else if (env.userAgent.includes('metamask')) {
+                    icon.textContent = '🦊';
+                    title.textContent = 'MetaMask In-App Browser';
+                    subtitle.textContent = 'Ready for wallet signature';
+                    banner.style.background = 'linear-gradient(135deg, #f6851b, #e2761b)';
+                } else if (env.userAgent.includes('trust')) {
+                    icon.textContent = '🛡️';
+                    title.textContent = 'Trust Wallet Browser';
+                    subtitle.textContent = 'Tap Connect to sign in with your wallet';
+                    banner.style.background = 'linear-gradient(135deg, #3375bb, #1a5aab)';
+                } else if (env.userAgent.includes('rainbow')) {
+                    icon.textContent = '🌈';
+                    title.textContent = 'Rainbow Wallet Browser';
+                    subtitle.textContent = 'Ready for wallet signature';
+                    banner.style.background = 'linear-gradient(135deg, #ff6b6b, #feca57)';
+                } else {
+                    icon.textContent = '📱';
+                    title.textContent = 'Wallet In-App Browser';
+                    subtitle.textContent = 'Tap Connect to sign in with your wallet';
+                }
+                
+                log(`📱 Detected: ${title.textContent}`);
+            } else if (env.isMobile) {
+                // Mobile but not in-app browser
+                banner.style.display = 'block';
+                icon.textContent = env.isIOS ? '📱' : '🤖';
+                title.textContent = env.isIOS ? 'iOS Device' : 'Android Device';
+                subtitle.textContent = 'Open in your wallet app for best experience';
+                banner.style.background = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+                log(`📱 Mobile browser detected: ${env.isIOS ? 'iOS' : 'Android'}`);
+            } else {
+                // Desktop - hide banner
+                banner.style.display = 'none';
+                log('🖥️ Desktop browser detected');
+            }
+        }
+        
         // Load from URL if owner is in params
         window.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
@@ -1678,6 +1909,9 @@ Issued At: ${issuedAt}`;
                 document.getElementById('ownerInput').value = owner;
                 // Do NOT auto-load - user must click button
             }
+            
+            // Show mobile info banner
+            showMobileInfoBanner();
         });
         
         // ===== Smooth Scroll Function =====

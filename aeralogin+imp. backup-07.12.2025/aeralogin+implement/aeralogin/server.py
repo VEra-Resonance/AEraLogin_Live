@@ -1787,9 +1787,9 @@ async def verify(req: Request):
             log_activity("ERROR", "AUTH", "Invalid address format", address=address[:10])
             return {"error": "Invalid address format", "is_human": False}
         
-        # ===== VALIDIERE SIGNATURE MIT web3.py =====
+        # ===== VALIDIERE SIGNATURE MIT web3.py (EOA + Smart Contract Wallets) =====
         try:
-            from eth_account.messages import encode_defunct
+            from eth_account.messages import encode_defunct, defunct_hash_message
             from eth_account import Account
             
             # 🔐 Support both old format AND SIWE (EIP-4361) format
@@ -1801,13 +1801,88 @@ async def verify(req: Request):
                 # Old format: Build message with nonce
                 message_text = f"Signiere diese Nachricht um dich bei AEra anzumelden:\nNonce: {nonce}"
             
-            message = encode_defunct(text=message_text)
+            # Detect Smart Contract Wallet signature (EIP-6492)
+            # These signatures are much longer than 65 bytes (130 hex chars + 0x)
+            is_smart_wallet_sig = len(signature) > 200 if signature else False
+            log_activity("INFO", "AUTH", f"Signature length: {len(signature)}, Smart Contract Wallet: {is_smart_wallet_sig}", address=address[:10])
             
-            # Verifiziere Signature
-            recovered_address = Account.recover_message(message, signature=signature)
+            signature_valid = False
             
-            if recovered_address.lower() != address:
-                log_activity("ERROR", "AUTH", "Signature verification FAILED", address=address[:10], recovered=recovered_address[:10])
+            # ========================================
+            # SMART CONTRACT WALLET (EIP-1271) VERIFICATION
+            # Base Wallet, Coinbase Smart Wallet, Safe, etc.
+            # ========================================
+            if is_smart_wallet_sig:
+                log_activity("INFO", "AUTH", "Attempting EIP-1271 Smart Contract Wallet verification...", address=address[:10])
+                try:
+                    from web3 import Web3
+                    
+                    # Connect to BASE mainnet
+                    w3 = Web3(Web3.HTTPProvider('https://mainnet.base.org'))
+                    
+                    # EIP-1271 ABI - just the isValidSignature function
+                    EIP1271_ABI = [
+                        {
+                            "inputs": [
+                                {"name": "_hash", "type": "bytes32"},
+                                {"name": "_signature", "type": "bytes"}
+                            ],
+                            "name": "isValidSignature",
+                            "outputs": [{"name": "", "type": "bytes4"}],
+                            "stateMutability": "view",
+                            "type": "function"
+                        }
+                    ]
+                    
+                    # Hash the message (EIP-191 personal sign format)
+                    message_hash = defunct_hash_message(text=message_text)
+                    log_activity("INFO", "AUTH", f"Message hash for EIP-1271: {message_hash.hex()[:20]}...", address=address[:10])
+                    
+                    # Create contract instance
+                    wallet_contract = w3.eth.contract(
+                        address=Web3.to_checksum_address(address),
+                        abi=EIP1271_ABI
+                    )
+                    
+                    # Convert signature to bytes
+                    sig_bytes = bytes.fromhex(signature[2:]) if signature.startswith('0x') else bytes.fromhex(signature)
+                    
+                    # Call isValidSignature on the smart contract wallet
+                    result = wallet_contract.functions.isValidSignature(
+                        message_hash,
+                        sig_bytes
+                    ).call()
+                    
+                    # EIP-1271 magic value for valid signature
+                    MAGIC_VALUE = bytes.fromhex('1626ba7e')
+                    
+                    if result == MAGIC_VALUE:
+                        signature_valid = True
+                        log_activity("INFO", "AUTH", "✅ EIP-1271 Smart Contract Wallet verification SUCCESS!", address=address[:10])
+                    else:
+                        log_activity("INFO", "AUTH", f"EIP-1271 returned: {result.hex()} (expected 1626ba7e)", address=address[:10])
+                        
+                except Exception as eip1271_error:
+                    log_activity("INFO", "AUTH", f"EIP-1271 verification failed: {str(eip1271_error)}", address=address[:10])
+            
+            # ========================================
+            # STANDARD EOA SIGNATURE VERIFICATION
+            # MetaMask, Rainbow, Trust, etc.
+            # ========================================
+            if not signature_valid:
+                try:
+                    message = encode_defunct(text=message_text)
+                    recovered_address = Account.recover_message(message, signature=signature)
+                    
+                    if recovered_address.lower() == address:
+                        signature_valid = True
+                        log_activity("INFO", "AUTH", "✅ EOA signature verification SUCCESS", address=address[:10])
+                    else:
+                        log_activity("ERROR", "AUTH", "Signature verification FAILED", address=address[:10], recovered=recovered_address[:10])
+                except Exception as eoa_error:
+                    log_activity("INFO", "AUTH", f"EOA verification failed: {str(eoa_error)}", address=address[:10])
+            
+            if not signature_valid:
                 return {"error": "Signature verification failed", "is_human": False}
             
             # 🔐 SIWE: Also verify nonce is in the message (anti-replay)
@@ -3108,33 +3183,118 @@ async def verify_dashboard_signature(data: dict):
             log_activity("WARNING", "AUTH", "Challenge expired", owner=owner[:10])
             return {"success": False, "error": "Challenge expired"}
         
-        # Verify signature - supports both old format and SIWE (EIP-4361)
+        # Verify signature - supports EOA, SIWE (EIP-4361), and Smart Contract Wallets (EIP-1271/EIP-6492)
+        from eth_account.messages import encode_defunct
+        
+        recovered_address = None
+        signed_message = data.get("message", "")  # Frontend can send the signed message
+        
+        # DEBUG: Log received data FIRST (before any try/except)
+        log_activity("INFO", "AUTH", f"=== SIGNATURE DEBUG START ===")
+        log_activity("INFO", "AUTH", f"Owner: {owner}")
+        log_activity("INFO", "AUTH", f"Signature length: {len(signature) if signature else 0}")
+        log_activity("INFO", "AUTH", f"Signature (first 40): {signature[:40] if signature else 'None'}...")
+        log_activity("INFO", "AUTH", f"Message length: {len(signed_message) if signed_message else 0}")
+        log_activity("INFO", "AUTH", f"Message (first 150): {signed_message[:150] if signed_message else 'None'}")
+        log_activity("INFO", "AUTH", f"Nonce: {nonce}")
+        log_activity("INFO", "AUTH", f"Nonce in message: {nonce in signed_message if signed_message else False}")
+        
+        # Detect Smart Contract Wallet signature (EIP-6492)
+        # These signatures are much longer than 65 bytes and often start with zeros
+        is_smart_wallet_sig = len(signature) > 200 if signature else False
+        log_activity("INFO", "AUTH", f"Smart Contract Wallet detected: {is_smart_wallet_sig}")
+        
         try:
-            from eth_account.messages import encode_defunct
-            
-            recovered_address = None
-            signed_message = data.get("message", "")  # Frontend can send the signed message
-            
-            # If frontend sent the message, use it directly
-            if signed_message and nonce in signed_message:
+            # ========================================
+            # SMART CONTRACT WALLET (EIP-1271) VERIFICATION
+            # Base Wallet, Coinbase Smart Wallet, Safe, etc.
+            # ========================================
+            if is_smart_wallet_sig and signed_message and nonce in signed_message:
+                log_activity("INFO", "AUTH", "Attempting EIP-1271 Smart Contract Wallet verification...")
                 try:
-                    message = encode_defunct(text=signed_message)
-                    recovered_address = Account.recover_message(message, signature=signature).lower()
-                    log_activity("INFO", "AUTH", "SIWE message verification", owner=owner[:10])
-                except Exception as e:
-                    log_activity("DEBUG", "AUTH", f"SIWE verification failed: {e}")
+                    # For Smart Contract Wallets, we verify via on-chain call
+                    # The wallet contract implements isValidSignature(bytes32 hash, bytes signature)
+                    # Magic value 0x1626ba7e means valid
+                    
+                    from web3 import Web3
+                    from eth_account.messages import defunct_hash_message
+                    
+                    # Connect to BASE mainnet
+                    w3 = Web3(Web3.HTTPProvider('https://mainnet.base.org'))
+                    
+                    # EIP-1271 ABI - just the isValidSignature function
+                    EIP1271_ABI = [
+                        {
+                            "inputs": [
+                                {"name": "_hash", "type": "bytes32"},
+                                {"name": "_signature", "type": "bytes"}
+                            ],
+                            "name": "isValidSignature",
+                            "outputs": [{"name": "", "type": "bytes4"}],
+                            "stateMutability": "view",
+                            "type": "function"
+                        }
+                    ]
+                    
+                    # Hash the message (EIP-191 personal sign format)
+                    message_hash = defunct_hash_message(text=signed_message)
+                    log_activity("INFO", "AUTH", f"Message hash: {message_hash.hex()}")
+                    
+                    # Create contract instance
+                    wallet_contract = w3.eth.contract(
+                        address=Web3.to_checksum_address(owner),
+                        abi=EIP1271_ABI
+                    )
+                    
+                    # Convert signature to bytes
+                    sig_bytes = bytes.fromhex(signature[2:]) if signature.startswith('0x') else bytes.fromhex(signature)
+                    
+                    # Call isValidSignature on the smart contract wallet
+                    try:
+                        result = wallet_contract.functions.isValidSignature(
+                            message_hash,
+                            sig_bytes
+                        ).call()
+                        
+                        # EIP-1271 magic value for valid signature
+                        MAGIC_VALUE = bytes.fromhex('1626ba7e')
+                        
+                        if result == MAGIC_VALUE:
+                            recovered_address = owner  # Smart contract wallet verified!
+                            log_activity("INFO", "AUTH", f"✅ EIP-1271 Smart Contract Wallet verification SUCCESS!")
+                        else:
+                            log_activity("INFO", "AUTH", f"EIP-1271 returned: {result.hex()} (expected 1626ba7e)")
+                    except Exception as contract_error:
+                        log_activity("INFO", "AUTH", f"EIP-1271 contract call failed: {str(contract_error)}")
+                        
+                except Exception as eip1271_error:
+                    log_activity("INFO", "AUTH", f"EIP-1271 verification error: {str(eip1271_error)}")
             
-            # Fallback: Try old format for backwards compatibility
+            # ========================================
+            # STANDARD EOA SIGNATURE VERIFICATION
+            # MetaMask, Rainbow, Trust, etc.
+            # ========================================
             if recovered_address != owner:
-                old_message = f"VEra-Resonance Dashboard Access\n\nNonce: {nonce}\n\nPlease confirm in your Web3 wallet to access your dashboard."
-                try:
-                    message = encode_defunct(text=old_message)
-                    recovered_address = Account.recover_message(message, signature=signature).lower()
-                    log_activity("INFO", "AUTH", "Old format verification", owner=owner[:10])
-                except:
-                    pass
+                # If frontend sent the message, use it directly
+                if signed_message and nonce in signed_message:
+                    try:
+                        message = encode_defunct(text=signed_message)
+                        recovered_address = Account.recover_message(message, signature=signature).lower()
+                        log_activity("INFO", "AUTH", f"SIWE verification SUCCESS - recovered: {recovered_address}", owner=owner[:10])
+                    except Exception as e:
+                        log_activity("INFO", "AUTH", f"SIWE verification FAILED: {str(e)}")
+                
+                # Fallback: Try old format for backwards compatibility
+                if recovered_address != owner:
+                    old_message = f"VEra-Resonance Dashboard Access\n\nNonce: {nonce}\n\nPlease confirm in your Web3 wallet to access your dashboard."
+                    try:
+                        message = encode_defunct(text=old_message)
+                        recovered_address = Account.recover_message(message, signature=signature).lower()
+                        log_activity("INFO", "AUTH", "Old format verification SUCCESS", owner=owner[:10])
+                    except Exception as e2:
+                        log_activity("INFO", "AUTH", f"Old format verification FAILED: {str(e2)}")
             
-            if not recovered_address:
+            if not recovered_address or recovered_address != owner:
                 raise Exception("Could not recover address from signature")
                 
         except Exception as e:
