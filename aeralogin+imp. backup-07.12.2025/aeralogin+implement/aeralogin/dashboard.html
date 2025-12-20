@@ -105,7 +105,7 @@ Licensed under the Apache License, Version 2.0
         
         /* Header */
         .header {
-            padding: 1rem 5%;
+            padding: 0.79rem 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -120,7 +120,7 @@ Licensed under the Apache License, Version 2.0
         }
 
         .logo {
-            font-size: 2.5rem;
+            font-size: 2.25rem;
             font-weight: 800;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
@@ -131,7 +131,7 @@ Licensed under the Apache License, Version 2.0
         }
 
         .logo-icon {
-            font-size: 3rem;
+            font-size: 2.7rem;
             background: none !important;
             -webkit-background-clip: unset !important;
             -webkit-text-fill-color: currentColor !important;
@@ -276,6 +276,12 @@ Licensed under the Apache License, Version 2.0
             animation: fadeInUp 0.6s ease-out;
             animation-delay: 0.1s;
             animation-fill-mode: both;
+            transition: all 0.3s ease;
+        }
+        
+        .owner-section:hover {
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 15px 50px rgba(0, 82, 255, 0.2);
         }
         
         .owner-section h2 {
@@ -401,6 +407,12 @@ Licensed under the Apache License, Version 2.0
             border-radius: 16px;
             margin-bottom: 24px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .link-section:hover {
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 15px 50px rgba(0, 82, 255, 0.2);
         }
         
         .link-section p {
@@ -461,6 +473,12 @@ Licensed under the Apache License, Version 2.0
             overflow: hidden;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        .followers-table:hover {
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 15px 50px rgba(0, 82, 255, 0.2);
         }
         
         .table-header {
@@ -508,8 +526,14 @@ Licensed under the Apache License, Version 2.0
             color: rgba(240, 244, 255, 0.9);
         }
         
-        tr:hover {
-            background: rgba(0, 82, 255, 0.05);
+        tbody tr {
+            transition: all 0.3s ease;
+            border-left: 2px solid transparent;
+        }
+        
+        tbody tr:hover {
+            background: rgba(0, 82, 255, 0.08);
+            border-left-color: var(--secondary);
         }
         
         tr:last-child td {
@@ -925,7 +949,7 @@ Licensed under the Apache License, Version 2.0
             <a onclick="scrollToSection('stats')">Stats</a>
             <a onclick="scrollToSection('followers')">Followers</a>
             <a onclick="scrollToSection('blockchain')">Blockchain</a>
-            <a href="/logo.html">Logo</a>
+            <a onclick="navigateToCore()">AEra Core</a>
             <a href="/">Home</a>
         </nav>
         
@@ -940,7 +964,7 @@ Licensed under the Apache License, Version 2.0
         <a onclick="scrollToSection('stats'); closeMenu();">Stats</a>
         <a onclick="scrollToSection('followers'); closeMenu();">Followers</a>
         <a onclick="scrollToSection('blockchain'); closeMenu();">Blockchain</a>
-        <a href="/logo.html">Logo</a>
+        <a onclick="navigateToCore(); closeMenu();">AEra Core</a>
         <a href="/">Home</a>
     </nav>
     
@@ -1794,6 +1818,10 @@ Issued At: ${issuedAt}`;
                 dashboardToken = signature;  // Use signature as token
                 connectedWallet = walletAddress;
                 
+                // ✅ Store in sessionStorage for User Dashboard access
+                sessionStorage.setItem('aeraDashboardWallet', walletAddress);
+                sessionStorage.setItem('aeraDashboardToken', signature);
+                
                 // Auto-fill input
                 document.getElementById('ownerInput').value = walletAddress;
                 
@@ -1833,6 +1861,11 @@ Issued At: ${issuedAt}`;
             document.getElementById('statusMessage').innerHTML = '';
             dashboardToken = null;
             connectedWallet = null;
+            
+            // Clear sessionStorage for AEra Core access
+            sessionStorage.removeItem('aeraDashboardWallet');
+            sessionStorage.removeItem('aeraDashboardToken');
+            console.log('🔓 Session cleared - AEra Core access revoked');
         }
         
         //  SECURITY: Do NOT listen to accountsChanged for auto-connection
@@ -1943,6 +1976,19 @@ Issued At: ${issuedAt}`;
             mobileMenu.classList.remove('active');
             menuBackdrop.classList.remove('active');
             menuToggle.textContent = '☰';
+        }
+
+        // Navigate to AEra Core (User Dashboard)
+        function navigateToCore() {
+            // Check if wallet is connected AND verified (in-memory variable from signature verification)
+            // connectedWallet is only set after successful wallet connection + signature verification
+            if (connectedWallet && dashboardToken) {
+                // User is logged in with verified signature - navigate to core
+                window.location.href = 'user-dashboard.html';
+            } else {
+                // User not logged in - show popup
+                alert('🔐 Access Restricted\n\nPlease connect your wallet first to access AEra Core.\n\nUse the "Connect Wallet" button below to authenticate.');
+            }
         }
 
         // Toggle menu on button click

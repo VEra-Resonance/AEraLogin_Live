@@ -13,3 +13,6 @@ httpx>=0.25.0
 
 # Telegram Group Bot
 python-telegram-bot>=20.0
+
+# OAuth/JWT support
+PyJWT>=2.8.0

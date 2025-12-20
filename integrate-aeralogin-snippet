@@ -1,0 +1,138 @@
+Arbeitsauftrag: AEra Embed Snippet + Secure Verification
+0) Bestehendes System zuerst vollständig analysieren
+Analysiere die aktuelle Implementierung und den Flow auf folgenden Seiten (Code, Cookies/Storage, Redirects, API Calls, Parameter, Token/Session-Handling):
+/ (Index / Landing)
+/join-telegram (oder entsprechender Join-/Gate-Einstieg)
+/dashboard
+/user (Userbereich / Core)
+Konkret herausfinden und dokumentieren:
+Wie wird Wallet-Connect gemacht? (welche Lib, welche Provider/WalletConnect/Injected)
+Wie wird SIWE oder Signatur gemacht? (Message Format, Nonce, Domain, ChainId)
+Wie entsteht das “FT/NFT” (wann, wo, Trigger: Dashboard-Login vs Followerlink)
+Welche Backend-Endpunkte existieren bereits?
+login/auth verify?
+score read?
+nft/ft status?
+session create?
+Wie wird aktuell “eingeloggt” gespeichert?
+Cookie (httpOnly?) oder localStorage?
+JWT? Session-ID?
+Wie wird aktuell die Zugriffslogik durchgesetzt?
+rein Frontend Redirect?
+Server prüft auch?
+Welche Daten werden im Userbereich angezeigt?
+Wallet gekürzt, Score, Status, Token vorhanden
+Erst wenn das klar ist: Snippet bauen, ohne den Flow zu zerstören.
+1) Ziel: AEra Gate als “Embed” für fremde Websites
+Erstelle ein einbindbares Snippet, das Drittseiten so nutzen:
+Minimal-Integration (Publisher)
+Option A (ein Script + 1 Container):
+<script src="https://aeralogin.com/sdk/aera-gate.js"></script>
+<div data-aera-protect data-min-score="20" data-require-ft="true">
+  <!-- geschützter Inhalt -->
+</div>
+oder Option B (JS API):
+<script src="https://aeralogin.com/sdk/aera-gate.js"></script>
+<script>
+  AEraGate.protect({
+    selector: "[data-aera-protect]",
+    minScore: 20,
+    requireFT: true
+  });
+</script>
+2) Sicherheitsanforderung: echte Protection (nicht nur UI)
+Das Snippet muss zwei Modi unterstützen:
+Mode 1 — Client UI Gate (schnell, Demo)
+Versteckt/zeigt DOM-Inhalt
+Nutzt Backend-Verify, aber ist nicht “hard security”
+Gut für Teaser/Marketing
+Mode 2 — Secure Gate (echter Schutz, empfohlen)
+Echter Schutz erfordert serverseitige Verifikation beim Publisher.
+Dafür implementieren:
+(A) AEra API: POST /api/v1/verify
+Eingabe: Authorization: Bearer <aera_session_token>
+Ausgabe:
+{
+  "valid": true,
+  "wallet": "0x...",
+  "score": 42,
+  "hasFT": true,
+  "chainId": 8453,
+  "issuedAt": "...",
+  "expiresAt": "..."
+}
+MUSS enthalten:
+Token-Expiry
+Signierte Antwort oder JWT (AEra signiert)
+Replay-Schutz (nonce/jti)
+CORS restriktiv (nur erlaubte Origins pro Publisher)
+(B) Publisher-Middleware Beispiele liefern
+Node/Express Middleware Beispiel
+Next.js Middleware Beispiel
+(Optional) PHP/Laravel Beispiel
+Publisher prüft serverseitig:
+Cookie/Token vorhanden?
+verify call
+wenn fail → redirect to AEra login URL
+3) Session- und Redirect-Design (SSO-ähnlich)
+Implementiere einen Login Redirect Flow, der für fremde Sites sauber funktioniert:
+Publisher protected page erkennt: kein gültiger AEra Token
+Redirect zu:
+https://aeralogin.com/auth?client_id=...&redirect_uri=https://publisher.com/private&state=...
+AEra führt bestehenden Flow aus (Dashboard-Login / FT generation falls nötig)
+AEra redirect zurück:
+https://publisher.com/private?code=...&state=...
+Publisher tauscht code gegen aera_session_token:
+POST https://api.aeralogin.com/oauth/token
+Publisher setzt httpOnly cookie (aera_session) und liefert Content aus
+Wichtig:
+state prüfen (CSRF)
+redirect_uri whitelisten pro client_id
+code nur einmal verwendbar, kurzlebig (z.B. 60s)
+4) SDK / Snippet: Funktionen und Verhalten
+Erstelle aera-gate.js (minified + source) mit:
+API
+AEraGate.init({ clientId, mode, apiBase })
+AEraGate.protect({ selector, minScore, requireFT, onAllow, onDeny })
+AEraGate.login({ redirectUri }) → startet Auth Redirect
+AEraGate.logout() → cookie/session invalidation (optional)
+UI (minimal, base-konform)
+Wenn denied:
+zeige eine schlichte Box: “Login required”
+Button: “Continue with AEra”
+Keine langen Texte, keine Web3-Erklärungen
+Kompatibilität
+Funktioniert auf:
+plain HTML
+React/Next (client side)
+ohne Framework
+5) Origin- & Security-Hardening
+MUSS umgesetzt werden:
+client_id + client_secret Konzept (für Server-Token Exchange)
+redirect_uri Whitelist
+CORS: allowlist pro Client
+Cookies: HttpOnly; Secure; SameSite=Lax (oder None bei cross-site + https)
+Rate limiting auf verify/token
+Logging minimal (keine sensitiven Signaturen speichern)
+Token signiert (JWT) + Rotation Key (optional)
+ChainId check (Base mainnet/testnet je nach Config)
+6) Deliverables (konkret abliefern)
+sdk/aera-gate.js (production build)
+sdk/aera-gate.min.js
+docs/embed.md:
+Quickstart (1 snippet)
+Server-side secure integration (copy/paste)
+api Implementation:
+/api/v1/verify
+/oauth/token
+/oauth/authorize (oder /auth endpoint)
+Example Publisher App:
+examples/express-protected-site/
+enthält eine protected route + login redirect + token exchange
+7) Akzeptanzkriterien / Tests
+Automatisierte Tests oder manuelle Testcheckliste:
+Kein Login → denied + redirect möglich
+Login → FT/NFT wird (falls nötig) wie im aktuellen Flow erstellt
+Zurück auf Publisher → Content wird serverseitig ausgeliefert
+Token expiry → erneuter login nötig
+Manipulation im Browser (DOM unhide) darf nicht helfen (server-side mode)

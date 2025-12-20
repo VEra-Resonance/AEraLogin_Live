@@ -47,7 +47,7 @@
 
         /* Header */
         header {
-            padding: 1rem 5%;
+            padding: 0.79rem 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -62,7 +62,7 @@
         }
 
         .logo {
-            font-size: 2.5rem;
+            font-size: 2.25rem;
             font-weight: 800;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
@@ -73,7 +73,7 @@
         }
 
         .logo-icon {
-            font-size: 3rem;
+            font-size: 2.7rem;
             background: none !important;
             -webkit-background-clip: unset !important;
             background-clip: unset !important;
@@ -672,13 +672,17 @@
                 Decentralized authentication with Soul-Bound NFTs, 
                 dynamic Resonance Scoring, and blockchain-verified social reputation.
             </p>
-            <div style="margin: 2rem auto; padding: 1rem; background: rgba(0, 212, 255, 0.1); border-radius: 12px; border: 1px solid var(--secondary); max-width: 700px;">
-                <p style="font-size: 1.1rem; font-weight: 600; color: var(--secondary); margin-bottom: 0.5rem;">
-                    🌍 Multi-Platform Ready
+            <div style="margin: 2rem auto; padding: 1.5rem; background: rgba(0, 212, 255, 0.1); border-radius: 12px; border: 1px solid var(--secondary); max-width: 750px;">
+                <p style="font-size: 1.2rem; font-weight: 700; color: var(--secondary); margin-bottom: 1rem;">
+                    🌍 Multi-Platform Ready + Website Integration
                 </p>
-                <p style="font-size: 0.95rem; color: rgba(240, 244, 255, 0.8);">
-                    Share your AEraLogIn link anywhere - X/Twitter, Telegram, Discord, Farcaster, WhatsApp, Instagram.
+                <p style="font-size: 1rem; color: rgba(240, 244, 255, 0.9); margin-bottom: 1rem; line-height: 1.7;">
+                    <strong>Social Media:</strong> Share your AEraLogIn link anywhere - X/Twitter, Telegram, Discord, Farcaster, WhatsApp, Instagram.
                     Works in profiles, groups, channels, and DMs. One link, all platforms! 🔗
+                </p>
+                <p style="font-size: 1rem; color: rgba(240, 244, 255, 0.9); line-height: 1.7;">
+                    <strong>🔐 Website Protection:</strong> Secure entire user areas on your website with NFT-gated access.
+                    Perfect for exclusive content, member dashboards, and protected communities. No passwords needed - just Web3 authentication!
                 </p>
             </div>
             <div class="hero-cta">
@@ -688,11 +692,53 @@
         </div>
     </section>
 
+    <!-- AEra Core - Protected User Area -->
+    <section style="padding: 3rem 5%;">
+        <div style="max-width: 700px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, rgba(0, 82, 255, 0.1), rgba(99, 102, 241, 0.15)); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 16px; padding: 2.5rem; text-align: center; backdrop-filter: blur(10px); box-shadow: 0 10px 40px rgba(99, 102, 241, 0.2);">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">
+                    <span style="color: #3b82f6; animation: pulse 2s ease-in-out infinite; display: inline-block;">🌀</span>
+                </div>
+                
+                <h3 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 0.75rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    AEra Core
+                </h3>
+                
+                <p style="font-size: 1.1rem; color: rgba(240, 244, 255, 0.9); margin-bottom: 1.5rem; line-height: 1.7;">
+                    Your <strong>protected user area</strong> with exclusive access for verified members.<br>
+                    Get real-time updates, project news, and community insights.
+                </p>
+                
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.9rem;">
+                        <span style="color: var(--success);">✓</span> Live Project Updates
+                    </div>
+                    <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.9rem;">
+                        <span style="color: var(--success);">✓</span> Your Profile & Stats
+                    </div>
+                    <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.9rem;">
+                        <span style="color: var(--success);">✓</span> NFT-Gated Access
+                    </div>
+                </div>
+                
+                <a href="/user-dashboard.html" class="cta-button cta-primary" style="font-size: 1.1rem; padding: 1rem 2.5rem; background: linear-gradient(135deg, var(--primary), var(--accent)); display: inline-flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.3rem;">🌀</span>
+                    <span>Enter AEra Core</span>
+                    <span>→</span>
+                </a>
+                
+                <p style="font-size: 0.85rem; color: rgba(240, 244, 255, 0.5); margin-top: 1.25rem;">
+                    🔐 Protected by AEraLogIn — Connect your wallet on the <a href="/dashboard.html" style="color: var(--secondary); text-decoration: underline;">Dashboard</a> first
+                </p>
+            </div>
+        </div>
+    </section>
+
     <!-- NFT-Gated Community CTA Banner -->
     <section style="padding: 3rem 5%;">
         <div style="max-width: 700px; margin: 0 auto;">
             <!-- Community Box -->
-            <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 2rem; text-align: center; backdrop-filter: blur(10px);">
+            <div style="background: rgba(0, 212, 255, 0.1); border: 1px solid var(--secondary); border-radius: 12px; padding: 2rem; text-align: center; backdrop-filter: blur(10px);">
                 <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔐</div>
                 
                 <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--light);">
@@ -813,8 +859,8 @@
                 </div>
             </div>
 
-            <div style="margin-top: 3rem; padding: 2rem; background: linear-gradient(135deg, rgba(0, 82, 255, 0.1), rgba(99, 102, 241, 0.1)); border-radius: 16px; border: 1px solid rgba(99, 102, 241, 0.3); max-width: 700px; margin-left: auto; margin-right: auto;">
-                <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--accent);">
+            <div style="margin-top: 3rem; padding: 2rem; background: rgba(0, 212, 255, 0.1); border-radius: 12px; border: 1px solid var(--secondary); max-width: 700px; margin-left: auto; margin-right: auto;">
+                <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--secondary);">
                     ✨ How It Works
                 </h3>
                 <p style="color: rgba(240, 244, 255, 0.8); line-height: 1.8;">
@@ -888,6 +934,18 @@
                     Works in: <strong>Profiles</strong> • <strong>Groups</strong> • <strong>Channels</strong> • <strong>DMs</strong> • <strong>Stories</strong>
                 </p>
             </div>
+            <div class="feature-card">
+                <span class="feature-icon">🌐</span>
+                <h3>Website Integration & NFT-Gated Access</h3>
+                <p>
+                    <strong>Protect entire user areas on your website!</strong>
+                    Integrate AEraLogIn to secure exclusive content, member dashboards, and protected communities.
+                    <br><br>
+                    <strong>Perfect for:</strong> Premium Content • Member Portals • Community Areas • Exclusive Features
+                    <br><br>
+                    No passwords, no emails - just Web3 wallet authentication with NFT verification! 🔐
+                </p>
+            </div>
         </div>
     </section>
 
@@ -937,8 +995,8 @@
             </div>
         </div>
         
-        <div style="max-width: 800px; margin: 4rem auto 0; padding: 2rem; background: rgba(99, 102, 241, 0.1); border-radius: 16px; border: 1px solid var(--accent);">
-            <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--accent);">
+        <div style="max-width: 800px; margin: 4rem auto 0; padding: 2rem; background: rgba(0, 212, 255, 0.1); border-radius: 12px; border: 1px solid var(--secondary);">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--secondary);">
                 ✅ Quick Setup Guide (2 Minutes)
             </h3>
             <ol style="text-align: left; color: rgba(240, 244, 255, 0.8); line-height: 2; padding-left: 1.5rem;">
@@ -1133,7 +1191,7 @@
     <!-- CTA Section -->
     <section class="cta-section">
         <div style="max-width: 800px; margin: 0 auto;">
-            <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 3rem 2rem; text-align: center; backdrop-filter: blur(10px); box-shadow: 0 20px 60px rgba(0, 212, 255, 0.15);">
+            <div style="background: rgba(0, 212, 255, 0.1); border: 1px solid var(--secondary); border-radius: 12px; padding: 3rem 2rem; text-align: center; backdrop-filter: blur(10px);">
                 <div style="font-size: 3rem; margin-bottom: 1rem;">🚀</div>
                 <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
                     Ready for the Web3 Social Revolution?

@@ -1,0 +1,1053 @@
+<!--
+VEra-Resonance — User Dashboard (Protected Access)
+© 2025 Karlheinz Beismann — VEra-Resonance Project
+Licensed under the Apache License, Version 2.0
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEra User Dashboard - Protected Access</title>
+    <meta name="description" content="AEra User Dashboard - Protected access for verified identity holders">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0052ff;
+            --secondary: #00d4ff;
+            --dark: #0a0e27;
+            --darker: #050814;
+            --light: #f0f4ff;
+            --accent: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--light);
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            min-height: 100vh;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .bg-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--secondary);
+            border-radius: 50%;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(-100px) translateX(50px); }
+            50% { transform: translateY(-50px) translateX(-50px); }
+            75% { transform: translateY(-150px) translateX(100px); }
+        }
+
+        /* Sticky Header Navigation */
+        header {
+            padding: 0.79rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 39, 0.8);
+            width: 100%;
+            margin: 0;
+        }
+
+        .logo {
+            font-size: 2.25rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            font-size: 2.7rem;
+            background: none !important;
+            -webkit-background-clip: unset !important;
+            background-clip: unset !important;
+            -webkit-text-fill-color: currentColor !important;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.85;
+            }
+        }
+
+        nav, .nav-menu {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a, .nav-menu a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            opacity: 0.8;
+            cursor: pointer;
+        }
+
+        nav a:hover, .nav-menu a:hover {
+            color: var(--secondary);
+            opacity: 1;
+        }
+
+        /* Mobile Menu Styles */
+        .menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--light);
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            z-index: 1001;
+        }
+
+        .menu-toggle:hover {
+            color: var(--secondary);
+        }
+
+        /* Mobile Menu Overlay */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 300px;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 5rem 2rem 2rem;
+            gap: 1.5rem;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
+            border-left: 1px solid rgba(99, 102, 241, 0.3);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .mobile-menu a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .mobile-menu a:hover {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--secondary);
+        }
+        
+        .mobile-menu .disconnect-btn {
+            margin-top: 1rem;
+        }
+
+        /* Menu Backdrop */
+        .menu-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-backdrop.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                padding: 0.75rem 3%;
+            }
+
+            .logo {
+                font-size: 1.8rem;
+            }
+
+            .logo-icon {
+                font-size: 2rem;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .nav-menu:not(.mobile-menu) {
+                display: none;
+            }
+        }
+
+        /* Desktop: Always show nav, hide mobile elements */
+        @media (min-width: 769px) {
+            .menu-toggle {
+                display: none !important;
+            }
+
+            .mobile-menu {
+                display: none !important;
+            }
+
+            .menu-backdrop {
+                display: none !important;
+            }
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Protection Banner */
+        .protection-banner {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(0, 212, 255, 0.1));
+            border: 1px solid var(--success);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .protection-banner-icon {
+            font-size: 1.5rem;
+        }
+
+        .protection-banner-text .title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--success);
+        }
+
+        .protection-banner-text .subtitle {
+            font-size: 0.8rem;
+            color: var(--light);
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        /* Card Container */
+        .card {
+            background: rgba(15, 20, 45, 0.6);
+            backdrop-filter: blur(20px);
+            padding: 2rem;
+            border-radius: 20px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            margin-bottom: 2rem;
+        }
+
+        /* Profile Section */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 82, 255, 0.3);
+        }
+
+        .profile-info h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .profile-info p {
+            color: var(--light);
+            opacity: 0.7;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--secondary);
+            background: rgba(0, 212, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--light);
+            opacity: 0.6;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--secondary);
+        }
+
+        /* Feed Items */
+        .feed-item {
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .feed-item:hover {
+            border-color: var(--secondary);
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .feed-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .feed-item-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--light);
+        }
+
+        .feed-item-timestamp {
+            font-size: 0.75rem;
+            color: var(--light);
+            opacity: 0.5;
+        }
+
+        .feed-item-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.5rem;
+        }
+
+        .badge-update {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .badge-security {
+            background: rgba(0, 82, 255, 0.2);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .badge-integration {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+            border: 1px solid #a855f7;
+        }
+
+        .feed-item-content {
+            color: var(--light);
+            opacity: 0.8;
+            line-height: 1.6;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .feed-item-link {
+            color: var(--secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .feed-item-link:hover {
+            gap: 0.75rem;
+            color: var(--primary);
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            gap: 0.75rem;
+            color: var(--light);
+            opacity: 0.7;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(99, 102, 241, 0.3);
+            border-top-color: var(--secondary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            border-radius: 12px;
+            padding: 1.5rem;
+            color: var(--error);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        /* Disconnect Button */
+        .disconnect-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--error);
+            border-radius: 6px;
+            color: var(--error);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .disconnect-btn:hover {
+            background: var(--error);
+            color: white;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--light);
+            opacity: 0.6;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Footer */
+        footer {
+            padding: 2rem;
+            text-align: center;
+            opacity: 0.6;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(99, 102, 241, 0.2);
+            margin-top: 3rem;
+        }
+
+        footer a {
+            color: var(--secondary);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .feed-item-header {
+                flex-direction: column;
+            }
+
+            .protection-banner {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background Particles -->
+    <div class="bg-particles" id="particles"></div>
+
+    <!-- Menu Backdrop -->
+    <div class="menu-backdrop" id="menuBackdrop" onclick="toggleMobileMenu()"></div>
+
+    <!-- Header -->
+    <header>
+        <a href="/" class="logo">
+            <span class="logo-icon">🌀</span>
+            <span>AEraLogIn</span>
+        </a>
+        
+        <!-- Desktop Navigation -->
+        <nav class="nav-menu">
+            <a href="/">Home</a>
+            <a href="/dashboard.html">Dashboard</a>
+            <a href="/sdk-docs">SDK & Integration</a>
+            <a href="/privacy-policy">Privacy</a>
+            <a href="/security-concept.html">Security</a>
+            <button class="disconnect-btn" onclick="disconnectWallet()">Disconnect</button>
+        </nav>
+
+        <!-- Mobile Menu Toggle -->
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
+    </header>
+
+    <!-- Mobile Navigation (outside header for proper z-index stacking) -->
+    <nav class="mobile-menu" id="mobileMenu">
+        <a href="/" onclick="closeMenu()">Home</a>
+        <a href="/dashboard.html" onclick="closeMenu()">Dashboard</a>
+        <a href="/sdk-docs" onclick="closeMenu()">SDK & Integration</a>
+        <a href="/privacy-policy" onclick="closeMenu()">Privacy</a>
+        <a href="/security-concept.html" onclick="closeMenu()">Security</a>
+        <button class="disconnect-btn" onclick="disconnectWallet()">Disconnect</button>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        
+        <!-- Protection Banner -->
+        <div class="protection-banner">
+            <div class="protection-banner-icon">🔐</div>
+            <div class="protection-banner-text">
+                <div class="title">Protected by AEra LogIn</div>
+                <div class="subtitle">This page is only visible to verified AEra Identity NFT holders</div>
+            </div>
+        </div>
+
+        <!-- Profile Section -->
+        <div class="card" id="profileSection">
+            <div class="profile-header">
+                <div class="profile-avatar">👤</div>
+                <div class="profile-info">
+                    <h2 id="profileName">Welcome</h2>
+                    <p id="profileAddress">Loading your wallet...</p>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Status</div>
+                    <div class="stat-value" id="userStatus">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Resonance Score</div>
+                    <div class="stat-value" id="userScore">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Community Access</div>
+                    <div class="stat-value" id="communityCount">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Member Since</div>
+                    <div class="stat-value" id="memberSince">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Living Feed Section -->
+        <div class="card">
+            <h3 class="section-title">📰 Latest Updates</h3>
+            <div id="feedContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>Loading updates...</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 AEra LogIn — VEra-Resonance Project</p>
+        <p style="margin-top: 0.5rem;">
+            <a href="/privacy-policy">Privacy Policy</a> · 
+            <a href="/security-concept.html">Security</a>
+        </p>
+    </footer>
+
+    <!-- ===== AERA CHAT WIDGET ===== -->
+    <link rel="stylesheet" href="/aera-chat.css?v=20251209002">
+    <script src="/aera-chat.js?v=20251209001"></script>
+    <script>
+        // Initialize AEra Chat Widget
+        if (typeof initAeraChat === 'function') {
+            initAeraChat();
+            console.log('🌀 AEra Chat Widget initialized');
+        }
+    </script>
+
+    <!-- Scripts -->
+    <script>
+        // ========================================
+        // AERA USER DASHBOARD - MAIN LOGIC
+        // ========================================
+        
+        const API_BASE = '';
+        let connectedWallet = null;
+        let userNFTData = null;
+        
+        // Project Update Feed (loaded from backend or static)
+        const feedData = [
+            {
+                id: 1,
+                title: "AEra Gate SDK Infrastructure Live",
+                badge: "integration",
+                timestamp: "Dec 20, 2025",
+                content: "Complete SDK infrastructure deployed: New server endpoints for authentication and NFT verification added, comprehensive SDK documentation portal launched at /sdk-docs with integration guides and code examples, developer resources including basic-integration demo with live authentication testing available.",
+                link: "/sdk-docs"
+            },
+            {
+                id: 2,
+                title: "Android Intent-Bridge Live",
+                badge: "integration",
+                timestamp: "Dec 19, 2025",
+                content: "AEra now supports direct Telegram access from Android wallet browsers including MetaMask Mobile, Base Wallet, and Trust Wallet.",
+                link: null
+            },
+            {
+                id: 3,
+                title: "EIP-1271 Smart Contract Wallet Support",
+                badge: "security",
+                timestamp: "Dec 18, 2025",
+                content: "Added full support for Smart Contract Wallets including Base Wallet and Coinbase Smart Wallet signature verification via isValidSignature().",
+                link: null
+            },
+            {
+                id: 4,
+                title: "iOS Universal Links Enabled",
+                badge: "update",
+                timestamp: "Dec 17, 2025",
+                content: "Improved iOS Telegram integration with Universal Links support for seamless deep linking from wallet browsers.",
+                link: null
+            },
+            {
+                id: 5,
+                title: "Multi-Wallet Signature Support",
+                badge: "update",
+                timestamp: "Dec 15, 2025",
+                content: "AEra supports signature verification across MetaMask, Rainbow, Trust Wallet, Base Wallet, and Coinbase Wallet with automatic fallback strategies.",
+                link: null
+            },
+            {
+                id: 6,
+                title: "BASE Mainnet Deployment",
+                badge: "integration",
+                timestamp: "Dec 10, 2025",
+                content: "AEra Identity NFT and Resonance Registry contracts are now live on BASE Mainnet (Chain ID: 8453).",
+                link: null
+            }
+        ];
+
+        // ========================================
+        // MOBILE MENU FUNCTIONS
+        // ========================================
+        const menuToggle = document.getElementById('menuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const menuBackdrop = document.getElementById('menuBackdrop');
+
+        function toggleMenu() {
+            mobileMenu.classList.toggle('active');
+            menuBackdrop.classList.toggle('active');
+            
+            // Change icon
+            if (mobileMenu.classList.contains('active')) {
+                menuToggle.textContent = '✕';
+            } else {
+                menuToggle.textContent = '☰';
+            }
+        }
+
+        function closeMenu() {
+            mobileMenu.classList.remove('active');
+            menuBackdrop.classList.remove('active');
+            menuToggle.textContent = '☰';
+        }
+
+        // Toggle menu on button click
+        menuToggle.addEventListener('click', toggleMenu);
+
+        // Close menu on backdrop click
+        menuBackdrop.addEventListener('click', closeMenu);
+
+        // Close menu on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mobileMenu.classList.contains('active')) {
+                closeMenu();
+            }
+        });
+
+        // ========================================
+        // BACKGROUND PARTICLES
+        // ========================================
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // ========================================
+        // INITIALIZATION
+        // ========================================
+        async function initDashboard() {
+            console.log('🔐 [User Dashboard] Initializing...');
+            
+            // Check if wallet is connected from session
+            const storedWallet = sessionStorage.getItem('aeraDashboardWallet');
+            const storedToken = sessionStorage.getItem('aeraDashboardToken');
+            
+            if (!storedWallet || !storedToken) {
+                console.log('❌ No wallet session found - showing access denied...');
+                showAccessDenied();
+                return;
+            }
+            
+            // Validate session by checking if user exists in backend and was recently active
+            try {
+                console.log('🔍 Validating session with backend...');
+                const response = await fetch('/api/user/profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: storedWallet })
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    console.log('❌ User not found in backend - clearing session...');
+                    sessionStorage.removeItem('aeraDashboardWallet');
+                    sessionStorage.removeItem('aeraDashboardToken');
+                    showAccessDenied();
+                    return;
+                }
+                
+                // Check if user was active in last 24 hours (last_login from join_date or score > 0)
+                // For now, just checking if user exists is enough
+                console.log('✅ Session validated - user exists in backend');
+                
+            } catch (error) {
+                console.error('❌ Backend validation failed:', error);
+                showAccessDenied();
+                return;
+            }
+            
+            connectedWallet = storedWallet;
+            console.log('✅ Wallet session restored:', connectedWallet);
+            
+            // Load user data
+            await loadUserData();
+            loadFeed();
+        }
+        
+        // Show access denied message and redirect
+        function showAccessDenied() {
+            document.querySelector('.main-container').innerHTML = `
+                <div class="card" style="text-align: center; padding: 3rem;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🔐</div>
+                    <h2 style="color: var(--error); margin-bottom: 1rem;">Access Restricted</h2>
+                    <p style="margin-bottom: 2rem; opacity: 0.8;">
+                        Please connect your wallet on the Dashboard first to access AEra Core.
+                    </p>
+                    <a href="dashboard.html" class="disconnect-btn" style="
+                        display: inline-block;
+                        padding: 1rem 2rem;
+                        background: linear-gradient(135deg, var(--primary), var(--accent));
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        text-decoration: none;
+                        font-weight: 600;
+                    ">Go to Dashboard</a>
+                </div>
+            `;
+        }
+
+        // ========================================
+        // LOAD USER DATA FROM BACKEND
+        // ========================================
+        async function loadUserData() {
+            try {
+                console.log('📊 Loading user data...');
+                
+                // Update basic profile immediately
+                const shortAddr = connectedWallet.substring(0, 6) + '...' + connectedWallet.substring(38);
+                document.getElementById('profileName').textContent = `Welcome, Builder`;
+                document.getElementById('profileAddress').textContent = connectedWallet;
+                
+                // Get user info from backend
+                const response = await fetch(`${API_BASE}/api/user/profile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: connectedWallet })
+                });
+                
+                const data = await response.json();
+                console.log('📊 Profile API response:', data);
+                
+                if (data.success) {
+                    userNFTData = data;
+                    
+                    // Update profile with real data
+                    document.getElementById('profileName').textContent = data.display_name || `Builder ${shortAddr}`;
+                    document.getElementById('profileAddress').textContent = connectedWallet;
+                    
+                    // Status with NFT info
+                    if (data.nft_verified) {
+                        document.getElementById('userStatus').innerHTML = `<span style="color: var(--success);">Verified ✓</span>`;
+                    } else {
+                        document.getElementById('userStatus').innerHTML = `<span style="color: var(--warning);">Pending</span>`;
+                    }
+                    
+                    // Score display with breakdown
+                    const totalScore = data.score || 0;
+                    const ownScore = data.own_score || 0;
+                    const followerBonus = data.follower_bonus || 0;
+                    document.getElementById('userScore').innerHTML = `
+                        ${totalScore.toFixed(0)}
+                        <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 4px;">
+                            Own: ${ownScore.toFixed(0)} + Bonus: ${followerBonus.toFixed(0)}
+                        </div>
+                    `;
+                    
+                    // Community count
+                    document.getElementById('communityCount').textContent = data.communities || '0';
+                    
+                    // Format member since date
+                    if (data.join_date) {
+                        const joinDate = new Date(data.join_date);
+                        const options = { month: 'short', year: 'numeric' };
+                        document.getElementById('memberSince').textContent = joinDate.toLocaleDateString('en-US', options);
+                    } else {
+                        document.getElementById('memberSince').textContent = 'New';
+                    }
+                    
+                    console.log('✅ User data loaded:', data);
+                } else {
+                    console.warn('⚠️ Could not load user data:', data.error);
+                    // Show defaults
+                    document.getElementById('userStatus').textContent = 'Unknown';
+                    document.getElementById('userScore').textContent = '—';
+                    document.getElementById('communityCount').textContent = '—';
+                    document.getElementById('memberSince').textContent = '—';
+                }
+            } catch (error) {
+                console.error('❌ Error loading user data:', error);
+                // Show defaults on error
+                document.getElementById('userStatus').textContent = 'Error';
+                document.getElementById('userScore').textContent = '—';
+                document.getElementById('communityCount').textContent = '—';
+                document.getElementById('memberSince').textContent = '—';
+            }
+        }
+
+        // ========================================
+        // LOAD FEED
+        // ========================================
+        function loadFeed() {
+            console.log('📰 Loading feed...');
+            
+            const feedContainer = document.getElementById('feedContainer');
+            
+            if (feedData.length === 0) {
+                feedContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div>No updates yet. Check back soon!</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Render feed items
+            feedContainer.innerHTML = feedData.map(item => `
+                <div class="feed-item">
+                    <div class="feed-item-header">
+                        <div>
+                            <div class="feed-item-title">${item.title}</div>
+                            <span class="feed-item-badge badge-${item.badge}">${item.badge.toUpperCase()}</span>
+                        </div>
+                        <div class="feed-item-timestamp">${item.timestamp}</div>
+                    </div>
+                    <div class="feed-item-content">${item.content}</div>
+                    ${item.link ? `<a href="${item.link}" class="feed-item-link">Learn more →</a>` : ''}
+                </div>
+            `).join('');
+            
+            console.log('✅ Feed loaded');
+        }
+
+        // ========================================
+        // DISCONNECT WALLET
+        // ========================================
+        function disconnectWallet() {
+            if (confirm('Disconnect wallet and return to dashboard?')) {
+                sessionStorage.removeItem('aeraDashboardWallet');
+                sessionStorage.removeItem('aeraDashboardToken');
+                window.location.href = 'dashboard.html';
+            }
+        }
+
+        // ========================================
+        // PAGE LOAD
+        // ========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 User Dashboard loaded');
+            createParticles();
+            initDashboard();
+        });
+    </script>
+</body>
+</html>

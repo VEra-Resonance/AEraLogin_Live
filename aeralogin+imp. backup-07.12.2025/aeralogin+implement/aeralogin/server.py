@@ -126,6 +126,33 @@ try:
 except Exception as e:
     logger.warning(f"⚠️ Static Files konnten nicht gemountet werden: {e}")
 
+# SDK Verzeichnis für Third-Party Integration
+sdk_dir = os.path.join(os.path.dirname(__file__), "sdk")
+if os.path.exists(sdk_dir):
+    try:
+        app.mount("/sdk", StaticFiles(directory=sdk_dir), name="sdk")
+        logger.info(f"✓ SDK Files mounted: {sdk_dir}")
+    except Exception as e:
+        logger.warning(f"⚠️ SDK Files konnten nicht gemountet werden: {e}")
+
+# Examples Verzeichnis für Dokumentation
+examples_dir = os.path.join(os.path.dirname(__file__), "examples")
+if os.path.exists(examples_dir):
+    try:
+        app.mount("/examples", StaticFiles(directory=examples_dir), name="examples")
+        logger.info(f"✓ Examples Files mounted: {examples_dir}")
+    except Exception as e:
+        logger.warning(f"⚠️ Examples Files konnten nicht gemountet werden: {e}")
+
+# Docs Verzeichnis für SDK-Dokumentation
+docs_dir = os.path.join(os.path.dirname(__file__), "docs")
+if os.path.exists(docs_dir):
+    try:
+        app.mount("/docs", StaticFiles(directory=docs_dir), name="docs")
+        logger.info(f"✓ Docs Files mounted: {docs_dir}")
+    except Exception as e:
+        logger.warning(f"⚠️ Docs Files konnten nicht gemountet werden: {e}")
+
 # Templates für dynamische Landing Pages
 templates = Jinja2Templates(directory=static_dir)
 
@@ -435,6 +462,57 @@ def init_db():
     )
     """)
     
+    # ===== OAUTH TABLES FOR THIRD-PARTY INTEGRATION =====
+    
+    # OAuth Clients: Registered third-party applications
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS oauth_clients (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id TEXT UNIQUE NOT NULL,
+        client_secret_hash TEXT NOT NULL,
+        client_name TEXT NOT NULL,
+        redirect_uris TEXT NOT NULL,
+        allowed_origins TEXT,
+        min_score INTEGER DEFAULT 0,
+        require_nft BOOLEAN DEFAULT 1,
+        created_at TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT 1
+    )
+    """)
+    
+    # OAuth Authorization Codes: Short-lived codes for token exchange
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS oauth_codes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT UNIQUE NOT NULL,
+        client_id TEXT NOT NULL,
+        address TEXT NOT NULL,
+        redirect_uri TEXT NOT NULL,
+        state TEXT,
+        nonce TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        used BOOLEAN DEFAULT 0,
+        FOREIGN KEY(client_id) REFERENCES oauth_clients(client_id)
+    )
+    """)
+    
+    # OAuth Sessions: JWT sessions for third-party sites
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS oauth_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id TEXT UNIQUE NOT NULL,
+        client_id TEXT NOT NULL,
+        address TEXT NOT NULL,
+        score INTEGER,
+        has_nft BOOLEAN,
+        created_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT 1,
+        FOREIGN KEY(client_id) REFERENCES oauth_clients(client_id)
+    )
+    """)
+    
     conn.commit()
     conn.close()
     print(f"✓ Datenbank initialisiert: {DB_PATH}")
@@ -675,6 +753,22 @@ async def dashboard_html():
         content = f.read()
     return HR(content=content, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
 
+@app.get("/user-dashboard", response_class=HTMLResponse)
+async def user_dashboard():
+    """User Dashboard - Protected area for verified users"""
+    from fastapi.responses import HTMLResponse as HR
+    with open(os.path.join(os.path.dirname(__file__), "user-dashboard.html"), "r") as f:
+        content = f.read()
+    return HR(content=content, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+@app.get("/user-dashboard.html", response_class=HTMLResponse)
+async def user_dashboard_html():
+    """User Dashboard - Protected area for verified users (with .html extension)"""
+    from fastapi.responses import HTMLResponse as HR
+    with open(os.path.join(os.path.dirname(__file__), "user-dashboard.html"), "r") as f:
+        content = f.read()
+    return HR(content=content, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
 @app.get("/blockchain-dashboard.js")
 async def blockchain_dashboard_js():
     """Blockchain Dashboard JavaScript Module"""
@@ -725,6 +819,24 @@ async def logo_page():
     """Logo Page - AEraLogIn Branding"""
     with open(os.path.join(os.path.dirname(__file__), "logo.html"), "r") as f:
         return f.read()
+
+# ===== SDK DOCUMENTATION ROUTES =====
+@app.get("/sdk-docs", response_class=HTMLResponse)
+async def sdk_documentation():
+    """SDK Documentation - Third-Party Integration Guide"""
+    docs_path = os.path.join(os.path.dirname(__file__), "docs", "sdk-documentation.html")
+    if os.path.exists(docs_path):
+        with open(docs_path, "r") as f:
+            return f.read()
+    return HTMLResponse("<h1>SDK Documentation coming soon</h1>", status_code=200)
+
+@app.get("/developer", response_class=HTMLResponse)
+async def developer_portal():
+    """Developer Portal - Redirect to SDK Docs"""
+    return HTMLResponse(
+        '<html><head><meta http-equiv="refresh" content="0;url=/sdk-docs"></head></html>',
+        status_code=302
+    )
 
 @app.get("/api/health")
 async def health_check():
@@ -868,6 +980,114 @@ async def get_nonce(req: Request):
     except Exception as e:
         log_activity("ERROR", "AUTH", f"Nonce error: {str(e)}")
         return {"error": str(e), "success": False}
+
+# ===== USER PROFILE ENDPOINT =====
+
+@app.post("/api/user/profile")
+async def get_user_profile(req: Request):
+    """
+    Get user profile data for User Dashboard
+    
+    Request:
+        { "address": "0x..." }
+    
+    Response:
+        {
+            "success": true,
+            "address": "0x...",
+            "display_name": "Builder 0x1234...",
+            "nft_verified": true,
+            "score": 123.45,
+            "blockchain_score": 100,
+            "communities": ["telegram"],
+            "join_date": "2025-01-15"
+        }
+    """
+    try:
+        data = await req.json()
+        address = data.get("address", "").lower()
+        
+        if not address or not address.startswith("0x") or len(address) != 42:
+            log_activity("ERROR", "USER_PROFILE", "Invalid address", address=address[:10] if address else "none")
+            return {"success": False, "error": "Invalid address"}
+        
+        log_activity("DEBUG", "USER_PROFILE", f"Profile requested for {address[:10]}...")
+        
+        # Get user data from database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get basic user info - use correct column names!
+        cursor.execute("""
+            SELECT 
+                address,
+                display_name,
+                score,
+                blockchain_score,
+                created_at,
+                identity_status,
+                identity_nft_token_id,
+                first_seen
+            FROM users 
+            WHERE LOWER(address) = ?
+        """, (address,))
+        
+        user_row = cursor.fetchone()
+        
+        if not user_row:
+            conn.close()
+            log_activity("DEBUG", "USER_PROFILE", f"User not found: {address[:10]}...")
+            return {
+                "success": False,
+                "error": "User not found"
+            }
+        
+        # Check NFT status - first from DB, then from chain if needed
+        has_nft = user_row['identity_status'] == 'active' and user_row['identity_nft_token_id']
+        if not has_nft:
+            try:
+                has_nft = await web3_service.has_identity_nft(address)
+            except Exception as nft_err:
+                log_activity("WARN", "USER_PROFILE", f"NFT check failed: {str(nft_err)}")
+        
+        # Get community access (Telegram gates granted)
+        cursor.execute("""
+            SELECT COUNT(DISTINCT owner_wallet) as community_count
+            FROM telegram_invites 
+            WHERE LOWER(address) = ? AND granted = 1
+        """, (address,))
+        
+        community_row = cursor.fetchone()
+        community_count = community_row['community_count'] if community_row else 0
+        
+        # Calculate Resonance Score (with follower bonus)
+        from resonance_calculator import calculate_resonance_score
+        own_score, follower_bonus, follower_count, total_resonance = calculate_resonance_score(address, conn)
+        
+        conn.close()
+        
+        # Build response
+        response = {
+            "success": True,
+            "address": address,
+            "display_name": user_row['display_name'] if user_row['display_name'] else None,
+            "nft_verified": has_nft,
+            "token_id": user_row['identity_nft_token_id'],
+            "score": float(total_resonance) if total_resonance else 0.0,
+            "own_score": float(own_score) if own_score else 0.0,
+            "follower_bonus": float(follower_bonus) if follower_bonus else 0.0,
+            "follower_count": follower_count,
+            "blockchain_score": float(user_row['blockchain_score']) if user_row['blockchain_score'] else 0.0,
+            "communities": community_count,
+            "join_date": user_row['created_at'] or user_row['first_seen']
+        }
+        
+        log_activity("INFO", "USER_PROFILE", f"Profile loaded for {address[:10]}..., NFT: {has_nft}, Score: {response['score']}")
+        return response
+        
+    except Exception as e:
+        log_activity("ERROR", "USER_PROFILE", f"Error: {str(e)}")
+        return {"success": False, "error": str(e)}
 
 # ===== TELEGRAM-GATE ENDPOINTS =====
 
@@ -3055,6 +3275,795 @@ async def verify_token_endpoint(req: Request):
         
     except Exception as e:
         return {"valid": False, "error": str(e)}
+
+
+# ============================================================================
+# ===== OAUTH 2.0 + API v1 ENDPOINTS FOR THIRD-PARTY INTEGRATION =====
+# ============================================================================
+
+import jwt
+import base64
+from urllib.parse import urlencode, parse_qs, urlparse
+
+# JWT Secret for OAuth tokens (separate from TOKEN_SECRET)
+OAUTH_JWT_SECRET = os.getenv("OAUTH_JWT_SECRET", TOKEN_SECRET + "-oauth")
+OAUTH_TOKEN_EXPIRY_HOURS = int(os.getenv("OAUTH_TOKEN_EXPIRY_HOURS", 24))
+OAUTH_CODE_EXPIRY_SECONDS = 60  # Authorization code valid for 60 seconds
+
+def hash_client_secret(secret: str) -> str:
+    """Hash client secret for storage"""
+    return hashlib.sha256(secret.encode()).hexdigest()
+
+def verify_client_secret(secret: str, stored_hash: str) -> bool:
+    """Verify client secret against stored hash"""
+    return hashlib.sha256(secret.encode()).hexdigest() == stored_hash
+
+def generate_oauth_code() -> str:
+    """Generate a secure authorization code"""
+    return secrets.token_urlsafe(32)
+
+def generate_oauth_session_token(client_id: str, address: str, score: int, has_nft: bool) -> str:
+    """Generate a signed JWT session token"""
+    now = datetime.now(timezone.utc)
+    payload = {
+        "iss": "aeralogin.com",
+        "sub": address.lower(),
+        "aud": client_id,
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(hours=OAUTH_TOKEN_EXPIRY_HOURS)).timestamp()),
+        "jti": secrets.token_hex(16),
+        "score": score,
+        "has_nft": has_nft,
+        "chain_id": 8453
+    }
+    return jwt.encode(payload, OAUTH_JWT_SECRET, algorithm="HS256")
+
+
+@app.get("/oauth/authorize", response_class=HTMLResponse)
+async def oauth_authorize(
+    request: Request,
+    client_id: str = None,
+    redirect_uri: str = None,
+    state: str = None,
+    response_type: str = "code"
+):
+    """
+    OAuth 2.0 Authorization Endpoint
+    
+    Redirects user to AEra login flow, then back to publisher with authorization code.
+    
+    Parameters:
+        client_id: Registered OAuth client ID
+        redirect_uri: Where to redirect after authorization
+        state: CSRF protection state parameter
+        response_type: Only "code" is supported
+    """
+    if not client_id or not redirect_uri:
+        return HTMLResponse(content="""
+            <html><body style="font-family: sans-serif; text-align: center; padding: 50px;">
+                <h1>❌ Invalid Request</h1>
+                <p>Missing required parameters: client_id and redirect_uri</p>
+            </body></html>
+        """, status_code=400)
+    
+    # Validate client_id
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM oauth_clients WHERE client_id = ? AND is_active = 1", (client_id,))
+    client = cursor.fetchone()
+    conn.close()
+    
+    if not client:
+        log_activity("WARNING", "OAUTH", f"Invalid client_id: {client_id[:20]}")
+        return HTMLResponse(content="""
+            <html><body style="font-family: sans-serif; text-align: center; padding: 50px;">
+                <h1>❌ Unknown Application</h1>
+                <p>This application is not registered with AEraLogIn.</p>
+            </body></html>
+        """, status_code=400)
+    
+    # Validate redirect_uri against whitelist
+    allowed_uris = json.loads(client['redirect_uris'])
+    if redirect_uri not in allowed_uris:
+        log_activity("WARNING", "OAUTH", f"Invalid redirect_uri for {client_id}: {redirect_uri[:50]}")
+        return HTMLResponse(content="""
+            <html><body style="font-family: sans-serif; text-align: center; padding: 50px;">
+                <h1>❌ Invalid Redirect URI</h1>
+                <p>The redirect URI is not authorized for this application.</p>
+            </body></html>
+        """, status_code=400)
+    
+    # Store authorization request in session and redirect to dashboard for login
+    nonce = secrets.token_hex(16)
+    
+    # Store pending authorization in database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO oauth_codes (code, client_id, address, redirect_uri, state, nonce, created_at, expires_at, used)
+        VALUES (?, ?, '', ?, ?, ?, ?, ?, 0)
+    """, (
+        nonce,  # Use nonce as temporary code placeholder
+        client_id,
+        redirect_uri,
+        state or '',
+        nonce,
+        datetime.now(timezone.utc).isoformat(),
+        (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat()
+    ))
+    conn.commit()
+    conn.close()
+    
+    # Redirect to a special OAuth login page
+    oauth_params = urlencode({
+        'oauth_nonce': nonce,
+        'client_name': client['client_name'],
+        'redirect_uri': redirect_uri
+    })
+    
+    return HTMLResponse(content=f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Sign in with AEraLogIn</title>
+            <style>
+                * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+                    background: linear-gradient(135deg, #050814 0%, #0a0e27 100%);
+                    color: #f0f4ff;
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }}
+                .container {{
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 20px;
+                    padding: 3rem;
+                    max-width: 450px;
+                    text-align: center;
+                    backdrop-filter: blur(10px);
+                }}
+                .logo {{ font-size: 4rem; margin-bottom: 1rem; }}
+                h1 {{ font-size: 1.8rem; margin-bottom: 0.5rem; }}
+                .client-name {{
+                    color: #00d4ff;
+                    font-weight: 600;
+                    font-size: 1.2rem;
+                    margin-bottom: 2rem;
+                }}
+                .info {{
+                    background: rgba(0, 212, 255, 0.1);
+                    border: 1px solid #00d4ff;
+                    border-radius: 12px;
+                    padding: 1rem;
+                    margin-bottom: 2rem;
+                    font-size: 0.9rem;
+                }}
+                .button {{
+                    background: linear-gradient(135deg, #0052ff, #6366f1);
+                    color: white;
+                    border: none;
+                    padding: 1rem 2rem;
+                    border-radius: 12px;
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    width: 100%;
+                    margin-bottom: 1rem;
+                }}
+                .button:hover {{ transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 82, 255, 0.4); }}
+                .cancel {{ background: rgba(255, 255, 255, 0.1); }}
+                #status {{ margin-top: 1rem; padding: 1rem; border-radius: 8px; display: none; }}
+                .status-error {{ background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; }}
+                .status-success {{ background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="logo">🌀</div>
+                <h1>Sign in with AEraLogIn</h1>
+                <p class="client-name">{client['client_name']}</p>
+                
+                <div class="info">
+                    <p>🔐 This application wants to verify your identity using your AEra Identity NFT.</p>
+                    <p style="margin-top: 0.5rem; opacity: 0.8;">Requirements: Identity NFT + Min Score: {client['min_score']}</p>
+                </div>
+                
+                <button class="button" onclick="connectWallet()">🦊 Connect Wallet</button>
+                <button class="button cancel" onclick="window.close()">Cancel</button>
+                
+                <div id="status"></div>
+            </div>
+            
+            <script>
+                const API_BASE = window.location.origin;
+                const oauthNonce = '{nonce}';
+                const redirectUri = '{redirect_uri}';
+                const state = '{state or ""}';
+                const minScore = {client['min_score']};
+                const requireNFT = {str(client['require_nft']).lower()};
+                
+                function showStatus(msg, type) {{
+                    const status = document.getElementById('status');
+                    status.textContent = msg;
+                    status.className = 'status-' + type;
+                    status.style.display = 'block';
+                }}
+                
+                async function connectWallet() {{
+                    if (!window.ethereum) {{
+                        showStatus('❌ No Web3 wallet found. Please install MetaMask or use a wallet browser.', 'error');
+                        return;
+                    }}
+                    
+                    try {{
+                        showStatus('⏳ Connecting wallet...', 'success');
+                        
+                        // Request wallet connection
+                        const accounts = await window.ethereum.request({{ method: 'eth_requestAccounts' }});
+                        const address = accounts[0].toLowerCase();
+                        
+                        // Get nonce from backend
+                        const nonceResp = await fetch(`${{API_BASE}}/api/nonce`, {{
+                            method: 'POST',
+                            headers: {{ 'Content-Type': 'application/json' }},
+                            body: JSON.stringify({{ address }})
+                        }});
+                        const nonceData = await nonceResp.json();
+                        if (!nonceData.success) throw new Error('Failed to get nonce');
+                        
+                        // Build SIWE message
+                        const domain = window.location.host;
+                        const uri = window.location.origin;
+                        const issuedAt = new Date().toISOString();
+                        const messageToSign = `${{domain}} wants you to sign in with your Ethereum account:
+${{address}}
+
+Sign in to AEraLogIn for third-party authorization
+
+URI: ${{uri}}
+Version: 1
+Chain ID: 8453
+Nonce: ${{nonceData.nonce}}
+Issued At: ${{issuedAt}}`;
+                        
+                        showStatus('⏳ Please sign the message in your wallet...', 'success');
+                        
+                        // Sign message
+                        const signature = await window.ethereum.request({{
+                            method: 'personal_sign',
+                            params: [messageToSign, address]
+                        }});
+                        
+                        showStatus('⏳ Verifying identity...', 'success');
+                        
+                        // Complete OAuth flow
+                        const oauthResp = await fetch(`${{API_BASE}}/oauth/complete`, {{
+                            method: 'POST',
+                            headers: {{ 'Content-Type': 'application/json' }},
+                            body: JSON.stringify({{
+                                oauth_nonce: oauthNonce,
+                                address: address,
+                                nonce: nonceData.nonce,
+                                message: messageToSign,
+                                signature: signature
+                            }})
+                        }});
+                        
+                        const oauthData = await oauthResp.json();
+                        
+                        if (!oauthData.success) {{
+                            throw new Error(oauthData.error || 'Authorization failed');
+                        }}
+                        
+                        showStatus('✅ Authorized! Redirecting...', 'success');
+                        
+                        // Redirect back to publisher with authorization code
+                        setTimeout(() => {{
+                            const params = new URLSearchParams();
+                            params.set('code', oauthData.code);
+                            if (state) params.set('state', state);
+                            window.location.href = redirectUri + '?' + params.toString();
+                        }}, 1000);
+                        
+                    }} catch (error) {{
+                        console.error('OAuth error:', error);
+                        if (error.code === 4001) {{
+                            showStatus('❌ You rejected the wallet signature.', 'error');
+                        }} else {{
+                            showStatus('❌ ' + error.message, 'error');
+                        }}
+                    }}
+                }}
+            </script>
+        </body>
+        </html>
+    """)
+
+
+@app.post("/oauth/complete")
+async def oauth_complete(req: Request):
+    """
+    Complete OAuth authorization after wallet signature
+    
+    Request:
+        {{
+            "oauth_nonce": "...",
+            "address": "0x...",
+            "nonce": "...",
+            "message": "...",
+            "signature": "0x..."
+        }}
+    
+    Response:
+        {{
+            "success": true,
+            "code": "authorization_code"
+        }}
+    """
+    try:
+        data = await req.json()
+        oauth_nonce = data.get("oauth_nonce", "")
+        address = data.get("address", "").lower()
+        nonce = data.get("nonce", "")
+        message = data.get("message", "")
+        signature = data.get("signature", "")
+        
+        if not all([oauth_nonce, address, nonce, message, signature]):
+            return {"success": False, "error": "Missing required parameters"}
+        
+        # Find pending authorization
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT oc.*, c.min_score, c.require_nft 
+            FROM oauth_codes oc
+            JOIN oauth_clients c ON oc.client_id = c.client_id
+            WHERE oc.nonce = ? AND oc.used = 0 AND oc.expires_at > ?
+        """, (oauth_nonce, datetime.now(timezone.utc).isoformat()))
+        pending = cursor.fetchone()
+        
+        if not pending:
+            conn.close()
+            return {"success": False, "error": "Invalid or expired authorization request"}
+        
+        # Verify signature
+        try:
+            from eth_account.messages import encode_defunct
+            from eth_account import Account
+            
+            msg = encode_defunct(text=message)
+            recovered = Account.recover_message(msg, signature=signature)
+            
+            if recovered.lower() != address:
+                conn.close()
+                return {"success": False, "error": "Signature verification failed"}
+        except Exception as e:
+            conn.close()
+            return {"success": False, "error": f"Signature error: {str(e)}"}
+        
+        # Check user exists and meets requirements
+        cursor.execute("SELECT * FROM users WHERE address = ?", (address,))
+        user = cursor.fetchone()
+        
+        if not user:
+            # Create user if doesn't exist (triggers NFT minting)
+            conn.close()
+            return {"success": False, "error": "Please register on AEraLogIn dashboard first to get your Identity NFT"}
+        
+        # Check NFT requirement
+        if pending['require_nft']:
+            cursor.execute("SELECT * FROM nft_mints WHERE address = ? AND status = 'confirmed'", (address,))
+            nft = cursor.fetchone()
+            if not nft:
+                conn.close()
+                return {"success": False, "error": "Identity NFT required. Please mint your NFT on the dashboard first."}
+        
+        # Check score requirement
+        if user['score'] < pending['min_score']:
+            conn.close()
+            return {"success": False, "error": f"Minimum Resonance Score of {pending['min_score']} required. Your score: {user['score']}"}
+        
+        # Generate authorization code
+        auth_code = generate_oauth_code()
+        
+        # Update the authorization record with actual data
+        cursor.execute("""
+            UPDATE oauth_codes 
+            SET code = ?, address = ?, created_at = ?, expires_at = ?
+            WHERE nonce = ?
+        """, (
+            auth_code,
+            address,
+            datetime.now(timezone.utc).isoformat(),
+            (datetime.now(timezone.utc) + timedelta(seconds=OAUTH_CODE_EXPIRY_SECONDS)).isoformat(),
+            oauth_nonce
+        ))
+        conn.commit()
+        conn.close()
+        
+        log_activity("INFO", "OAUTH", f"Authorization code generated for {address[:10]}", client_id=pending['client_id'])
+        
+        return {"success": True, "code": auth_code}
+        
+    except Exception as e:
+        log_activity("ERROR", "OAUTH", f"OAuth complete error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/oauth/token")
+async def oauth_token(req: Request):
+    """
+    OAuth 2.0 Token Endpoint
+    
+    Exchange authorization code for access token.
+    
+    Request (application/json or application/x-www-form-urlencoded):
+        {{
+            "grant_type": "authorization_code",
+            "code": "...",
+            "redirect_uri": "...",
+            "client_id": "...",
+            "client_secret": "..."
+        }}
+    
+    Response:
+        {{
+            "access_token": "jwt...",
+            "token_type": "Bearer",
+            "expires_in": 86400,
+            "wallet": "0x...",
+            "score": 55,
+            "has_nft": true
+        }}
+    """
+    try:
+        # Support both JSON and form-urlencoded
+        content_type = req.headers.get("content-type", "")
+        if "application/json" in content_type:
+            data = await req.json()
+        else:
+            body = await req.body()
+            data = dict(parse_qs(body.decode()))
+            data = {k: v[0] if isinstance(v, list) else v for k, v in data.items()}
+        
+        grant_type = data.get("grant_type", "")
+        code = data.get("code", "")
+        redirect_uri = data.get("redirect_uri", "")
+        client_id = data.get("client_id", "")
+        client_secret = data.get("client_secret", "")
+        
+        if grant_type != "authorization_code":
+            return {"error": "unsupported_grant_type", "error_description": "Only authorization_code grant is supported"}
+        
+        if not all([code, redirect_uri, client_id, client_secret]):
+            return {"error": "invalid_request", "error_description": "Missing required parameters"}
+        
+        # Validate client credentials
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM oauth_clients WHERE client_id = ? AND is_active = 1", (client_id,))
+        client = cursor.fetchone()
+        
+        if not client:
+            conn.close()
+            return {"error": "invalid_client", "error_description": "Unknown client"}
+        
+        if hash_client_secret(client_secret) != client['client_secret_hash']:
+            conn.close()
+            log_activity("WARNING", "OAUTH", f"Invalid client_secret for {client_id}")
+            return {"error": "invalid_client", "error_description": "Invalid client credentials"}
+        
+        # Validate authorization code
+        cursor.execute("""
+            SELECT * FROM oauth_codes 
+            WHERE code = ? AND client_id = ? AND redirect_uri = ? AND used = 0 AND expires_at > ?
+        """, (code, client_id, redirect_uri, datetime.now(timezone.utc).isoformat()))
+        auth_code = cursor.fetchone()
+        
+        if not auth_code:
+            conn.close()
+            return {"error": "invalid_grant", "error_description": "Invalid or expired authorization code"}
+        
+        # Mark code as used
+        cursor.execute("UPDATE oauth_codes SET used = 1 WHERE code = ?", (code,))
+        
+        # Get user data
+        cursor.execute("SELECT * FROM users WHERE address = ?", (auth_code['address'],))
+        user = cursor.fetchone()
+        
+        # Check NFT status
+        cursor.execute("SELECT * FROM nft_mints WHERE address = ? AND status = 'confirmed'", (auth_code['address'],))
+        nft = cursor.fetchone()
+        has_nft = nft is not None
+        
+        # Generate session token
+        access_token = generate_oauth_session_token(
+            client_id=client_id,
+            address=auth_code['address'],
+            score=user['score'] if user else 0,
+            has_nft=has_nft
+        )
+        
+        # Store session
+        session_id = secrets.token_hex(16)
+        cursor.execute("""
+            INSERT INTO oauth_sessions (session_id, client_id, address, score, has_nft, created_at, expires_at, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+        """, (
+            session_id,
+            client_id,
+            auth_code['address'],
+            user['score'] if user else 0,
+            has_nft,
+            datetime.now(timezone.utc).isoformat(),
+            (datetime.now(timezone.utc) + timedelta(hours=OAUTH_TOKEN_EXPIRY_HOURS)).isoformat()
+        ))
+        conn.commit()
+        conn.close()
+        
+        log_activity("INFO", "OAUTH", f"Token issued for {auth_code['address'][:10]}", client_id=client_id)
+        
+        return {
+            "access_token": access_token,
+            "token_type": "Bearer",
+            "expires_in": OAUTH_TOKEN_EXPIRY_HOURS * 3600,
+            "wallet": auth_code['address'],
+            "score": user['score'] if user else 0,
+            "has_nft": has_nft
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "OAUTH", f"Token exchange error: {str(e)}")
+        return {"error": "server_error", "error_description": str(e)}
+
+
+@app.post("/api/v1/verify")
+async def api_v1_verify(req: Request):
+    """
+    API v1: Verify AEra Session Token
+    
+    Used by publishers to verify user authentication server-side.
+    
+    Request:
+        Headers:
+            Authorization: Bearer <aera_session_token>
+    
+    Response:
+        {{
+            "valid": true,
+            "wallet": "0x...",
+            "score": 42,
+            "has_nft": true,
+            "chain_id": 8453,
+            "issued_at": "2025-01-01T00:00:00Z",
+            "expires_at": "2025-01-02T00:00:00Z"
+        }}
+    """
+    try:
+        # Get token from Authorization header
+        auth_header = req.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return {"valid": False, "error": "Missing or invalid Authorization header"}
+        
+        token = auth_header[7:]  # Remove "Bearer " prefix
+        
+        # Verify JWT
+        try:
+            payload = jwt.decode(token, OAUTH_JWT_SECRET, algorithms=["HS256"], audience=None)
+        except jwt.ExpiredSignatureError:
+            return {"valid": False, "error": "Token expired"}
+        except jwt.InvalidTokenError as e:
+            return {"valid": False, "error": f"Invalid token: {str(e)}"}
+        
+        # Get fresh user data
+        address = payload.get("sub", "")
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE address = ?", (address,))
+        user = cursor.fetchone()
+        
+        cursor.execute("SELECT * FROM nft_mints WHERE address = ? AND status = 'confirmed'", (address,))
+        nft = cursor.fetchone()
+        conn.close()
+        
+        return {
+            "valid": True,
+            "wallet": address,
+            "score": user['score'] if user else payload.get("score", 0),
+            "has_nft": nft is not None,
+            "chain_id": payload.get("chain_id", 8453),
+            "issued_at": datetime.fromtimestamp(payload.get("iat", 0), tz=timezone.utc).isoformat(),
+            "expires_at": datetime.fromtimestamp(payload.get("exp", 0), tz=timezone.utc).isoformat(),
+            "client_id": payload.get("aud"),
+            "jti": payload.get("jti")
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "API", f"v1/verify error: {str(e)}")
+        return {"valid": False, "error": str(e)}
+
+
+@app.post("/api/v1/clients/register")
+async def register_oauth_client(req: Request):
+    """
+    Register a new OAuth client (for development/admin use)
+    
+    Request:
+        {{
+            "admin_key": "...",
+            "client_name": "My App",
+            "redirect_uris": ["https://myapp.com/callback"],
+            "allowed_origins": ["https://myapp.com"],
+            "min_score": 0,
+            "require_nft": true
+        }}
+    
+    Response:
+        {{
+            "success": true,
+            "client_id": "...",
+            "client_secret": "..."
+        }}
+    """
+    try:
+        data = await req.json()
+        admin_key = data.get("admin_key", "")
+        
+        # Simple admin key check (should be replaced with proper admin auth)
+        expected_admin_key = os.getenv("OAUTH_ADMIN_KEY", TOKEN_SECRET)
+        if admin_key != expected_admin_key:
+            return {"success": False, "error": "Invalid admin key"}
+        
+        client_name = data.get("client_name", "")
+        redirect_uris = data.get("redirect_uris", [])
+        allowed_origins = data.get("allowed_origins", [])
+        min_score = data.get("min_score", 0)
+        require_nft = data.get("require_nft", True)
+        
+        if not client_name or not redirect_uris:
+            return {"success": False, "error": "client_name and redirect_uris are required"}
+        
+        # Generate credentials
+        client_id = "aera_" + secrets.token_hex(16)
+        client_secret = secrets.token_urlsafe(32)
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO oauth_clients (client_id, client_secret_hash, client_name, redirect_uris, allowed_origins, min_score, require_nft, created_at, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+        """, (
+            client_id,
+            hash_client_secret(client_secret),
+            client_name,
+            json.dumps(redirect_uris),
+            json.dumps(allowed_origins),
+            min_score,
+            require_nft,
+            datetime.now(timezone.utc).isoformat()
+        ))
+        conn.commit()
+        conn.close()
+        
+        log_activity("INFO", "OAUTH", f"New client registered: {client_name}", client_id=client_id)
+        
+        return {
+            "success": True,
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "message": "Store the client_secret securely - it cannot be retrieved later!"
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "OAUTH", f"Client registration error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/oauth/verify-nft")
+async def oauth_verify_nft(req: Request):
+    """
+    🔐 OAuth NFT Verification Endpoint for Third-Party Integration
+    
+    Allows registered OAuth clients to verify a user's NFT ownership
+    using their client credentials.
+    
+    Request:
+        {
+            "access_token": "user's access token",
+            "client_id": "your_client_id",
+            "client_secret": "your_client_secret"
+        }
+    
+    Response (success):
+        {
+            "valid": true,
+            "wallet": "0x...",
+            "has_nft": true,
+            "score": 42,
+            "chain_id": 8453
+        }
+    
+    Response (failure):
+        {
+            "valid": false,
+            "error": "Invalid credentials"
+        }
+    """
+    try:
+        data = await req.json()
+        access_token = data.get("access_token", "")
+        client_id = data.get("client_id", "")
+        client_secret = data.get("client_secret", "")
+        
+        if not access_token or not client_id or not client_secret:
+            return {"valid": False, "error": "Missing required fields"}
+        
+        # Verify client credentials
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM oauth_clients WHERE client_id = ? AND is_active = 1", (client_id,))
+        client = cursor.fetchone()
+        
+        if not client:
+            conn.close()
+            log_activity("WARNING", "OAUTH", f"Invalid client_id: {client_id[:20]}")
+            return {"valid": False, "error": "Invalid client credentials"}
+        
+        # Verify client secret
+        if not verify_client_secret(client_secret, client['client_secret_hash']):
+            conn.close()
+            log_activity("WARNING", "OAUTH", f"Invalid client_secret for: {client_id[:20]}")
+            return {"valid": False, "error": "Invalid client credentials"}
+        
+        # Verify the access token (JWT)
+        try:
+            payload = jwt.decode(access_token, OAUTH_JWT_SECRET, algorithms=["HS256"], audience=None)
+        except jwt.ExpiredSignatureError:
+            conn.close()
+            return {"valid": False, "error": "Token expired"}
+        except jwt.InvalidTokenError as e:
+            conn.close()
+            return {"valid": False, "error": f"Invalid token: {str(e)}"}
+        
+        address = payload.get("sub", "")
+        
+        # Get fresh NFT status
+        has_nft = await web3_service.has_identity_nft(address)
+        
+        # Get user score
+        cursor.execute("SELECT score FROM users WHERE LOWER(address) = ?", (address.lower(),))
+        user = cursor.fetchone()
+        score = user['score'] if user else 0
+        
+        conn.close()
+        
+        log_activity("INFO", "OAUTH", f"NFT verified for {address[:10]}", 
+                    client_id=client_id[:20], has_nft=has_nft)
+        
+        return {
+            "valid": True,
+            "wallet": address,
+            "has_nft": has_nft,
+            "score": score,
+            "chain_id": 8453,
+            "client_id": client_id
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "OAUTH", f"verify-nft error: {str(e)}")
+        return {"valid": False, "error": str(e)}
+
+
+# ============================================================================
+# ===== END OF OAUTH ENDPOINTS =====
+# ============================================================================
+
 
 @app.get("/api/airdrop-status/{address}")
 async def get_airdrop_status(address: str):

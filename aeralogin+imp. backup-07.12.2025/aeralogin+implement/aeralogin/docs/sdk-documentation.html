@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEra Gate SDK - Documentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #0052ff;
+            --secondary: #00d4ff;
+            --dark: #0a0e27;
+            --darker: #050814;
+            --light: #f0f4ff;
+            --accent: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            min-height: 100vh;
+            color: var(--light);
+            overflow-x: hidden;
+        }
+        
+        /* Animated Background - Canvas Particles */
+        .bg-animation {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .bg-animation canvas {
+            display: block;
+        }
+        
+        /* Header */
+        header {
+            padding: 0.79rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 39, 0.8);
+            width: 100%;
+            margin: 0;
+        }
+
+        .logo {
+            font-size: 2.25rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            font-size: 2.7rem;
+            background: none !important;
+            -webkit-background-clip: unset !important;
+            background-clip: unset !important;
+            -webkit-text-fill-color: currentColor !important;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            opacity: 0.8;
+            cursor: pointer;
+        }
+
+        nav a:hover {
+            color: var(--secondary);
+            opacity: 1;
+        }
+        
+        nav a.active {
+            color: var(--secondary);
+            opacity: 1;
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--light);
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            z-index: 1001;
+        }
+
+        .menu-toggle:hover {
+            color: var(--secondary);
+        }
+
+        /* Mobile Menu */
+        .nav-menu.mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 300px;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            backdrop-filter: blur(20px);
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 5rem 2rem 2rem;
+            gap: 1.5rem;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
+            border-left: 1px solid rgba(99, 102, 241, 0.3);
+            overflow-y: auto;
+        }
+
+        .nav-menu.mobile-menu.active {
+            right: 0;
+        }
+
+        .nav-menu.mobile-menu a {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .nav-menu.mobile-menu a:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        /* Menu Backdrop */
+        .menu-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-backdrop.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        @media (max-width: 768px) {
+            nav.nav-menu:not(.mobile-menu) {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+        }
+        
+        /* Layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 2rem;
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 40px;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .sidebar-section {
+            margin-bottom: 28px;
+        }
+        
+        .sidebar-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .sidebar-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--secondary);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        
+        .sidebar-links {
+            list-style: none;
+        }
+        
+        .sidebar-links li {
+            margin-bottom: 4px;
+        }
+        
+        .sidebar-links a {
+            display: block;
+            color: rgba(240, 244, 255, 0.6);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-left: 2px solid transparent;
+            font-size: 0.9rem;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-links a:hover,
+        .sidebar-links a.active {
+            color: var(--light);
+            border-left-color: var(--secondary);
+            background: rgba(0, 212, 255, 0.1);
+        }
+        
+        /* Main Content */
+        .main-content {
+            max-width: 100%;
+        }
+        
+        .section {
+            margin-bottom: 50px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .section:hover {
+            border-color: rgba(0, 212, 255, 0.3);
+            box-shadow: 0 15px 50px rgba(0, 82, 255, 0.15);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--light), var(--secondary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+        
+        h2 {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            font-weight: 700;
+        }
+        
+        h3 {
+            font-size: 1.15rem;
+            margin: 28px 0 14px;
+            color: var(--secondary);
+            font-weight: 600;
+        }
+        
+        p {
+            color: rgba(240, 244, 255, 0.7);
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+        
+        /* Code Blocks */
+        .code-block {
+            background: rgba(5, 8, 20, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            margin: 20px 0;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .code-header {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .code-lang {
+            font-size: 0.8rem;
+            color: var(--secondary);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .copy-btn {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .copy-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 82, 255, 0.3);
+        }
+        
+        .code-content {
+            padding: 20px;
+            overflow-x: auto;
+        }
+        
+        .code-content code {
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: #e6edf3;
+        }
+        
+        .code-content .comment { color: #6b7280; font-style: italic; }
+        .code-content .string { color: var(--secondary); }
+        .code-content .keyword { color: #f472b6; }
+        .code-content .function { color: #a78bfa; }
+        .code-content .property { color: #60a5fa; }
+        .code-content .number { color: #fbbf24; }
+        
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        
+        th, td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        th {
+            background: rgba(0, 82, 255, 0.15);
+            color: var(--light);
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 0.3px;
+        }
+        
+        td {
+            color: rgba(240, 244, 255, 0.7);
+        }
+        
+        td code {
+            background: rgba(0, 212, 255, 0.15);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            color: var(--secondary);
+        }
+        
+        tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        /* Info Boxes */
+        .info-box {
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 20px 0;
+        }
+        
+        .info-box.warning {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+        
+        .info-box.success {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        
+        .info-box-title {
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--light);
+            font-size: 1rem;
+        }
+        
+        .info-box ul {
+            margin-left: 24px;
+            color: rgba(240, 244, 255, 0.7);
+        }
+        
+        .info-box ul li {
+            margin-bottom: 6px;
+            line-height: 1.6;
+        }
+        
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+        
+        .badge.required {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+        
+        .badge.optional {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--secondary);
+        }
+        
+        /* Links */
+        a {
+            color: var(--secondary);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        a:hover {
+            color: var(--light);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .nav {
+                display: none;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .section {
+                padding: 24px;
+            }
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 212, 255, 0.3);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 212, 255, 0.5);
+        }
+        
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .section {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .section:nth-child(1) { animation-delay: 0.1s; }
+        .section:nth-child(2) { animation-delay: 0.2s; }
+        .section:nth-child(3) { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="bg-animation" id="bgCanvas"></div>
+    
+    <!-- Header Navigation -->
+    <header>
+        <div class="logo">
+            <span class="logo-icon" style="color: #3b82f6;">🌀</span>
+            <span>AEraLogIn</span>
+        </div>
+        <nav class="nav-menu">
+            <a href="/sdk-docs" class="active">SDK Docs</a>
+            <a href="/examples/snippets/basic-integration.html">Examples</a>
+            <a href="/">Home</a>
+            <a href="/user-dashboard">AEraCore</a>
+        </nav>
+        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+    </header>
+    
+    <!-- Mobile Menu -->
+    <nav class="nav-menu mobile-menu" id="mobileMenu">
+        <a href="/sdk-docs" class="active">SDK Docs</a>
+        <a href="/examples/snippets/basic-integration.html">Examples</a>
+        <a href="/">Home</a>
+        <a href="/user-dashboard">AEraCore</a>
+    </nav>
+    
+    <!-- Menu Backdrop -->
+    <div class="menu-backdrop" id="menuBackdrop" onclick="toggleMenu()"></div>
+    
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h4 class="sidebar-title">Getting Started</h4>
+                <ul class="sidebar-links">
+                    <li><a href="#introduction" class="active">Introduction</a></li>
+                    <li><a href="#installation">Installation</a></li>
+                    <li><a href="#quick-start">Quick Start</a></li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <h4 class="sidebar-title">JavaScript SDK</h4>
+                <ul class="sidebar-links">
+                    <li><a href="#init">AEraGate.init()</a></li>
+                    <li><a href="#login">AEraGate.login()</a></li>
+                    <li><a href="#logout">AEraGate.logout()</a></li>
+                    <li><a href="#getuser">AEraGate.getUser()</a></li>
+                    <li><a href="#events">Events</a></li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <h4 class="sidebar-title">Server Integration</h4>
+                <ul class="sidebar-links">
+                    <li><a href="#oauth">OAuth Flow</a></li>
+                    <li><a href="#api-verify">API Verification</a></li>
+                    <li><a href="#middleware">Middleware</a></li>
+                </ul>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Introduction -->
+            <section id="introduction" class="section">
+                <h1>AEra Gate SDK</h1>
+                <p>
+                    The AEra Gate SDK enables website operators to protect their content with 
+                    NFT-based access control. Users must own an AEra Identity NFT to access 
+                    protected areas.
+                </p>
+                
+                <div class="info-box success">
+                    <div class="info-box-title">✨ Benefits</div>
+                    <ul>
+                        <li>No custom login system required</li>
+                        <li>Decentralized authentication via wallet</li>
+                        <li>Automatic protection of HTML elements</li>
+                        <li>Easy integration in 5 minutes</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- Installation -->
+            <section id="installation" class="section">
+                <h2>🔧 Installation</h2>
+                
+                <h3>Via CDN (Recommended)</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">HTML</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code><span class="keyword">&lt;script</span> <span class="property">src</span>=<span class="string">"https://aeralogin.com/sdk/aera-gate.js"</span><span class="keyword">&gt;&lt;/script&gt;</span></code>
+                    </div>
+                </div>
+                
+                <h3>Via NPM</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Terminal</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code>npm install @aera/gate-sdk</code>
+                    </div>
+                </div>
+                
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JavaScript</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code><span class="keyword">import</span> { AEraGate } <span class="keyword">from</span> <span class="string">'@aera/gate-sdk'</span>;</code>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Quick Start -->
+            <section id="quick-start" class="section">
+                <h2>🚀 Quick Start</h2>
+                
+                <p>
+                    The simplest setup requires only a few lines of code. The SDK 
+                    automatically protects all elements with the <code>data-aera-protected</code> attribute.
+                </p>
+                
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">HTML</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code><span class="comment">&lt;!-- Public Content --&gt;</span>
+<span class="keyword">&lt;div&gt;</span>This content is visible to everyone.<span class="keyword">&lt;/div&gt;</span>
+
+<span class="comment">&lt;!-- Protected Content --&gt;</span>
+<span class="keyword">&lt;div</span> <span class="property">data-aera-protected</span><span class="keyword">&gt;</span>
+  Only visible to NFT holders!
+<span class="keyword">&lt;/div&gt;</span>
+
+<span class="comment">&lt;!-- Load and initialize SDK --&gt;</span>
+<span class="keyword">&lt;script</span> <span class="property">src</span>=<span class="string">"https://aeralogin.com/sdk/aera-gate.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>
+<span class="keyword">&lt;script&gt;</span>
+  AEraGate.<span class="function">init</span>({
+    <span class="property">clientId</span>: <span class="string">'your-client-id'</span>,
+    <span class="property">autoProtect</span>: <span class="keyword">true</span>
+  });
+<span class="keyword">&lt;/script&gt;</span></code>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- AEraGate.init() -->
+            <section id="init" class="section">
+                <h2>⚙️ AEraGate.init(options)</h2>
+                <p>Initializes the SDK with the specified options.</p>
+                
+                <h3>Parameters</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Option</th>
+                                <th>Type</th>
+                                <th>Default</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>clientId</code> <span class="badge required">Required</span></td>
+                                <td>string</td>
+                                <td>-</td>
+                                <td>Your Client ID from the AEra Dashboard</td>
+                            </tr>
+                            <tr>
+                                <td><code>autoProtect</code></td>
+                                <td>boolean</td>
+                                <td><code>true</code></td>
+                                <td>Automatically protect elements with data-aera-protected</td>
+                            </tr>
+                            <tr>
+                                <td><code>mode</code></td>
+                                <td>string</td>
+                                <td><code>'modal'</code></td>
+                                <td>Login mode: 'modal' or 'redirect'</td>
+                            </tr>
+                            <tr>
+                                <td><code>theme</code></td>
+                                <td>string</td>
+                                <td><code>'dark'</code></td>
+                                <td>UI theme: 'dark' or 'light'</td>
+                            </tr>
+                            <tr>
+                                <td><code>requireNFT</code></td>
+                                <td>boolean</td>
+                                <td><code>true</code></td>
+                                <td>NFT ownership required</td>
+                            </tr>
+                            <tr>
+                                <td><code>minScore</code></td>
+                                <td>number</td>
+                                <td><code>0</code></td>
+                                <td>Minimum Resonance Score</td>
+                            </tr>
+                            <tr>
+                                <td><code>onAuthenticated</code></td>
+                                <td>function</td>
+                                <td>-</td>
+                                <td>Callback after successful authentication</td>
+                            </tr>
+                            <tr>
+                                <td><code>onLogout</code></td>
+                                <td>function</td>
+                                <td>-</td>
+                                <td>Callback after logout</td>
+                            </tr>
+                            <tr>
+                                <td><code>onError</code></td>
+                                <td>function</td>
+                                <td>-</td>
+                                <td>Callback on errors</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h3>Example</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JavaScript</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code>AEraGate.<span class="function">init</span>({
+  <span class="property">clientId</span>: <span class="string">'my-website-client'</span>,
+  <span class="property">autoProtect</span>: <span class="keyword">true</span>,
+  <span class="property">mode</span>: <span class="string">'modal'</span>,
+  <span class="property">theme</span>: <span class="string">'dark'</span>,
+  <span class="property">minScore</span>: <span class="number">50</span>,
+  
+  <span class="function">onAuthenticated</span>: <span class="keyword">function</span>(user) {
+    <span class="keyword">console</span>.<span class="function">log</span>(<span class="string">'Welcome!'</span>, user.wallet);
+    <span class="keyword">console</span>.<span class="function">log</span>(<span class="string">'Score:'</span>, user.score);
+  },
+  
+  <span class="function">onLogout</span>: <span class="keyword">function</span>() {
+    <span class="keyword">console</span>.<span class="function">log</span>(<span class="string">'Goodbye!'</span>);
+  },
+  
+  <span class="function">onError</span>: <span class="keyword">function</span>(error) {
+    <span class="keyword">console</span>.<span class="function">error</span>(<span class="string">'Error:'</span>, error);
+  }
+});</code>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- AEraGate.login() -->
+            <section id="login" class="section">
+                <h2>🔐 AEraGate.login(options)</h2>
+                <p>Starts the login process. Opens a modal or redirects to the AEra Login page depending on configuration.</p>
+                
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JavaScript</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code><span class="comment">// Simple call</span>
+AEraGate.<span class="function">login</span>();
+
+<span class="comment">// With options</span>
+AEraGate.<span class="function">login</span>({
+  <span class="property">returnUrl</span>: <span class="string">'/dashboard'</span>,
+  <span class="property">forceModal</span>: <span class="keyword">true</span>
+});</code>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- AEraGate.logout() -->
+            <section id="logout" class="section">
+                <h2>🚪 AEraGate.logout()</h2>
+                <p>Ends the current session and removes all stored tokens.</p>
+                
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JavaScript</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code>AEraGate.<span class="function">logout</span>();</code>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- AEraGate.getUser() -->
+            <section id="getuser" class="section">
+                <h2>👤 AEraGate.getUser()</h2>
+                <p>Returns the data of the currently authenticated user, or <code>null</code> if not authenticated.</p>
+                
+                <h3>Return Value</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JavaScript</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code><span class="keyword">const</span> user = AEraGate.<span class="function">getUser</span>();
+
+<span class="comment">// user object:</span>
+{
+  <span class="property">wallet</span>: <span class="string">"0x1234...5678"</span>,       <span class="comment">// Wallet address</span>
+  <span class="property">score</span>: <span class="number">150</span>,                     <span class="comment">// Resonance Score</span>
+  <span class="property">hasNFT</span>: <span class="keyword">true</span>,                   <span class="comment">// Has AEra Identity NFT</span>
+  <span class="property">token</span>: <span class="string">"eyJ..."</span>,                <span class="comment">// Session Token</span>
+  <span class="property">expiresAt</span>: <span class="string">"2025-12-08T..."</span>    <span class="comment">// Token expiry</span>
+}</code>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- OAuth Flow -->
+            <section id="oauth" class="section">
+                <h2>🔑 OAuth Flow (Server-Side)</h2>
+                <p>
+                    For server-side verification, use the OAuth 2.0 flow. 
+                    This provides maximum security as verification takes place on your server.
+                </p>
+                
+                <h3>1. Autorisierungs-URL</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">URL</span>
+                    </div>
+                    <div class="code-content">
+<code>https://aeralogin.com/oauth/authorize
+  ?client_id=YOUR_CLIENT_ID
+  &redirect_uri=https://yoursite.com/callback
+  &response_type=code
+  &state=RANDOM_STATE</code>
+                    </div>
+                </div>
+                
+                <h3>2. Token Exchange</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JavaScript (Node.js)</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code><span class="keyword">const</span> response = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'https://aeralogin.com/oauth/token'</span>, {
+  <span class="property">method</span>: <span class="string">'POST'</span>,
+  <span class="property">headers</span>: { <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span> },
+  <span class="property">body</span>: JSON.<span class="function">stringify</span>({
+    <span class="property">grant_type</span>: <span class="string">'authorization_code'</span>,
+    <span class="property">code</span>: code,
+    <span class="property">redirect_uri</span>: <span class="string">'https://yoursite.com/callback'</span>,
+    <span class="property">client_id</span>: <span class="string">'YOUR_CLIENT_ID'</span>,
+    <span class="property">client_secret</span>: <span class="string">'YOUR_CLIENT_SECRET'</span>
+  })
+});
+
+<span class="keyword">const</span> { access_token } = <span class="keyword">await</span> response.<span class="function">json</span>();</code>
+                    </div>
+                </div>
+                
+                <h3>3. NFT Verification</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JavaScript (Node.js)</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code><span class="keyword">const</span> verification = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'https://aeralogin.com/api/oauth/verify-nft'</span>, {
+  <span class="property">method</span>: <span class="string">'POST'</span>,
+  <span class="property">headers</span>: { <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span> },
+  <span class="property">body</span>: JSON.<span class="function">stringify</span>({
+    <span class="property">access_token</span>: access_token,
+    <span class="property">client_id</span>: <span class="string">'YOUR_CLIENT_ID'</span>,
+    <span class="property">client_secret</span>: <span class="string">'YOUR_CLIENT_SECRET'</span>
+  })
+});
+
+<span class="keyword">const</span> result = <span class="keyword">await</span> verification.<span class="function">json</span>();
+<span class="comment">// { valid: true, wallet: "0x...", has_nft: true, score: 150 }</span></code>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Middleware -->
+            <section id="middleware" class="section">
+                <h2>🧩 Server Middleware</h2>
+                <p>
+                    We provide ready-to-use middleware solutions for various frameworks:
+                </p>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Framework</th>
+                                <th>Middleware</th>
+                                <th>Link</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Express.js</td>
+                                <td><code>express-middleware.js</code></td>
+                                <td><a href="/examples/middleware/express-middleware.js">Download</a></td>
+                            </tr>
+                            <tr>
+                                <td>Next.js</td>
+                                <td><code>nextjs-middleware.ts</code></td>
+                                <td><a href="/examples/middleware/nextjs-middleware.ts">Download</a></td>
+                            </tr>
+                            <tr>
+                                <td>PHP</td>
+                                <td><code>php-middleware.php</code></td>
+                                <td><a href="/examples/middleware/php-middleware.php">Download</a></td>
+                            </tr>
+                            <tr>
+                                <td>Python/Flask</td>
+                                <td><code>python-middleware.py</code></td>
+                                <td><a href="/examples/middleware/python-middleware.py">Download</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-box-title">💡 Tip</div>
+                    <p>
+                        For maximum security, we recommend using server-side 
+                        middleware in combination with the JavaScript SDK.
+                    </p>
+                </div>
+            </section>
+            
+            <!-- Footer CTA -->
+            <section class="section" style="text-align: center;">
+                <h2>🎯 Ready to Get Started?</h2>
+                <p style="max-width: 600px; margin: 0 auto 24px;">
+                    Integrate AEra Gate in minutes and offer your users 
+                    a secure, decentralized authentication experience.
+                </p>
+                <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                    <a href="/examples/snippets/basic-integration.html" class="nav-cta-button" style="padding: 14px 28px; font-size: 1rem;">
+                        📋 View Example
+                    </a>
+                    <a href="/" style="padding: 14px 28px; font-size: 1rem; border: 2px solid var(--secondary); border-radius: 8px; color: var(--secondary); font-weight: 600; transition: all 0.3s;">
+                        🛡️ Try AEra Login
+                    </a>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <script>
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                button.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                    button.style.background = 'linear-gradient(135deg, var(--primary), var(--accent))';
+                }, 2000);
+            });
+        }
+        
+        // Active link tracking
+        document.querySelectorAll('.sidebar-links a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelector('.sidebar-links a.active')?.classList.remove('active');
+                this.classList.add('active');
+            });
+        });
+        
+        // Intersection Observer for active section highlighting
+        const sections = document.querySelectorAll('.section[id]');
+        const sidebarLinks = document.querySelectorAll('.sidebar-links a');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    sidebarLinks.forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+                    });
+                }
+            });
+        }, { rootMargin: '-20% 0px -80% 0px' });
+        
+        sections.forEach(section => observer.observe(section));
+        
+        // Mobile menu toggle function
+        function toggleMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const backdrop = document.getElementById('menuBackdrop');
+            mobileMenu.classList.toggle('active');
+            backdrop.classList.toggle('active');
+        }
+    </script>
+    
+    <!-- Canvas Particle Animation -->
+    <script>
+        // Particle animation for background (from landing.html)
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        document.getElementById('bgCanvas').appendChild(canvas);
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 50;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.fillStyle = 'rgba(0, 212, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            // Draw connections between nearby particles
+            particles.forEach((p1, i) => {
+                particles.slice(i + 1).forEach(p2 => {
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 150) {
+                        ctx.strokeStyle = `rgba(0, 212, 255, ${0.2 * (1 - distance / 150)})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                });
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+    
+    <!-- ===== AERA CHAT WIDGET ===== -->
+    <link rel="stylesheet" href="/aera-chat.css?v=20251209002">
+    <script src="/aera-chat.js?v=20251209001"></script>
+    <script>
+        if (typeof initAeraChat === 'function') {
+            initAeraChat();
+            console.log('🌀 AEra Chat Widget initialized on sdk-documentation.html');
+        }
+    </script>
+</body>
+</html>
