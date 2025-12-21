@@ -1092,6 +1092,73 @@ Licensed under the Apache License, Version 2.0
             </div>
         </div>
         
+        <!-- ===== SDK APP REGISTRATION SECTION ===== -->
+        <div class="owner-section" id="sdkAppsSection">
+            <h2>🔧 SDK Integration - Register Your Website</h2>
+            <div class="link-section">
+                <p>Register your website to use AEra Gate authentication. Get your Client ID and Secret to integrate NFT-gated access on any website.</p>
+                
+                <!-- Register New App Form -->
+                <div id="registerAppForm" style="margin-bottom: 20px; padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 14px; color: var(--secondary);">➕ Register New Website</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">App Name *</label>
+                            <input type="text" id="sdkAppName" placeholder="My Awesome Website" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Website URL *</label>
+                            <input type="text" id="sdkWebsiteUrl" placeholder="https://yourwebsite.com" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Redirect URI *</label>
+                            <input type="text" id="sdkRedirectUri" placeholder="https://yourwebsite.com/callback" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Description (optional)</label>
+                            <input type="text" id="sdkAppDescription" placeholder="Brief description of your app" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                        </div>
+                    </div>
+                    <button onclick="registerSdkApp()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 30px rgba(0, 82, 255, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                        🚀 Register App & Get Credentials
+                    </button>
+                    <div id="registerAppStatus" style="margin-top: 10px; display: none;"></div>
+                </div>
+                
+                <!-- New Credentials Display (shown after registration) -->
+                <div id="newCredentialsDisplay" style="display: none; margin-bottom: 20px; padding: 16px; background: rgba(16, 185, 129, 0.1); border: 2px solid var(--success); border-radius: 8px;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 14px; color: var(--success);">✅ App Registered Successfully!</h3>
+                    <div style="background: rgba(5, 8, 20, 0.8); padding: 12px; border-radius: 6px; margin-bottom: 10px;">
+                        <div style="margin-bottom: 8px;">
+                            <label style="font-size: 11px; color: rgba(240, 244, 255, 0.6); display: block;">CLIENT ID:</label>
+                            <code id="newClientId" style="font-size: 13px; color: var(--secondary); word-break: break-all;"></code>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; color: rgba(240, 244, 255, 0.6); display: block;">CLIENT SECRET:</label>
+                            <code id="newClientSecret" style="font-size: 13px; color: #f59e0b; word-break: break-all;"></code>
+                        </div>
+                    </div>
+                    <p style="font-size: 12px; color: #f59e0b; margin: 0;">⚠️ <strong>IMPORTANT:</strong> Copy your Client Secret NOW! It will NOT be shown again.</p>
+                    <button onclick="copyCredentials()" style="margin-top: 10px; padding: 8px 16px; background: var(--success); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">📋 Copy Both to Clipboard</button>
+                </div>
+                
+                <!-- My Apps List -->
+                <div id="myAppsSection" style="margin-top: 20px;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 14px; color: var(--secondary); display: flex; justify-content: space-between; align-items: center;">
+                        📱 My Registered Apps
+                        <button onclick="loadMyApps()" style="padding: 5px 10px; font-size: 11px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: var(--light); cursor: pointer;">🔄 Refresh</button>
+                    </h3>
+                    <div id="myAppsList" style="display: grid; gap: 12px;">
+                        <div style="text-align: center; padding: 30px; color: rgba(240, 244, 255, 0.5);">
+                            <p>Connect your wallet to view your registered apps</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div id="dashboardContent" style="display: none;">
             <!-- Owner Stats -->
             <div id="stats" class="stats-grid">
@@ -1822,6 +1889,14 @@ Issued At: ${issuedAt}`;
                 sessionStorage.setItem('aeraDashboardWallet', walletAddress);
                 sessionStorage.setItem('aeraDashboardToken', signature);
                 
+                // ✅ Store JWT token in localStorage for SDK App Management
+                if (verifyData.jwt_token) {
+                    localStorage.setItem('aera_jwt_token', verifyData.jwt_token);
+                    console.log('✅ JWT token stored for SDK app management');
+                    // Load SDK apps after login
+                    loadMyApps();
+                }
+                
                 // Auto-fill input
                 document.getElementById('ownerInput').value = walletAddress;
                 
@@ -2067,6 +2142,257 @@ Issued At: ${issuedAt}`;
                 btn.classList.add('collapsed');
                 btn.textContent = '▶';
             }
+        }
+        
+        // ===== SDK APP MANAGEMENT FUNCTIONS =====
+        
+        // Get JWT token from localStorage or current session
+        function getAuthToken() {
+            return localStorage.getItem('aera_jwt_token');
+        }
+        
+        // Register a new SDK App
+        async function registerSdkApp() {
+            const statusDiv = document.getElementById('registerAppStatus');
+            const appName = document.getElementById('sdkAppName').value.trim();
+            const websiteUrl = document.getElementById('sdkWebsiteUrl').value.trim();
+            const redirectUri = document.getElementById('sdkRedirectUri').value.trim();
+            const description = document.getElementById('sdkAppDescription').value.trim();
+            
+            // Validation
+            if (!appName || appName.length < 3) {
+                statusDiv.innerHTML = '<div style="color: #ef4444;">❌ App name must be at least 3 characters</div>';
+                statusDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!websiteUrl || !websiteUrl.startsWith('http')) {
+                statusDiv.innerHTML = '<div style="color: #ef4444;">❌ Valid website URL required (https://...)</div>';
+                statusDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!redirectUri || !redirectUri.startsWith('http')) {
+                statusDiv.innerHTML = '<div style="color: #ef4444;">❌ Valid redirect URI required (https://...)</div>';
+                statusDiv.style.display = 'block';
+                return;
+            }
+            
+            const token = getAuthToken();
+            if (!token) {
+                statusDiv.innerHTML = '<div style="color: #ef4444;">❌ Please connect your wallet first and ensure you have an AEra NFT</div>';
+                statusDiv.style.display = 'block';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<div style="color: var(--secondary);">⏳ Registering your app...</div>';
+            statusDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/oauth/my-apps/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        app_name: appName,
+                        website_url: websiteUrl,
+                        redirect_uri: redirectUri,
+                        description: description
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show credentials
+                    document.getElementById('newClientId').textContent = data.client_id;
+                    document.getElementById('newClientSecret').textContent = data.client_secret;
+                    document.getElementById('newCredentialsDisplay').style.display = 'block';
+                    
+                    // Clear form
+                    document.getElementById('sdkAppName').value = '';
+                    document.getElementById('sdkWebsiteUrl').value = '';
+                    document.getElementById('sdkRedirectUri').value = '';
+                    document.getElementById('sdkAppDescription').value = '';
+                    
+                    statusDiv.innerHTML = '<div style="color: var(--success);">✅ App registered successfully! Copy your credentials above.</div>';
+                    
+                    // Refresh apps list
+                    loadMyApps();
+                } else {
+                    statusDiv.innerHTML = `<div style="color: #ef4444;">❌ ${data.error}</div>`;
+                }
+            } catch (error) {
+                console.error('Register app error:', error);
+                statusDiv.innerHTML = '<div style="color: #ef4444;">❌ Network error. Please try again.</div>';
+            }
+        }
+        
+        // Copy credentials to clipboard
+        function copyCredentials() {
+            const clientId = document.getElementById('newClientId').textContent;
+            const clientSecret = document.getElementById('newClientSecret').textContent;
+            const text = `AERA_CLIENT_ID=${clientId}\nAERA_CLIENT_SECRET=${clientSecret}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Credentials copied to clipboard!\n\nAdd these to your .env file.');
+            }).catch(err => {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ Credentials copied to clipboard!');
+            });
+        }
+        
+        // Load user's apps
+        async function loadMyApps() {
+            const token = getAuthToken();
+            const container = document.getElementById('myAppsList');
+            
+            if (!token) {
+                container.innerHTML = '<div style="text-align: center; padding: 30px; color: rgba(240, 244, 255, 0.5);"><p>Connect your wallet to view your registered apps</p></div>';
+                return;
+            }
+            
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: rgba(240, 244, 255, 0.5);">⏳ Loading your apps...</div>';
+            
+            try {
+                const response = await fetch('/api/oauth/my-apps', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.apps.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; padding: 30px; color: rgba(240, 244, 255, 0.5);"><p>No apps registered yet. Create your first app above!</p></div>';
+                    } else {
+                        container.innerHTML = data.apps.map(app => `
+                            <div style="padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; transition: all 0.3s;" onmouseover="this.style.borderColor='rgba(0, 212, 255, 0.5)'" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.1)'">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                                    <div>
+                                        <h4 style="margin: 0; color: var(--light); font-size: 14px;">${app.app_name}</h4>
+                                        <a href="${app.website_url}" target="_blank" style="font-size: 12px; color: var(--secondary); text-decoration: none;">${app.website_url}</a>
+                                    </div>
+                                    <span style="font-size: 10px; padding: 3px 8px; background: ${app.is_active ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${app.is_active ? 'var(--success)' : '#ef4444'}; border-radius: 4px;">${app.is_active ? '✓ Active' : '✗ Inactive'}</span>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <label style="font-size: 10px; color: rgba(240, 244, 255, 0.5); display: block;">CLIENT ID:</label>
+                                    <code style="font-size: 11px; color: var(--secondary); word-break: break-all;">${app.client_id}</code>
+                                </div>
+                                ${app.description ? `<p style="font-size: 11px; color: rgba(240, 244, 255, 0.6); margin: 0 0 10px 0;">${app.description}</p>` : ''}
+                                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                                    <button onclick="regenerateSecret('${app.client_id}')" style="flex: 1; padding: 6px; font-size: 11px; background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; border-radius: 4px; color: #f59e0b; cursor: pointer;">🔄 New Secret</button>
+                                    <button onclick="deleteApp('${app.client_id}', '${app.app_name}')" style="flex: 1; padding: 6px; font-size: 11px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; border-radius: 4px; color: #ef4444; cursor: pointer;">🗑️ Delete</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    // Show count
+                    const countInfo = document.createElement('div');
+                    countInfo.style.cssText = 'text-align: right; font-size: 11px; color: rgba(240, 244, 255, 0.5); margin-top: 8px;';
+                    countInfo.textContent = `${data.count}/${data.max_apps} apps used`;
+                    container.appendChild(countInfo);
+                } else {
+                    container.innerHTML = `<div style="color: #ef4444; padding: 20px;">❌ ${data.error}</div>`;
+                }
+            } catch (error) {
+                console.error('Load apps error:', error);
+                container.innerHTML = '<div style="color: #ef4444; padding: 20px;">❌ Failed to load apps</div>';
+            }
+        }
+        
+        // Regenerate client secret
+        async function regenerateSecret(clientId) {
+            if (!confirm('⚠️ Are you sure you want to generate a new secret?\n\nThe old secret will stop working immediately!')) {
+                return;
+            }
+            
+            const token = getAuthToken();
+            if (!token) {
+                alert('❌ Please connect your wallet first');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/oauth/my-apps/${clientId}/regenerate-secret`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show new secret
+                    document.getElementById('newClientId').textContent = data.client_id;
+                    document.getElementById('newClientSecret').textContent = data.client_secret;
+                    document.getElementById('newCredentialsDisplay').style.display = 'block';
+                    
+                    // Scroll to credentials
+                    document.getElementById('newCredentialsDisplay').scrollIntoView({ behavior: 'smooth' });
+                    
+                    alert('✅ New secret generated! Copy it from above - it won\'t be shown again.');
+                } else {
+                    alert(`❌ ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Regenerate secret error:', error);
+                alert('❌ Network error. Please try again.');
+            }
+        }
+        
+        // Delete an app
+        async function deleteApp(clientId, appName) {
+            if (!confirm(`🗑️ Delete "${appName}"?\n\nThis action cannot be undone and all integrations using this app will stop working.`)) {
+                return;
+            }
+            
+            const token = getAuthToken();
+            if (!token) {
+                alert('❌ Please connect your wallet first');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/oauth/my-apps/${clientId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ ${data.message}`);
+                    loadMyApps();
+                } else {
+                    alert(`❌ ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Delete app error:', error);
+                alert('❌ Network error. Please try again.');
+            }
+        }
+        
+        // Load apps when wallet is connected (triggered by MetaMask connection)
+        function onWalletConnected(address, jwtToken) {
+            // Store token for SDK functions
+            localStorage.setItem('aera_jwt_token', jwtToken);
+            // Load apps
+            loadMyApps();
         }
         
         // ===== Canvas Background Animation =====

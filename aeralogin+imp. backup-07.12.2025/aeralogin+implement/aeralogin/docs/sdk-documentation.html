@@ -884,6 +884,77 @@ AEraGate.<span class="function">login</span>({
                 </div>
             </section>
             
+            <!-- Events -->
+            <section id="events" class="section">
+                <h2>📡 Events</h2>
+                <p>
+                    Das SDK löst Events aus, auf die Sie reagieren können. Verwenden Sie 
+                    <code>AEraGate.on()</code> um Event-Listener zu registrieren.
+                </p>
+                
+                <h3>Verfügbare Events</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Beschreibung</th>
+                                <th>Callback Parameter</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>login</code></td>
+                                <td>Benutzer hat sich erfolgreich angemeldet</td>
+                                <td><code>{ wallet, score, hasNFT }</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>logout</code></td>
+                                <td>Benutzer hat sich abgemeldet</td>
+                                <td><code>{ wallet }</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>sessionExpired</code></td>
+                                <td>Session Token ist abgelaufen</td>
+                                <td><code>{ wallet, expiredAt }</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>error</code></td>
+                                <td>Ein Fehler ist aufgetreten</td>
+                                <td><code>{ code, message }</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h3>Beispiel</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JavaScript</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code><span class="comment">// Login-Event abfangen</span>
+AEraGate.<span class="function">on</span>(<span class="string">'login'</span>, (user) => {
+  console.<span class="function">log</span>(<span class="string">'User logged in:'</span>, user.wallet);
+  console.<span class="function">log</span>(<span class="string">'Resonance Score:'</span>, user.score);
+});
+
+<span class="comment">// Session-Ablauf behandeln</span>
+AEraGate.<span class="function">on</span>(<span class="string">'sessionExpired'</span>, (data) => {
+  console.<span class="function">log</span>(<span class="string">'Session expired, please login again'</span>);
+  <span class="comment">// Optionaler Re-Login</span>
+  AEraGate.<span class="function">login</span>();
+});
+
+<span class="comment">// Fehlerbehandlung</span>
+AEraGate.<span class="function">on</span>(<span class="string">'error'</span>, (error) => {
+  console.<span class="function">error</span>(<span class="string">'AEra Error:'</span>, error.message);
+});</code>
+                    </div>
+                </div>
+            </section>
+            
             <!-- OAuth Flow -->
             <section id="oauth" class="section">
                 <h2>🔑 OAuth Flow (Server-Side)</h2>
@@ -947,8 +1018,96 @@ AEraGate.<span class="function">login</span>({
 });
 
 <span class="keyword">const</span> result = <span class="keyword">await</span> verification.<span class="function">json</span>();
-<span class="comment">// { valid: true, wallet: "0x...", has_nft: true, score: 150 }</span></code>
+<span class="comment">// { valid: true, wallet: "0x...", has_nft: true, score: 150, chain_id: 8453 }</span></code>
                     </div>
+                </div>
+            </section>
+            
+            <!-- API Verification -->
+            <section id="api-verify" class="section">
+                <h2>🔍 API Verification</h2>
+                <p>
+                    Use the <code>/api/v1/verify</code> endpoint to verify a user's session token 
+                    server-side. This is useful when you need to validate authentication state 
+                    from your backend.
+                </p>
+                
+                <h3>Request</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">HTTP</span>
+                    </div>
+                    <div class="code-content">
+<code>POST https://aeralogin.com/api/v1/verify
+Authorization: Bearer &lt;aera_session_token&gt;</code>
+                    </div>
+                </div>
+                
+                <h3>Response (Success)</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JSON</span>
+                    </div>
+                    <div class="code-content">
+<code>{
+  <span class="string">"valid"</span>: <span class="keyword">true</span>,
+  <span class="string">"authenticated"</span>: <span class="keyword">true</span>,
+  <span class="string">"wallet"</span>: <span class="string">"0x1234...abcd"</span>,
+  <span class="string">"score"</span>: <span class="number">42</span>,
+  <span class="string">"has_nft"</span>: <span class="keyword">true</span>,
+  <span class="string">"chain_id"</span>: <span class="number">8453</span>,
+  <span class="string">"issued_at"</span>: <span class="string">"2025-01-01T00:00:00Z"</span>,
+  <span class="string">"expires_at"</span>: <span class="string">"2025-01-02T00:00:00Z"</span>
+}</code>
+                    </div>
+                </div>
+                
+                <h3>Response (Failure)</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JSON</span>
+                    </div>
+                    <div class="code-content">
+<code>{
+  <span class="string">"valid"</span>: <span class="keyword">false</span>,
+  <span class="string">"authenticated"</span>: <span class="keyword">false</span>,
+  <span class="string">"error"</span>: <span class="string">"Token expired"</span>
+}</code>
+                    </div>
+                </div>
+                
+                <h3>Example (Node.js)</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JavaScript</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code><span class="keyword">const</span> response = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'https://aeralogin.com/api/v1/verify'</span>, {
+  <span class="property">method</span>: <span class="string">'POST'</span>,
+  <span class="property">headers</span>: {
+    <span class="string">'Authorization'</span>: <span class="string">`Bearer ${sessionToken}`</span>
+  }
+});
+
+<span class="keyword">const</span> result = <span class="keyword">await</span> response.<span class="function">json</span>();
+
+<span class="keyword">if</span> (result.valid && result.has_nft) {
+  <span class="comment">// User is authenticated and has NFT</span>
+  console.<span class="function">log</span>(<span class="string">'User wallet:'</span>, result.wallet);
+} <span class="keyword">else</span> {
+  <span class="comment">// Authentication failed</span>
+  console.<span class="function">log</span>(<span class="string">'Error:'</span>, result.error);
+}</code>
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-box-title">💡 Hinweis</div>
+                    <p>
+                        Der Session Token wird beim Login automatisch generiert und kann 
+                        über <code>AEraGate.getSessionToken()</code> im Frontend abgerufen werden.
+                    </p>
                 </div>
             </section>
             

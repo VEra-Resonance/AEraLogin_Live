@@ -476,7 +476,10 @@ def init_db():
         min_score INTEGER DEFAULT 0,
         require_nft BOOLEAN DEFAULT 1,
         created_at TEXT NOT NULL,
-        is_active BOOLEAN DEFAULT 1
+        is_active BOOLEAN DEFAULT 1,
+        owner_address TEXT,
+        website_url TEXT,
+        description TEXT
     )
     """)
     
@@ -3290,6 +3293,27 @@ OAUTH_JWT_SECRET = os.getenv("OAUTH_JWT_SECRET", TOKEN_SECRET + "-oauth")
 OAUTH_TOKEN_EXPIRY_HOURS = int(os.getenv("OAUTH_TOKEN_EXPIRY_HOURS", 24))
 OAUTH_CODE_EXPIRY_SECONDS = 60  # Authorization code valid for 60 seconds
 
+# Dashboard JWT Token Expiry (7 days for dashboard sessions)
+DASHBOARD_TOKEN_EXPIRY_DAYS = 7
+
+def generate_dashboard_jwt(address: str, has_nft: bool = False) -> str:
+    """
+    Generate a JWT token for dashboard authentication.
+    Used for SDK app management and other dashboard features.
+    """
+    now = datetime.now(timezone.utc)
+    payload = {
+        "iss": "aeralogin.com",
+        "sub": address.lower(),
+        "address": address.lower(),  # For compatibility with SDK app endpoints
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(days=DASHBOARD_TOKEN_EXPIRY_DAYS)).timestamp()),
+        "jti": secrets.token_hex(16),
+        "has_nft": has_nft,
+        "type": "dashboard"
+    }
+    return jwt.encode(payload, TOKEN_SECRET, algorithm="HS256")
+
 def hash_client_secret(secret: str) -> str:
     """Hash client secret for storage"""
     return hashlib.sha256(secret.encode()).hexdigest()
@@ -3656,11 +3680,9 @@ async def oauth_complete(req: Request):
             conn.close()
             return {"success": False, "error": "Please register on AEraLogIn dashboard first to get your Identity NFT"}
         
-        # Check NFT requirement
+        # Check NFT requirement (using identity_status from users table)
         if pending['require_nft']:
-            cursor.execute("SELECT * FROM nft_mints WHERE address = ? AND status = 'confirmed'", (address,))
-            nft = cursor.fetchone()
-            if not nft:
+            if user['identity_status'] != 'active':
                 conn.close()
                 return {"success": False, "error": "Identity NFT required. Please mint your NFT on the dashboard first."}
         
@@ -3777,10 +3799,8 @@ async def oauth_token(req: Request):
         cursor.execute("SELECT * FROM users WHERE address = ?", (auth_code['address'],))
         user = cursor.fetchone()
         
-        # Check NFT status
-        cursor.execute("SELECT * FROM nft_mints WHERE address = ? AND status = 'confirmed'", (auth_code['address'],))
-        nft = cursor.fetchone()
-        has_nft = nft is not None
+        # Check NFT status (using identity_status from users table)
+        has_nft = user and user['identity_status'] == 'active'
         
         # Generate session token
         access_token = generate_oauth_session_token(
@@ -3809,7 +3829,8 @@ async def oauth_token(req: Request):
         
         log_activity("INFO", "OAUTH", f"Token issued for {auth_code['address'][:10]}", client_id=client_id)
         
-        return {
+        # Build response
+        token_response = {
             "access_token": access_token,
             "token_type": "Bearer",
             "expires_in": OAUTH_TOKEN_EXPIRY_HOURS * 3600,
@@ -3817,6 +3838,19 @@ async def oauth_token(req: Request):
             "score": user['score'] if user else 0,
             "has_nft": has_nft
         }
+        
+        # 🔍 DETAILED LOGGING: Show ALL fields returned
+        print("\n" + "="*60)
+        print("🔐 /oauth/token RESPONSE:")
+        print("="*60)
+        for key, value in token_response.items():
+            if key == "access_token":
+                print(f"  {key}: {value[:30]}... (JWT Token)")
+            else:
+                print(f"  {key}: {value}")
+        print("="*60 + "\n")
+        
+        return token_response
         
     except Exception as e:
         log_activity("ERROR", "OAUTH", f"Token exchange error: {str(e)}")
@@ -3849,7 +3883,7 @@ async def api_v1_verify(req: Request):
         # Get token from Authorization header
         auth_header = req.headers.get("Authorization", "")
         if not auth_header.startswith("Bearer "):
-            return {"valid": False, "error": "Missing or invalid Authorization header"}
+            return {"valid": False, "authenticated": False, "error": "Missing or invalid Authorization header"}
         
         token = auth_header[7:]  # Remove "Bearer " prefix
         
@@ -3857,9 +3891,9 @@ async def api_v1_verify(req: Request):
         try:
             payload = jwt.decode(token, OAUTH_JWT_SECRET, algorithms=["HS256"], audience=None)
         except jwt.ExpiredSignatureError:
-            return {"valid": False, "error": "Token expired"}
+            return {"valid": False, "authenticated": False, "error": "Token expired"}
         except jwt.InvalidTokenError as e:
-            return {"valid": False, "error": f"Invalid token: {str(e)}"}
+            return {"valid": False, "authenticated": False, "error": f"Invalid token: {str(e)}"}
         
         # Get fresh user data
         address = payload.get("sub", "")
@@ -3867,16 +3901,17 @@ async def api_v1_verify(req: Request):
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE address = ?", (address,))
         user = cursor.fetchone()
-        
-        cursor.execute("SELECT * FROM nft_mints WHERE address = ? AND status = 'confirmed'", (address,))
-        nft = cursor.fetchone()
         conn.close()
+        
+        # Check NFT status using identity_status from users table
+        has_nft = user and user['identity_status'] == 'active'
         
         return {
             "valid": True,
+            "authenticated": True,  # Alias for compatibility
             "wallet": address,
             "score": user['score'] if user else payload.get("score", 0),
-            "has_nft": nft is not None,
+            "has_nft": has_nft,
             "chain_id": payload.get("chain_id", 8453),
             "issued_at": datetime.fromtimestamp(payload.get("iat", 0), tz=timezone.utc).isoformat(),
             "expires_at": datetime.fromtimestamp(payload.get("exp", 0), tz=timezone.utc).isoformat(),
@@ -3886,7 +3921,7 @@ async def api_v1_verify(req: Request):
         
     except Exception as e:
         log_activity("ERROR", "API", f"v1/verify error: {str(e)}")
-        return {"valid": False, "error": str(e)}
+        return {"valid": False, "authenticated": False, "error": str(e)}
 
 
 @app.post("/api/v1/clients/register")
@@ -4058,6 +4093,348 @@ async def oauth_verify_nft(req: Request):
     except Exception as e:
         log_activity("ERROR", "OAUTH", f"verify-nft error: {str(e)}")
         return {"valid": False, "error": str(e)}
+
+
+# ============================================================================
+# ===== OAUTH CLIENT MANAGEMENT (User-Facing Dashboard) =====
+# ============================================================================
+
+@app.post("/api/oauth/my-apps/register")
+async def register_user_oauth_app(req: Request):
+    """
+    🔐 Register a new OAuth client for authenticated NFT holders
+    
+    Users must be authenticated via JWT and hold an AEra NFT to register apps.
+    
+    Request Headers:
+        Authorization: Bearer <jwt_token>
+    
+    Request Body:
+        {
+            "app_name": "My Website",
+            "website_url": "https://mywebsite.com",
+            "redirect_uri": "https://mywebsite.com/callback",
+            "description": "Optional description"
+        }
+    
+    Response:
+        {
+            "success": true,
+            "client_id": "aera_xxx...",
+            "client_secret": "xxx...",  // Only shown ONCE!
+            "message": "Save your client_secret now - it cannot be retrieved later!"
+        }
+    """
+    try:
+        # Get JWT from Authorization header
+        auth_header = req.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return {"success": False, "error": "Missing or invalid Authorization header"}
+        
+        token = auth_header.replace("Bearer ", "")
+        
+        # Verify JWT and get wallet address
+        try:
+            payload = jwt.decode(token, TOKEN_SECRET, algorithms=["HS256"])
+            owner_address = payload.get("address", "").lower()
+        except jwt.ExpiredSignatureError:
+            return {"success": False, "error": "Token expired"}
+        except jwt.InvalidTokenError:
+            return {"success": False, "error": "Invalid token"}
+        
+        if not owner_address:
+            return {"success": False, "error": "Invalid token payload"}
+        
+        # Verify user has NFT (identity_status = 'active')
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT identity_status FROM users WHERE address=?", (owner_address,))
+        user = cursor.fetchone()
+        
+        if not user or user[0] != 'active':
+            conn.close()
+            return {"success": False, "error": "NFT required to register apps. Please mint your AEra Identity NFT first."}
+        
+        # Parse request data
+        data = await req.json()
+        app_name = data.get("app_name", "").strip()
+        website_url = data.get("website_url", "").strip()
+        redirect_uri = data.get("redirect_uri", "").strip()
+        description = data.get("description", "").strip()
+        
+        # Validation
+        if not app_name or len(app_name) < 3:
+            conn.close()
+            return {"success": False, "error": "App name must be at least 3 characters"}
+        
+        if not website_url or not website_url.startswith("http"):
+            conn.close()
+            return {"success": False, "error": "Valid website URL required (must start with http:// or https://)"}
+        
+        if not redirect_uri or not redirect_uri.startswith("http"):
+            conn.close()
+            return {"success": False, "error": "Valid redirect URI required (must start with http:// or https://)"}
+        
+        # Check if user already has too many apps (limit: 5)
+        cursor.execute("SELECT COUNT(*) as count FROM oauth_clients WHERE owner_address=? AND is_active=1", (owner_address,))
+        count_result = cursor.fetchone()
+        if count_result and count_result['count'] >= 5:
+            conn.close()
+            return {"success": False, "error": "Maximum 5 apps per account. Please delete an existing app first."}
+        
+        # Generate credentials
+        client_id = "aera_" + secrets.token_hex(16)
+        client_secret = secrets.token_urlsafe(32)
+        client_secret_hash = hashlib.sha256(client_secret.encode()).hexdigest()
+        
+        # Extract origin from website URL
+        from urllib.parse import urlparse
+        parsed_url = urlparse(website_url)
+        allowed_origin = f"{parsed_url.scheme}://{parsed_url.netloc}"
+        
+        # Insert into database
+        cursor.execute("""
+            INSERT INTO oauth_clients (
+                client_id, client_secret_hash, client_name, redirect_uris, 
+                allowed_origins, min_score, require_nft, created_at, is_active,
+                owner_address, website_url, description
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
+        """, (
+            client_id,
+            client_secret_hash,
+            app_name,
+            json.dumps([redirect_uri]),
+            json.dumps([allowed_origin]),
+            0,  # min_score
+            1,  # require_nft
+            datetime.now(timezone.utc).isoformat(),
+            owner_address,
+            website_url,
+            description
+        ))
+        conn.commit()
+        conn.close()
+        
+        log_activity("INFO", "OAUTH", f"User registered new app: {app_name}", client_id=client_id, address=owner_address)
+        
+        return {
+            "success": True,
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "app_name": app_name,
+            "website_url": website_url,
+            "redirect_uri": redirect_uri,
+            "message": "⚠️ IMPORTANT: Save your client_secret NOW! It cannot be retrieved later."
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "OAUTH", f"User app registration error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/oauth/my-apps")
+async def list_user_oauth_apps(req: Request):
+    """
+    📋 List all OAuth apps registered by the authenticated user
+    
+    Request Headers:
+        Authorization: Bearer <jwt_token>
+    
+    Response:
+        {
+            "success": true,
+            "apps": [
+                {
+                    "client_id": "aera_xxx...",
+                    "app_name": "My Website",
+                    "website_url": "https://...",
+                    "redirect_uri": "https://...",
+                    "created_at": "2025-12-20T...",
+                    "is_active": true
+                }
+            ]
+        }
+    """
+    try:
+        # Get JWT from Authorization header
+        auth_header = req.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return {"success": False, "error": "Missing or invalid Authorization header"}
+        
+        token = auth_header.replace("Bearer ", "")
+        
+        # Verify JWT
+        try:
+            payload = jwt.decode(token, TOKEN_SECRET, algorithms=["HS256"])
+            owner_address = payload.get("address", "").lower()
+        except jwt.ExpiredSignatureError:
+            return {"success": False, "error": "Token expired"}
+        except jwt.InvalidTokenError:
+            return {"success": False, "error": "Invalid token"}
+        
+        if not owner_address:
+            return {"success": False, "error": "Invalid token payload"}
+        
+        # Get user's apps
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT client_id, client_name, website_url, redirect_uris, 
+                   allowed_origins, created_at, is_active, description
+            FROM oauth_clients 
+            WHERE owner_address=? 
+            ORDER BY created_at DESC
+        """, (owner_address,))
+        
+        apps = []
+        for row in cursor.fetchall():
+            redirect_uris = json.loads(row['redirect_uris']) if row['redirect_uris'] else []
+            apps.append({
+                "client_id": row['client_id'],
+                "app_name": row['client_name'],
+                "website_url": row['website_url'] or "",
+                "redirect_uri": redirect_uris[0] if redirect_uris else "",
+                "description": row['description'] or "",
+                "created_at": row['created_at'],
+                "is_active": bool(row['is_active'])
+            })
+        
+        conn.close()
+        
+        return {
+            "success": True,
+            "apps": apps,
+            "count": len(apps),
+            "max_apps": 5
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "OAUTH", f"List apps error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@app.delete("/api/oauth/my-apps/{client_id}")
+async def delete_user_oauth_app(client_id: str, req: Request):
+    """
+    🗑️ Delete/Deactivate an OAuth app
+    
+    Users can only delete their own apps.
+    
+    Request Headers:
+        Authorization: Bearer <jwt_token>
+    """
+    try:
+        # Get JWT from Authorization header
+        auth_header = req.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return {"success": False, "error": "Missing or invalid Authorization header"}
+        
+        token = auth_header.replace("Bearer ", "")
+        
+        # Verify JWT
+        try:
+            payload = jwt.decode(token, TOKEN_SECRET, algorithms=["HS256"])
+            owner_address = payload.get("address", "").lower()
+        except jwt.ExpiredSignatureError:
+            return {"success": False, "error": "Token expired"}
+        except jwt.InvalidTokenError:
+            return {"success": False, "error": "Invalid token"}
+        
+        if not owner_address:
+            return {"success": False, "error": "Invalid token payload"}
+        
+        # Delete app (only if owned by user)
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check ownership
+        cursor.execute("SELECT client_name FROM oauth_clients WHERE client_id=? AND owner_address=?", 
+                      (client_id, owner_address))
+        app = cursor.fetchone()
+        
+        if not app:
+            conn.close()
+            return {"success": False, "error": "App not found or you don't have permission to delete it"}
+        
+        # Soft delete (set is_active = 0)
+        cursor.execute("UPDATE oauth_clients SET is_active=0 WHERE client_id=?", (client_id,))
+        conn.commit()
+        conn.close()
+        
+        log_activity("INFO", "OAUTH", f"User deleted app: {app['client_name']}", client_id=client_id, address=owner_address)
+        
+        return {
+            "success": True,
+            "message": f"App '{app['client_name']}' has been deleted"
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "OAUTH", f"Delete app error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/oauth/my-apps/{client_id}/regenerate-secret")
+async def regenerate_client_secret(client_id: str, req: Request):
+    """
+    🔄 Regenerate client secret for an app
+    
+    Users can regenerate secrets for their own apps.
+    The old secret will be invalidated immediately.
+    """
+    try:
+        # Get JWT from Authorization header
+        auth_header = req.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return {"success": False, "error": "Missing or invalid Authorization header"}
+        
+        token = auth_header.replace("Bearer ", "")
+        
+        # Verify JWT
+        try:
+            payload = jwt.decode(token, TOKEN_SECRET, algorithms=["HS256"])
+            owner_address = payload.get("address", "").lower()
+        except jwt.ExpiredSignatureError:
+            return {"success": False, "error": "Token expired"}
+        except jwt.InvalidTokenError:
+            return {"success": False, "error": "Invalid token"}
+        
+        if not owner_address:
+            return {"success": False, "error": "Invalid token payload"}
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check ownership
+        cursor.execute("SELECT client_name FROM oauth_clients WHERE client_id=? AND owner_address=? AND is_active=1", 
+                      (client_id, owner_address))
+        app = cursor.fetchone()
+        
+        if not app:
+            conn.close()
+            return {"success": False, "error": "App not found or you don't have permission"}
+        
+        # Generate new secret
+        new_secret = secrets.token_urlsafe(32)
+        new_secret_hash = hashlib.sha256(new_secret.encode()).hexdigest()
+        
+        # Update database
+        cursor.execute("UPDATE oauth_clients SET client_secret_hash=? WHERE client_id=?", 
+                      (new_secret_hash, client_id))
+        conn.commit()
+        conn.close()
+        
+        log_activity("INFO", "OAUTH", f"Secret regenerated for: {app['client_name']}", client_id=client_id, address=owner_address)
+        
+        return {
+            "success": True,
+            "client_id": client_id,
+            "client_secret": new_secret,
+            "message": "⚠️ Save this new secret NOW! The old secret is no longer valid."
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "OAUTH", f"Regenerate secret error: {str(e)}")
+        return {"success": False, "error": str(e)}
 
 
 # ============================================================================
@@ -4520,17 +4897,28 @@ async def verify_dashboard_signature(data: dict):
                 
                 sync_status["nft_checked"] = True
             
+            # Get NFT status for JWT token before closing connection
+            cursor.execute("SELECT identity_status FROM users WHERE address=?", (owner,))
+            nft_result = cursor.fetchone()
+            has_nft = nft_result and nft_result[0] == 'active' if nft_result else False
+            
             conn.close()
         except Exception as e:
             log_activity("WARNING", "BLOCKCHAIN", f"NFT retry check failed: {str(e)}", address=owner[:10])
             sync_status["errors"].append(f"NFT check failed: {str(e)[:50]}")
+            has_nft = False
         # ===== END NFT RETRY LOGIC =====
+        
+        # Generate JWT token for dashboard session
+        dashboard_jwt = generate_dashboard_jwt(owner, has_nft)
+        log_activity("INFO", "AUTH", "✅ Dashboard JWT token generated", address=owner[:10], has_nft=has_nft)
         
         return {
             "success": True,
             "verified": True,
             "message": "✓ Verified - Dashboard access granted",
-            "sync_status": sync_status
+            "sync_status": sync_status,
+            "jwt_token": dashboard_jwt
         }
     except Exception as e:
         log_activity("ERROR", "AUTH", "Signature verification failed", error=str(e))
