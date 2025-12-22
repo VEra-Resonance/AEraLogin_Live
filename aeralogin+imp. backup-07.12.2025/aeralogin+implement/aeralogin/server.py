@@ -3889,7 +3889,13 @@ async def api_v1_verify(req: Request):
         
         # Verify JWT
         try:
-            payload = jwt.decode(token, OAUTH_JWT_SECRET, algorithms=["HS256"], audience=None)
+            # FIX: Don't validate audience - token has client_id as aud but we accept any
+            payload = jwt.decode(
+                token, 
+                OAUTH_JWT_SECRET, 
+                algorithms=["HS256"], 
+                options={"verify_aud": False}  # Skip audience validation
+            )
         except jwt.ExpiredSignatureError:
             return {"valid": False, "authenticated": False, "error": "Token expired"}
         except jwt.InvalidTokenError as e:
@@ -4058,7 +4064,13 @@ async def oauth_verify_nft(req: Request):
         
         # Verify the access token (JWT)
         try:
-            payload = jwt.decode(access_token, OAUTH_JWT_SECRET, algorithms=["HS256"], audience=None)
+            # FIX: Don't validate audience - token has client_id as aud
+            payload = jwt.decode(
+                access_token, 
+                OAUTH_JWT_SECRET, 
+                algorithms=["HS256"],
+                options={"verify_aud": False}  # Skip audience validation
+            )
         except jwt.ExpiredSignatureError:
             conn.close()
             return {"valid": False, "error": "Token expired"}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>example.aeralogin.com</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  
+  <main>
+    <!-- Public Section (always visible) -->
+    <section class="public" id="landing">
+      <h1>example.aeralogin.com</h1>
+      <p>This page demonstrates how AEra protects web content<br>using a single embed.</p>
+      <p class="restricted">Access is restricted.</p>
+      
+      <button id="login-btn" class="aera-button">Connect with AEra</button>
+    </section>
+
+    <!-- Authenticated Section (visible after login) -->
+    <section class="authenticated" id="authenticated" style="display: none;">
+      <h2>Authenticated</h2>
+      <p>You are connected.</p>
+      <button id="show-protected-btn" class="aera-button">View Protected Content</button>
+      <button id="logout-btn" class="aera-button-secondary">Logout</button>
+    </section>
+
+    <!-- Protected Section (only visible when explicitly requested) -->
+    <section class="protected" id="protected" style="display: none;">
+      <h2>Protected Content</h2>
+      <div class="data">
+        <p>Wallet: <span id="wallet-address">0xABCD…1234</span></p>
+        <p>Score: <span id="user-score">42</span></p>
+        <p>Status: <span id="user-status">verified</span></p>
+      </div>
+      <p class="powered">This page is protected by AEra.</p>
+      <button id="hide-protected-btn" class="aera-button-secondary">Hide</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>AEra</p>
+  </footer>
+
+  <!-- ============================================ -->
+  <!-- AEra Integration                              -->
+  <!-- ============================================ -->
+  
+  <script src="/static/aera-client.js"></script>
+
+</body>
+</html>

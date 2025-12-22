@@ -1,0 +1,523 @@
+# AEra Gate Demo
+
+Minimalistische Demo-Webseite für AEra Gate OAuth Integration.
+
+## Setup
+
+1. **Konfiguration erstellen:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **AEra Credentials eintragen:**
+   Bearbeite `.env` und füge deine AEra Client ID und Secret ein.
+
+3. **Dependencies installieren:**
+   ```bash
+   pip install flask requests
+   ```
+
+4. **Server starten:**
+   ```bash
+   python3 server.py
+   ```
+
+5. **Öffne im Browser:**
+   - Lokal: http://localhost:8000
+   - Tailscale: http://100.68.131.55:8000
+
+## Struktur
+
+```
+.
+├── index.html              # Hauptseite
+├── style.css               # Minimal-Styling
+├── static/
+│   └── aera-client.js      # Frontend OAuth-Flow
+├── server.py               # Flask-Server mit AEra Integration
+├── .env                    # Konfiguration (nicht in Git)
+└── .env.example            # Konfigurations-Vorlage
+```
+
+## Flow
+
+1. **Landing:** User sieht "Connect with AEra" Button
+2. **Login:** Weiterleitung zu aeralogin.com
+3. **Auth:** User authentifiziert sich mit Wallet
+4. **Callback:** Zurück zur Seite, Session gespeichert
+5. **Protected:** User kann geschützten Bereich öffnen
+
+## API Endpoints
+
+- `GET /` - Hauptseite
+- `GET /auth/aera/login` - OAuth Login starten
+- `GET /auth/aera/callback` - OAuth Callback
+- `POST /auth/aera/logout` - Logout
+- `GET /api/verify` - Session verifizieren
+
+## ⚠️ Sicherheitshinweis (Stand: 22.12.2025)
+
+### Was funktioniert:
+✅ **OAuth 2.0 Authorization Code Flow** - Sicher mit client_secret  
+✅ **Token Exchange** - Server-to-Server Kommunikation  
+✅ **Signierte Sessions** - Flask secret_key verhindert Manipulation  
+✅ **User-Daten vom Token Exchange** - wallet, score, has_nft direkt von AEra
+
+### Was NICHT funktioniert:
+❌ **Kontinuierliche Token-Verification** - AEra's Verification-Endpoints geben "Invalid audience" zurück
+
+### Getestete Verification-Methoden (alle fehlgeschlagen):
+1. `POST /api/v1/verify` mit `Authorization: Bearer {token}` → `"Invalid audience"`
+2. `POST /api/oauth/verify-nft` mit `{"token": ..., "client_id", "client_secret"}` → `"Missing required fields"`
+3. `POST /api/oauth/verify-nft` mit `{"access_token": ..., "client_id", "client_secret"}` → `"Invalid audience"`
+
+### Workaround:
+Diese Demo speichert User-Daten **aus dem Token Exchange** in der Session. Das ist für eine Demo akzeptabel, aber für Produktion sollte jede Anfrage das Token bei AEra verifizieren, um sicherzustellen:
+- Token ist noch gültig (nicht expired)
+- User wurde nicht ausgeloggt
+- Permissions haben sich nicht geändert
+
+### Nächste Schritte:
+- [ ] AEra Team kontaktieren bezüglich "Invalid audience" Error
+- [ ] Dokumentation für korrekte Token-Verification anfordern
+- [ ] Sobald Verification-Endpoint funktioniert, `verify_token()` Funktion aktivieren
+
+---
+
+## 🔬 Detaillierte Fehleranalyse
+
+### Timing der letzten 6 Login-Versuche
+
+**22. Dezember 2025, 17:21:18 - Versuch #1**
+```
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...-FiIWQX1axPyOHw0Pfqc
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 74
+[EXCHANGE] has_nft: True
+```
+Token Exchange: ✅ **ERFOLG**  
+Verification: ❌ **ALLE 3 ANSÄTZE FEHLGESCHLAGEN**
+
+---
+
+**22. Dezember 2025, 17:29:27 - Versuch #2**
+```
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...5ccw7zNvZMpd6vsLw2BE
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+```
+Token Exchange: ✅ **ERFOLG**  
+Verification: ❌ **ALLE 3 ANSÄTZE FEHLGESCHLAGEN**
+
+---
+
+**22. Dezember 2025, 17:29:54 - Versuch #3**
+```
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ..._Jbm4OhopNsPnDEn6_n0
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+```
+Token Exchange: ✅ **ERFOLG**  
+Verification: ❌ **ALLE 3 ANSÄTZE FEHLGESCHLAGEN**
+
+---
+
+**22. Dezember 2025, 17:30:06 - Versuch #4**
+```
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...giwuk5qGL6ZU-py0Xy48
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+```
+Token Exchange: ✅ **ERFOLG**  
+Verification: ❌ **ALLE 3 ANSÄTZE FEHLGESCHLAGEN**
+
+---
+
+**22. Dezember 2025, 17:30:22 - Versuch #5**
+```
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...B_waYtJeucLqivT8IRMo
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+```
+Token Exchange: ✅ **ERFOLG**  
+Verification: ❌ **ALLE 3 ANSÄTZE FEHLGESCHLAGEN**
+
+---
+
+**22. Dezember 2025, 17:30:32 - Versuch #6**
+```
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...EIL-fhhZk90j-XygZ1qg
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+```
+Token Exchange: ✅ **ERFOLG**  
+Verification: ❌ **ALLE 3 ANSÄTZE FEHLGESCHLAGEN**
+
+---
+
+## 📊 Statistische Analyse
+
+### Erfolgsrate Token Exchange: **100% (6/6)**
+- Alle 6 Versuche erhielten validen `access_token`
+- Alle 6 Versuche erhielten User-Daten (`wallet`, `score`, `has_nft`)
+- Durchschnittliche Response-Zeit: < 1 Sekunde
+- Token-Typ: Immer `Bearer`
+- Token-Gültigkeit: Immer `86400` Sekunden (24h)
+
+### Erfolgsrate Token Verification: **0% (0/18)**
+- 6 Versuche × 3 Ansätze = 18 Verification-Requests
+- **Alle 18 Requests fehlgeschlagen**
+- Immer HTTP 200 Status (aber `valid: false` im Body)
+
+---
+
+## 🔍 Detaillierte Fehleranalyse pro Ansatz
+
+### APPROACH 1: `/api/v1/verify` mit Bearer Token
+
+**Request-Format:**
+```http
+POST https://aeralogin.com/api/v1/verify
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+```
+
+**Beispiel-Response (alle 6 Versuche identisch):**
+```json
+{
+  "valid": false,
+  "authenticated": false,
+  "error": "Invalid token: Invalid audience"
+}
+```
+
+**HTTP Status:** 200 OK  
+**Content-Type:** application/json
+
+**Analyse:**
+- ❌ Token wird als "Invalid audience" abgelehnt
+- ❌ `authenticated` Field existiert, ist aber immer `false`
+- 🤔 Token wurde von `/oauth/token` ausgestellt, sollte validen `aud` Claim haben
+- 🤔 "Invalid audience" deutet auf JWT-Validierung hin (z.B. falsche `aud`, `iss`, oder `exp`)
+
+**Mögliche Ursachen:**
+1. Token hat falschen `audience` Claim (sollte vielleicht Client-ID sein?)
+2. Verification-Endpoint erwartet anderen Token-Typ
+3. Token ist für andere API-Endpoints gedacht, nicht für Verification
+4. Bug im AEra Verification-Service
+
+---
+
+### APPROACH 2: `/api/oauth/verify-nft` mit `token` Field
+
+**Request-Format:**
+```http
+POST https://aeralogin.com/api/oauth/verify-nft
+Content-Type: application/json
+
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "client_id": "aera_e8f59072e51167d83b61c5bab6f71651",
+  "client_secret": "***"
+}
+```
+
+**Beispiel-Response (alle 6 Versuche identisch):**
+```json
+{
+  "valid": false,
+  "error": "Missing required fields"
+}
+```
+
+**HTTP Status:** 200 OK  
+**Content-Type:** application/json
+
+**Analyse:**
+- ❌ "Missing required fields" - aber welche?
+- ✅ Wir senden: `token`, `client_id`, `client_secret`
+- 🤔 Fehlt vielleicht: `grant_type`, `redirect_uri`, oder andere Parameter?
+
+**Mögliche Ursachen:**
+1. Endpoint erwartet zusätzliche Fields (nicht dokumentiert)
+2. Field-Namen sind falsch (z.B. `access_token` statt `token`)
+3. Endpoint ist deprecated oder falsch dokumentiert
+4. Endpoint erwartet andere Authentifizierungsmethode
+
+---
+
+### APPROACH 3: `/api/oauth/verify-nft` mit `access_token` Field
+
+**Request-Format:**
+```http
+POST https://aeralogin.com/api/oauth/verify-nft
+Content-Type: application/json
+
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "client_id": "aera_e8f59072e51167d83b61c5bab6f71651",
+  "client_secret": "***"
+}
+```
+
+**Beispiel-Response (alle 6 Versuche identisch):**
+```json
+{
+  "valid": false,
+  "error": "Invalid token: Invalid audience"
+}
+```
+
+**HTTP Status:** 200 OK  
+**Content-Type:** application/json
+
+**Analyse:**
+- ❌ Gleicher "Invalid audience" Error wie APPROACH 1
+- 🤔 Field-Name `access_token` wird akzeptiert (kein "Missing fields" Error)
+- 🤔 Token-Validierung schlägt bei gleicher Stelle fehl
+
+---
+
+## 🧩 Token-Struktur Analyse
+
+### JWT Header (Base64 decoded)
+```json
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+```
+- Signatur-Algorithmus: **HMAC SHA-256**
+- Token-Typ: **JWT**
+
+### JWT Payload (teilweise sichtbar aus Base64)
+```json
+{
+  "iss": "aera...",  // Issuer beginnt mit "aera"
+  ...
+}
+```
+
+### Beobachtungen:
+1. Token sind **unterschiedlich** bei jedem Login (keine Wiederverwendung)
+2. Token-Länge variiert leicht (vermutlich verschiedene `exp` Timestamps)
+3. Alle Token beginnen mit `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9` (Standard JWT Header)
+4. Token werden korrekt von `/oauth/token` ausgestellt
+5. Token haben 24h Gültigkeit (`expires_in: 86400`)
+
+---
+
+## 🎯 Was funktioniert perfekt
+
+### ✅ OAuth 2.0 Authorization Code Flow
+```
+User → /auth/aera/login
+     → https://aeralogin.com/oauth/authorize?client_id=...&redirect_uri=...
+     → User authentifiziert sich mit Wallet
+     → Zurück zu /auth/aera/callback?code=...&state=...
+     → Server validiert state
+     → Server exchanged code für token
+     → SUCCESS
+```
+
+**Keine Fehler in:**
+- State-Generierung
+- State-Validierung
+- Authorization-Request
+- Callback-Handling
+- Code-Exchange
+
+### ✅ Token Exchange (`POST /oauth/token`)
+```json
+Request:
+{
+  "grant_type": "authorization_code",
+  "code": "3EJg__A8gnaMwllfWitB_H003iWWiayi8sIpHKPgPc0",
+  "redirect_uri": "https://ronna-unmagnetised-unaffrightedly.ngrok-free.dev/auth/aera/callback",
+  "client_id": "aera_e8f59072e51167d83b61c5bab6f71651",
+  "client_secret": "***"
+}
+
+Response: ✅ 200 OK
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "Bearer",
+  "expires_in": 86400,
+  "wallet": "0x9de3772a1b2e958561d8371ee34364dcd90967ba",
+  "score": 68,
+  "has_nft": true
+}
+```
+
+**Perfekt:**
+- Token wird ausgestellt
+- User-Daten werden mitgeliefert
+- Expire-Zeit ist klar
+- Token-Typ ist korrekt
+
+### ✅ Session Management
+```python
+session[AERA_CONFIG['session_name']] = result['access_token']
+session['aera_user'] = {
+    'wallet': result.get('wallet'),
+    'score': result.get('score', 0),
+    'has_nft': result.get('has_nft', False)
+}
+```
+
+**Sicher durch:**
+- Flask `app.secret_key` signiert Session-Cookie
+- Session kann nicht clientseitig manipuliert werden
+- User-Daten kommen direkt vom AEra-Server
+
+---
+
+## ❌ Was NICHT funktioniert
+
+### Token Verification - Alle Ansätze scheitern
+
+**Problem:** Kein einziger Verification-Endpoint akzeptiert die Tokens, die von `/oauth/token` ausgestellt wurden.
+
+**Inkonsistenz:**
+- `/oauth/token` gibt Token aus ✅
+- **ABER** kein Endpoint kann diesen Token verifizieren ❌
+
+**Das ist wie:**
+- Bank gibt dir eine Kreditkarte ✅
+- Aber kein Geldautomat akzeptiert sie ❌
+
+---
+
+## 💡 Meine Hypothesen (AI-Analyse)
+
+### Hypothese 1: Token ist für andere Zwecke gedacht
+**Wahrscheinlichkeit: 30%**
+
+Möglicherweise ist der `access_token` von `/oauth/token` NICHT für Verification gedacht, sondern für:
+- API-Calls zu geschützten Endpoints (z.B. `/api/user/profile`)
+- Session-Erstellung (nicht Verification)
+- Frontend-Authentifizierung
+
+**Test:** Andere AEra-Endpoints mit diesem Token testen
+
+---
+
+### Hypothese 2: "audience" Claim fehlt oder ist falsch
+**Wahrscheinlichkeit: 40%**
+
+Der Token hat möglicherweise:
+```json
+{
+  "iss": "aeralogin.com",
+  "aud": "aera_e8f59072e51167d83b61c5bab6f71651",  // ← Wird das erwartet?
+  "sub": "0x9de3772a1b2e958561d8371ee34364dcd90967ba",
+  "exp": 1703260157
+}
+```
+
+Aber Verification-Endpoint erwartet:
+```json
+{
+  "aud": "https://aeralogin.com/api/v1/verify"  // ← Oder so?
+}
+```
+
+**Test:** Token dekodieren und `aud` Claim prüfen
+
+---
+
+### Hypothese 3: Bug im AEra Verification-Service
+**Wahrscheinlichkeit: 30%**
+
+**Indizien:**
+1. AEra Team hat geschrieben: "We fixed /api/v1/verify to include authenticated field"
+2. Field existiert tatsächlich (`authenticated: false`)
+3. **ABER:** Token wird trotzdem als invalid abgelehnt
+4. Fix wurde möglicherweise nicht vollständig deployed
+
+**Mögliche Szenarien:**
+- Fix deployed, aber Token-Validierung noch buggy
+- Fix nur für neue Tokens, alte Tokens noch invalid
+- Fix deployed auf falschem Server/Environment
+
+---
+
+## 🔧 Aktueller Workaround
+
+Da alle Verification-Endpoints fehlschlagen, verwenden wir **User-Daten aus dem Token Exchange**:
+
+```python
+# In aera_callback():
+session['aera_user'] = {
+    'wallet': result.get('wallet'),      # Von /oauth/token
+    'score': result.get('score', 0),     # Von /oauth/token
+    'has_nft': result.get('has_nft', False)  # Von /oauth/token
+}
+
+# In api_verify():
+user = session.get('aera_user')  # Keine API-Verification!
+if user:
+    return jsonify({'authenticated': True, 'user': user})
+```
+
+**Warum das akzeptabel ist (für Demo):**
+1. ✅ Token Exchange verwendet `client_secret` (server-to-server)
+2. ✅ User kann Session-Daten nicht manipulieren (signiert)
+3. ✅ Daten kommen direkt von AEra (nicht vom Client)
+
+**Warum das NICHT production-ready ist:**
+1. ❌ Keine Überprüfung ob Token abgelaufen ist
+2. ❌ Keine Überprüfung ob User ausgeloggt wurde
+3. ❌ Keine Überprüfung ob Permissions sich geändert haben
+4. ❌ Session lebt länger als Token (24h Token, aber unbegrenzte Session)
+
+---
+
+## 📈 Empfehlungen für AEra Team
+
+### Kurzfristig (Quick Fixes):
+1. **Dokumentation aktualisieren** mit funktionierendem Verification-Beispiel
+2. **Error-Messages verbessern:** "Missing required fields" → "Missing field: xyz"
+3. **Debug-Endpoint** bereitstellen der Token dekodiert und zeigt warum er invalid ist
+4. **Working Example** in Python/JavaScript mit echten Tokens
+
+### Mittelfristig (API Improvements):
+1. **Konsistenz:** Token von `/oauth/token` sollte von Verification-Endpoints akzeptiert werden
+2. **Token Introspection Endpoint** (OAuth 2.0 Standard RFC 7662)
+3. **Bessere Error Codes:** HTTP 400 für "Missing fields", 401 für "Invalid token"
+4. **Rate Limiting** dokumentieren (falls vorhanden)
+
+### Langfristig (Architecture):
+1. **OpenID Connect** implementieren (statt custom OAuth)
+2. **JWK Endpoint** für Public Key (wenn RS256 statt HS256)
+3. **Token Refresh Flow** implementieren
+4. **Webhook** für User-Logout/Permission-Changes
+
+---
+
+## 📞 Support-Anfrage an AEra
+
+**Status:** 🟡 Offen  
+**Priorität:** Hoch  
+**Erstellt:** 22. Dezember 2025  
+**Letztes Update:** 22. Dezember 2025
+
+**Zusammenfassung:**
+Token Exchange funktioniert perfekt (6/6 Erfolge), aber alle Token Verification Methoden schlagen fehl (0/18 Erfolge). Trotz Nachricht dass "/api/v1/verify gefixt wurde", gibt Endpoint immer noch "Invalid audience" zurück.
+
+**Benötigt:**
+- Working Example für Token Verification
+- Erklärung was "Invalid audience" bedeutet
+- Vollständige API-Dokumentation mit allen required fields
+
+**Details:** Siehe `AERA_TOKEN_VERIFICATION_ISSUE.md`
+

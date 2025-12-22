@@ -1,0 +1,162 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  background: #fafafa;
+  color: #1a1a1a;
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+section {
+  max-width: 600px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+
+p {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.restricted {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.protected {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.authenticated {
+  margin-top: 2rem;
+}
+
+.data {
+  margin: 1.5rem 0;
+}
+
+.data p {
+  font-size: 0.9375rem;
+}
+
+.powered {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.aera-button {
+  background: #1a1a1a;
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0.5rem;
+  transition: background 0.2s;
+}
+
+.aera-button:hover {
+  background: #333;
+}
+
+.aera-button-secondary {
+  background: transparent;
+  color: #666;
+  border: 1px solid #ddd;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0.5rem;
+  transition: all 0.2s;
+}
+
+.aera-button-secondary:hover {
+  border-color: #999;
+  color: #1a1a1a;
+}
+
+footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.protected-area {
+  max-width: 600px;
+  text-align: center;
+}
+
+.success-message {
+  font-size: 1.125rem;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.status-box {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 2rem;
+  margin: 2rem 0;
+}
+
+.status-box h2 {
+  margin-bottom: 1rem;
+}
+
+.info {
+  font-size: 0.875rem;
+  color: #666;
+  line-height: 1.5;
+  margin: 2rem 0;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+
+.actions a {
+  text-decoration: none;
+}
