@@ -3,10 +3,17 @@
  * Loads user data and handles logout
  */
 
+// Auto-detect URL prefix from current path
+const URL_PREFIX = window.location.pathname.split('/').slice(0, 2).join('/') || '';
+
 const AERA_CONFIG = {
-  verifyPath: '/api/verify',
-  logoutPath: '/auth/aera/logout'
+  verifyPath: `${URL_PREFIX}/api/verify`,
+  logoutPath: `${URL_PREFIX}/auth/aera/logout`,
+  homePath: `${URL_PREFIX}/`
 };
+
+console.log('[PROTECTED] URL_PREFIX:', URL_PREFIX);
+console.log('[PROTECTED] Config:', AERA_CONFIG);
 
 class ProtectedArea {
   constructor() {
@@ -45,13 +52,13 @@ class ProtectedArea {
       // Not authenticated, redirect to home after delay
       console.log('Redirecting to home in 2 seconds...');
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.href = AERA_CONFIG.homePath;
       }, 2000);
       
     } catch (err) {
       console.error('Failed to load user data:', err);
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.href = AERA_CONFIG.homePath;
       }, 2000);
     }
   }
@@ -77,10 +84,10 @@ class ProtectedArea {
         method: 'POST',
         credentials: 'include'
       });
-      window.location.href = '/';
+      window.location.href = AERA_CONFIG.homePath;
     } catch (err) {
       console.error('Logout failed:', err);
-      window.location.href = '/';
+      window.location.href = AERA_CONFIG.homePath;
     }
   }
 

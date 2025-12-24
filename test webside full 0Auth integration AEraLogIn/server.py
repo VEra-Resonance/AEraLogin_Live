@@ -15,15 +15,19 @@ from flask_wtf.csrf import CSRFProtect
 # Load environment variables from .env file
 load_dotenv()
 
-app = Flask(__name__, static_folder='static', static_url_path='/static')
+# URL Prefix für Nginx Reverse Proxy
+URL_PREFIX = os.environ.get('URL_PREFIX', '/example-oauth')
+
+app = Flask(__name__, static_folder='static', static_url_path=f'{URL_PREFIX}/static')
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
 # Production Security Settings
 app.config.update(
-    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SECURE=True,  # HTTPS required
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
     PERMANENT_SESSION_LIFETIME=3600,
-    SESSION_COOKIE_NAME='__Host-session'
+    SESSION_COOKIE_NAME='aera_example_session',  # Changed: __Host- only works without proxy
+    SESSION_COOKIE_PATH=URL_PREFIX  # Scope cookie to our prefix
 )
 
 # CSRF Protection
@@ -154,36 +158,37 @@ def exchange_code(code, redirect_uri):
     return None
 
 
-@app.route('/')
+@app.route(f'{URL_PREFIX}/')
+@app.route(f'{URL_PREFIX}')
 def index():
     """Serve main page"""
     return send_from_directory('.', 'index.html')
 
 
-@app.route('/protected')
+@app.route(f'{URL_PREFIX}/protected')
 def protected():
     """Serve protected area page"""
     return send_from_directory('.', 'protected.html')
 
 
-@app.route('/style.css')
+@app.route(f'{URL_PREFIX}/style.css')
 def styles():
     """Serve CSS"""
     return send_from_directory('.', 'style.css')
 
 
-@app.route('/auth/aera/login')
+@app.route(f'{URL_PREFIX}/auth/aera/login')
 @limiter.limit("5 per minute")
 def aera_login():
     """Redirect to AEra OAuth login"""
     state = secrets.token_urlsafe(32)
     session['aera_state'] = state
-    session['aera_return_to'] = request.args.get('next', '/')
+    session['aera_return_to'] = request.args.get('next', f'{URL_PREFIX}/')
     
     # Build redirect URI with proper scheme (handle ngrok HTTPS)
     scheme = request.headers.get('X-Forwarded-Proto', request.scheme)
     host = request.headers.get('X-Forwarded-Host', request.host)
-    redirect_uri = f"{scheme}://{host}/auth/aera/callback"
+    redirect_uri = f"{scheme}://{host}{URL_PREFIX}/auth/aera/callback"
     
     auth_url = (
         f"{AERA_CONFIG['base_url']}/oauth/authorize"
@@ -196,7 +201,7 @@ def aera_login():
     return redirect(auth_url)
 
 
-@app.route('/auth/aera/callback')
+@app.route(f'{URL_PREFIX}/auth/aera/callback')
 def aera_callback():
     """Handle OAuth callback"""
     code = request.args.get('code')
@@ -211,7 +216,7 @@ def aera_callback():
     if not state or not saved_state or state != saved_state:
         # Clear invalid state and redirect to home
         session.pop('aera_state', None)
-        return redirect('/')
+        return redirect(f'{URL_PREFIX}/')
     
     if not code:
         return jsonify({'error': 'No authorization code'}), 400
@@ -219,7 +224,7 @@ def aera_callback():
     # Exchange code for token (handle ngrok HTTPS)
     scheme = request.headers.get('X-Forwarded-Proto', request.scheme)
     host = request.headers.get('X-Forwarded-Host', request.host)
-    redirect_uri = f"{scheme}://{host}/auth/aera/callback"
+    redirect_uri = f"{scheme}://{host}{URL_PREFIX}/auth/aera/callback"
     result = exchange_code(code, redirect_uri)
     
     if not result or 'access_token' not in result:
@@ -245,10 +250,10 @@ def aera_callback():
     session.pop('aera_return_to', None)
     session.pop('aera_state', None)
     
-    return redirect('/protected')
+    return redirect(f'{URL_PREFIX}/protected')
 
 
-@app.route('/auth/aera/logout', methods=['POST'])
+@app.route(f'{URL_PREFIX}/auth/aera/logout', methods=['POST'])
 @csrf.exempt  # CSRF-Token im Frontend senden für echte Production
 def aera_logout():
     """Logout user"""
@@ -257,7 +262,7 @@ def aera_logout():
     return jsonify({'success': True})
 
 
-@app.route('/api/verify')
+@app.route(f'{URL_PREFIX}/api/verify')
 @limiter.limit("10 per minute")
 def api_verify():
     """
@@ -325,11 +330,14 @@ if __name__ == '__main__':
         print("\n⚠️  WARNING: AERA_CLIENT_ID and AERA_CLIENT_SECRET not set!")
         print("Set them via environment variables or update AERA_CONFIG in server.py\n")
     
+    PORT = int(os.environ.get('PORT', 8001))
+    
     print("\n🚀 AEra Gate Server starting...")
     print(f"📍 Base URL: {AERA_CONFIG['base_url']}")
     print(f"🔑 Client ID: {AERA_CONFIG['client_id'][:10]}..." if AERA_CONFIG['client_id'] else "🔑 Client ID: NOT SET")
-    print("\n💡 Server will be available at:")
-    print("   - http://localhost:8000")
-    print("   - http://100.68.131.55:8000 (Tailscale)\n")
+    print(f"🌐 URL Prefix: {URL_PREFIX}")
+    print(f"\n💡 Server will be available at:")
+    print(f"   - http://localhost:{PORT}")
+    print(f"   - https://aeralogin.com{URL_PREFIX}\n")
     
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    app.run(host='0.0.0.0', port=PORT, debug=False)

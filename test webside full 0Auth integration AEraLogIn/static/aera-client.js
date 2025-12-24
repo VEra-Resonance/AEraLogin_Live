@@ -3,12 +3,18 @@
  * Handles authentication flow and protected content display
  */
 
+// Auto-detect URL prefix from current path
+const URL_PREFIX = window.location.pathname.split('/').slice(0, 2).join('/') || '';
+
 const AERA_CONFIG = {
   baseUrl: window.location.origin,
-  loginPath: '/auth/aera/login',
-  logoutPath: '/auth/aera/logout',
-  verifyPath: '/api/verify'
+  loginPath: `${URL_PREFIX}/auth/aera/login`,
+  logoutPath: `${URL_PREFIX}/auth/aera/logout`,
+  verifyPath: `${URL_PREFIX}/api/verify`
 };
+
+console.log('[AERA] Initialized with URL_PREFIX:', URL_PREFIX);
+console.log('[AERA] Config:', AERA_CONFIG);
 
 class AEraClient {
   constructor() {
