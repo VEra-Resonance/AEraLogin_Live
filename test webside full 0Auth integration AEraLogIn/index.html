@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>example.aeralogin.com</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="favicon.png?v=20251225c">
+  <link rel="stylesheet" href="style.css?v=20251225_0815">
 </head>
 <body>
   
@@ -27,13 +28,10 @@
     </section>
 
     <!-- Protected Section (only visible when explicitly requested) -->
+    <!-- SECURITY: No data in HTML - content is injected dynamically after verification -->
     <section class="protected" id="protected" style="display: none;">
       <h2>Protected Content</h2>
-      <div class="data">
-        <p>Wallet: <span id="wallet-address">0xABCD…1234</span></p>
-        <p>Score: <span id="user-score">42</span></p>
-        <p>Status: <span id="user-status">verified</span></p>
-      </div>
+      <div id="protected-data-container"></div>
       <p class="powered">This page is protected by AEra.</p>
       <button id="hide-protected-btn" class="aera-button-secondary">Hide</button>
     </section>

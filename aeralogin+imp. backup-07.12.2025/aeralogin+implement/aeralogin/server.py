@@ -153,6 +153,13 @@ if os.path.exists(docs_dir):
     except Exception as e:
         logger.warning(f"⚠️ Docs Files konnten nicht gemountet werden: {e}")
 
+# Favicon Route
+@app.get("/favicon.png")
+async def favicon():
+    """Serve Favicon"""
+    favicon_path = os.path.join(os.path.dirname(__file__), "favicon.png")
+    return FileResponse(favicon_path, media_type="image/png")
+
 # Templates für dynamische Landing Pages
 templates = Jinja2Templates(directory=static_dir)
 

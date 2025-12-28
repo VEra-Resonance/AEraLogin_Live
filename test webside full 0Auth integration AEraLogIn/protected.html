@@ -4,22 +4,60 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Protected Area - AEra</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="favicon.png?v=20251225c">
+  <link rel="stylesheet" href="style.css?v=20251225_0815">
+  <style>
+    /* Overlay styles only - main centering is in style.css */
+    #verification-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0a0e27 0%, #050814 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .verification-spinner {
+      text-align: center;
+      color: #f0f4ff;
+    }
+    .verification-spinner .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(0, 82, 255, 0.2);
+      border-top-color: #0052ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
   
-  <main>
+  <!-- Verification Overlay: Shown during server-side verification -->
+  <div id="verification-overlay">
+    <div class="verification-spinner">
+      <div class="spinner"></div>
+      <p>Verifying your identity...</p>
+    </div>
+  </div>
+
+  <!-- Protected Content: Only shown AFTER successful server verification -->
+  <main id="protected-content">
     <section class="protected-area">
       <h1>Congratulations</h1>
       <p class="success-message">You have successfully authenticated with AEra.</p>
       
       <div class="status-box">
         <h2>Protected Content</h2>
-        <div class="data">
-          <p>Wallet: <span id="wallet-address">Loading...</span></p>
-          <p>Score: <span id="user-score">Loading...</span></p>
-          <p>Status: <span id="user-status">Loading...</span></p>
-        </div>
+        <!-- Content is dynamically injected by protected.js AFTER verification -->
+        <div id="user-data-container"></div>
       </div>
       
       <p class="info">This area is protected by AEra Gate. Only users with a valid AEra Identity NFT can access this content.</p>
@@ -29,6 +67,7 @@
         <p style="color: #155724; margin: 0; font-size: 0.9rem;">
           Diese Seite nutzt <strong>echte Token-Verification</strong> mit AEra's API.
           <br>Jede Anfrage wird in Echtzeit verifiziert (Signatur, Expiry, User-Daten).
+          <br><strong>Zero-Trust:</strong> Content wird erst NACH Server-Verification geladen.
           <br><small>AEra Team hat den "Invalid audience" Bug am 22.12.2025 gefixt! 🎉</small>
         </p>
       </div>
@@ -44,7 +83,7 @@
     <p>AEra</p>
   </footer>
 
-  <script src="static/protected.js"></script>
+  <script src="static/protected.js?v=20251225_0815"></script>
 
 </body>
 </html>

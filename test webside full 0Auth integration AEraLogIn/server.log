@@ -497,3 +497,1548 @@ nohup: ignoring input
 [VERIFY] Token in session: False
 [VERIFY] No token in session
 127.0.0.1 - - [24/Dec/2025 12:02:34] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 12:57:44] "[31m[1mGET /example-oauth/ HTTP/1.1[0m" 416 -
+127.0.0.1 - - [24/Dec/2025 12:57:44] "[31m[1mGET /example-oauth/ HTTP/1.1[0m" 416 -
+127.0.0.1 - - [24/Dec/2025 12:57:44] "[31m[1mGET /example-oauth/ HTTP/1.1[0m" 416 -
+127.0.0.1 - - [24/Dec/2025 12:57:44] "[31m[1mGET /example-oauth/ HTTP/1.1[0m" 416 -
+127.0.0.1 - - [24/Dec/2025 12:57:45] "[31m[1mGET /example-oauth/ HTTP/1.1[0m" 416 -
+127.0.0.1 - - [24/Dec/2025 12:57:47] "[31m[1mGET /example-oauth/ HTTP/1.1[0m" 416 -
+127.0.0.1 - - [24/Dec/2025 19:37:54] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:37:54] "GET /example-oauth/static/aera-client.js HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:37:54] "GET /example-oauth/style.css HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [24/Dec/2025 19:37:55] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:38:01] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+127.0.0.1 - - [24/Dec/2025 19:38:04] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+127.0.0.1 - - [24/Dec/2025 19:38:28] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+127.0.0.1 - - [24/Dec/2025 19:39:17] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [24/Dec/2025 19:39:18] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:39:51] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:39:53] "[36mGET /example-oauth/static/aera-client.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [24/Dec/2025 19:39:53] "[36mGET /example-oauth/style.css HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [24/Dec/2025 19:39:56] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:39:56] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:39:56] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:39:58] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...btMX3aK-mJZkC9pQkl_s
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x4b452abecffd2ec6363bce7994dcaec3c08f1d85
+[EXCHANGE] score: 50
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x4b452abecffd2ec6363bce7994dcaec3c08f1d85', 'score': 50, 'has_nft': True}
+127.0.0.1 - - [24/Dec/2025 19:40:11] "[32mGET /example-oauth/auth/aera/callback?code=KrA-DyIPT6HnhpaUt_6N9n3ndHP1Y39uPYCb4wE0WmA&state=kt-nmNFQ9rrUGhGiJu8I9MtTqLcEQvZivk8_DjKjlaw HTTP/1.1[0m" 302 -
+127.0.0.1 - - [24/Dec/2025 19:40:11] "GET /example-oauth/protected HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:40:23] "GET /example-oauth/static/protected.js HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...ZkC9pQkl_s
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x4b452abecffd2ec6363bce7994dcaec3c08f1d85
+[TOKEN_VERIFY] Score: 50
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-25T19:40:11+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x4b452abecffd2ec6363bce7994dcaec3c08f1d85', 'score': 50, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-24T19:40:11+00:00', 'expires_at': '2025-12-25T19:40:11+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '8a8d0a294800c9e37f2373e885472c68'}
+[VERIFY] ===== SUCCESS! User: 0x4b452abecffd2ec6363bce7994dcaec3c08f1d85 =====
+127.0.0.1 - - [24/Dec/2025 19:40:24] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:40:24] "GET /example-oauth/protected HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:40:24] "GET /example-oauth/protected HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:41:08] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:41:08] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [24/Dec/2025 19:41:08] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:41:08] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+127.0.0.1 - - [24/Dec/2025 19:41:28] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...KEsm-W08ayllVExXKaKA
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x4b452abecffd2ec6363bce7994dcaec3c08f1d85
+[EXCHANGE] score: 50
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x4b452abecffd2ec6363bce7994dcaec3c08f1d85', 'score': 50, 'has_nft': True}
+127.0.0.1 - - [24/Dec/2025 19:41:51] "[32mGET /example-oauth/auth/aera/callback?code=R3HGqjVsOd6rt8DVDrjBlyzy1cM3L60Xgi05XvtechM&state=mlHiXWh8mxp9yn46AwnNbTAXSj4dUgzSD8VN7k1Jpuc HTTP/1.1[0m" 302 -
+127.0.0.1 - - [24/Dec/2025 19:41:51] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...llVExXKaKA
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x4b452abecffd2ec6363bce7994dcaec3c08f1d85
+[TOKEN_VERIFY] Score: 50
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-25T19:41:51+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x4b452abecffd2ec6363bce7994dcaec3c08f1d85', 'score': 50, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-24T19:41:51+00:00', 'expires_at': '2025-12-25T19:41:51+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'adc76dac15c09a312345be959960a6a4'}
+[VERIFY] ===== SUCCESS! User: 0x4b452abecffd2ec6363bce7994dcaec3c08f1d85 =====
+127.0.0.1 - - [24/Dec/2025 19:41:51] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:41:51] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+127.0.0.1 - - [24/Dec/2025 19:41:58] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...llVExXKaKA
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x4b452abecffd2ec6363bce7994dcaec3c08f1d85
+[TOKEN_VERIFY] Score: 50
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-25T19:41:51+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x4b452abecffd2ec6363bce7994dcaec3c08f1d85', 'score': 50, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-24T19:41:51+00:00', 'expires_at': '2025-12-25T19:41:51+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'adc76dac15c09a312345be959960a6a4'}
+[VERIFY] ===== SUCCESS! User: 0x4b452abecffd2ec6363bce7994dcaec3c08f1d85 =====
+127.0.0.1 - - [24/Dec/2025 19:41:59] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 19:41:59] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+127.0.0.1 - - [24/Dec/2025 19:42:06] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [24/Dec/2025 20:07:50] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 20:07:51] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+127.0.0.1 - - [24/Dec/2025 20:07:53] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [24/Dec/2025 20:07:54] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [24/Dec/2025 20:07:54] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+127.0.0.1 - - [25/Dec/2025 04:36:23] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 04:36:24] "[36mGET /example-oauth/static/aera-client.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [25/Dec/2025 04:36:24] "[36mGET /example-oauth/style.css HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 04:36:24] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 04:42:11] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 04:42:11] "GET /example-oauth/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 04:42:11] "GET /example-oauth/static/aera-client.js HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 04:42:11] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 04:42:25] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 04:43:36] "[33mGET /example-oauth/auth HTTP/1.1[0m" 404 -
+127.0.0.1 - - [25/Dec/2025 04:47:37] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 04:47:37] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 04:47:44] "GET /example-oauth HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 04:47:59] "GET /example-oauth HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 04:48:11] "[33mGET /example-oauth/auth HTTP/1.1[0m" 404 -
+127.0.0.1 - - [25/Dec/2025 05:13:57] "[33mGET /example-oauth/protected.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [25/Dec/2025 05:14:02] "[33mGET /example-oauth/protected.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [25/Dec/2025 05:14:09] "[33mGET /example-oauth/protected.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [25/Dec/2025 05:14:21] "[33mGET /example-oauth/protected.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [25/Dec/2025 05:14:26] "GET /example-oauth/protected HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:14:36] "GET /example-oauth/protected HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:14:41] "GET /example-oauth/protected HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:16:50] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:16:50] "[36mGET /example-oauth/static/aera-client.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [25/Dec/2025 05:16:50] "GET /example-oauth/style.css HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 05:16:50] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:16:52] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...TA_hoqz0RWMqRXKpoxfo
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 05:16:59] "[32mGET /example-oauth/auth/aera/callback?code=5lS2lPOXhKHWa2KqSuhUBmtd2qpw6AGks-HVVu0f5cg&state=8uRgmzZgzUXmaa9GPLUeQ2RPFhQJIXI0gk_7xwZWfGU HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 05:16:59] "GET /example-oauth/protected HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:16:59] "GET /example-oauth/static/protected.js HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...MqRXKpoxfo
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T05:16:59+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T05:16:59+00:00', 'expires_at': '2025-12-26T05:16:59+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'fbd0c75a4fef452d0eb2f4fae9b19208'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 05:16:59] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:17:39] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...MqRXKpoxfo
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T05:16:59+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T05:16:59+00:00', 'expires_at': '2025-12-26T05:16:59+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'fbd0c75a4fef452d0eb2f4fae9b19208'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 05:17:39] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:17:53] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:18:44] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 05:18:44] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:18:45] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 05:18:45] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:20:47] "GET /example-oauth/protected HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:20:47] "GET /example-oauth/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:20:47] "GET /example-oauth/static/protected.js HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 05:20:47] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:20:51] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:20:51] "[36mGET /example-oauth/static/aera-client.js HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 05:20:51] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:21:12] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 05:21:12] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:21:13] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 05:21:13] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:21:17] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 05:21:18] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:21:19] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 05:21:19] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 05:21:37] "[36mGET /example-oauth/static/protected.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [25/Dec/2025 05:37:02] "GET /example-oauth HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 06:33:05] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...fLkf4yAz49IXh-zdREHA
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 06:33:11] "[32mGET /example-oauth/auth/aera/callback?code=dCN7EvjAJOxmMCf9_k_atCad0n540iLUGeOQPMGD4Ek&state=arh5_mlk3dznHGIS1MMorVv6Cxhlc4SMeZBAZ7fUSk4 HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 06:33:11] "GET /example-oauth/protected HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...IXh-zdREHA
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T06:33:11+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T06:33:11+00:00', 'expires_at': '2025-12-26T06:33:11+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'd8c52c34def5e53a9fef6e01b32a7ffe'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 06:33:11] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 06:33:38] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...IXh-zdREHA
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T06:33:11+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T06:33:11+00:00', 'expires_at': '2025-12-26T06:33:11+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'd8c52c34def5e53a9fef6e01b32a7ffe'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 06:33:39] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 06:33:49] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:28:27] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 07:28:28] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:28:29] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...eGwomihK9sxQD-OZTu9A
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 07:28:35] "[32mGET /example-oauth/auth/aera/callback?code=_F9GXcD7JG82SnVsQDE0VghsLkeOnPsI8RbSMiCr9ko&state=rdQhjE1L5z6dVwjLev2GcAoMTp7z_9OgZO-_N2oUCh8 HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 07:28:35] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...xQD-OZTu9A
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:28:35+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:28:35+00:00', 'expires_at': '2025-12-26T07:28:35+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'caaba43a798f56b8e4a9598e7ff1caf0'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:28:35] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:29:57] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...xQD-OZTu9A
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:28:35+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:28:35+00:00', 'expires_at': '2025-12-26T07:28:35+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'caaba43a798f56b8e4a9598e7ff1caf0'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:29:57] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:29:58] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...xQD-OZTu9A
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:28:35+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:28:35+00:00', 'expires_at': '2025-12-26T07:28:35+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'caaba43a798f56b8e4a9598e7ff1caf0'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:29:58] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:29:59] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...xQD-OZTu9A
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:28:35+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:28:35+00:00', 'expires_at': '2025-12-26T07:28:35+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'caaba43a798f56b8e4a9598e7ff1caf0'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:30:00] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:30:00] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...xQD-OZTu9A
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:28:35+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:28:35+00:00', 'expires_at': '2025-12-26T07:28:35+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'caaba43a798f56b8e4a9598e7ff1caf0'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:30:01] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:30:01] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...xQD-OZTu9A
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:28:35+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:28:35+00:00', 'expires_at': '2025-12-26T07:28:35+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'caaba43a798f56b8e4a9598e7ff1caf0'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:30:02] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:30:02] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...xQD-OZTu9A
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:28:35+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:28:35+00:00', 'expires_at': '2025-12-26T07:28:35+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'caaba43a798f56b8e4a9598e7ff1caf0'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:30:03] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:31:21] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...xQD-OZTu9A
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:28:35+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:28:35+00:00', 'expires_at': '2025-12-26T07:28:35+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'caaba43a798f56b8e4a9598e7ff1caf0'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:31:22] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:31:23] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...xQD-OZTu9A
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:28:35+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:28:35+00:00', 'expires_at': '2025-12-26T07:28:35+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'caaba43a798f56b8e4a9598e7ff1caf0'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:31:23] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:31:24] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...xQD-OZTu9A
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:28:35+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:28:35+00:00', 'expires_at': '2025-12-26T07:28:35+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'caaba43a798f56b8e4a9598e7ff1caf0'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:31:25] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:31:50] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...xQD-OZTu9A
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:28:35+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:28:35+00:00', 'expires_at': '2025-12-26T07:28:35+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'caaba43a798f56b8e4a9598e7ff1caf0'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:31:50] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:31:52] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:31:54] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...tiDLRFhQOMQ7XmgtmqqE
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 07:31:59] "[32mGET /example-oauth/auth/aera/callback?code=TbCFHwUvPYYpF746ya_m3zwMlgxnc1rrJptFoT2tDEQ&state=MA1cP1Ht_rCMzq3W2pPlZzcp1B3ts7THLmKtYbyfl-g HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 07:31:59] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...Q7XmgtmqqE
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:31:59+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:31:59+00:00', 'expires_at': '2025-12-26T07:31:59+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '2648f474026049d9ba91fced4814f9e6'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:31:59] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [25/Dec/2025 07:33:08] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...Q7XmgtmqqE
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:31:59+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:31:59+00:00', 'expires_at': '2025-12-26T07:31:59+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '2648f474026049d9ba91fced4814f9e6'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:33:08] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:33:16] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...Mi_6I7a_U-V8Lv9sNvgw
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 07:33:21] "[32mGET /example-oauth/auth/aera/callback?code=HA_pOZOLOwiaoKI4j3GqjeM2z2u77S7tNU1xsBhpmNg&state=E9xBQLVFYSGpHpIZGZNX3EWFaDE-QN1pAtbeAel27EA HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 07:33:21] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...V8Lv9sNvgw
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:33:21+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:33:21+00:00', 'expires_at': '2025-12-26T07:33:21+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '1c6457b61d893ecd1799431ddc455e4e'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:33:21] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:34:16] "GET /example-oauth HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:34:31] "[36mGET /example-oauth HTTP/1.1[0m" 304 -
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [25/Dec/2025 07:36:31] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:36:37] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:36:56] "GET /example-oauth HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:36:58] "[36mGET /example-oauth HTTP/1.1[0m" 304 -
+127.0.0.1 - - [25/Dec/2025 07:37:13] "[36mGET /example-oauth HTTP/1.1[0m" 304 -
+127.0.0.1 - - [25/Dec/2025 07:37:15] "[36mGET /example-oauth HTTP/1.1[0m" 304 -
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [25/Dec/2025 07:39:24] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:39:29] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:40:27] "GET /example-oauth/ HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...V8Lv9sNvgw
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:33:21+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:33:21+00:00', 'expires_at': '2025-12-26T07:33:21+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '1c6457b61d893ecd1799431ddc455e4e'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:40:27] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:40:34] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:40:36] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...sYSs2giRAPA32bf6OTKU
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 07:40:41] "[32mGET /example-oauth/auth/aera/callback?code=yo70FgoKgxaLrpOtr4rOXlBX-YjzPnmEeNUbIkm44CE&state=fXU2SB0oN5SWhCqj6zUBAy2TQemPPLC2nLwD46WPHmg HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 07:40:41] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...A32bf6OTKU
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:40:41+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:40:41+00:00', 'expires_at': '2025-12-26T07:40:41+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '6eb93ded7503370e2db85031602aa24a'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:40:42] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:41:12] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...A32bf6OTKU
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:40:41+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:40:41+00:00', 'expires_at': '2025-12-26T07:40:41+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '6eb93ded7503370e2db85031602aa24a'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:41:12] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:41:17] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:41:19] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 07:41:42] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 07:41:42] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:41:45] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...BR_2D_5cKPswcMQqrQk0
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 07:41:50] "[32mGET /example-oauth/auth/aera/callback?code=hblRAcNY5YH-BRs2cCmVpvbo52kgDGl30Yvj6MvdLRI&state=IhU_sEi73CQkRsccP7gwiCBj-Wo5SwCbNSZxGaLKw3k HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 07:41:50] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...swcMQqrQk0
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:41:50+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:41:50+00:00', 'expires_at': '2025-12-26T07:41:50+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '1591ea8f49f949c93f118715b7a14a2f'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:41:50] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:41:56] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:41:56] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 07:41:56] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:42:57] "GET /example-oauth/protected HTTP/1.1" 200 -
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [25/Dec/2025 07:43:26] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...MiX2O_UZtucFzOYUJmhI
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 07:43:31] "[32mGET /example-oauth/auth/aera/callback?code=RQGuWQl2Zjuo2YSIvO7xDCKbx7mBBYLLLdnYXwEDpss&state=udvh1fFWwrmbj1xGFQIOFCcsNQLQujTpo1Klxbzm2Yg HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 07:43:31] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...cFzOYUJmhI
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:43:31+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:43:31+00:00', 'expires_at': '2025-12-26T07:43:31+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '4ad0a9cb37bd66c8e3c62d6c8257218a'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:43:32] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [25/Dec/2025 07:46:29] "GET /example-oauth/protected HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...cFzOYUJmhI
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:43:31+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:43:31+00:00', 'expires_at': '2025-12-26T07:43:31+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '4ad0a9cb37bd66c8e3c62d6c8257218a'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:46:30] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:46:49] "GET /example-oauth HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:47:02] "[36mGET /example-oauth HTTP/1.1[0m" 304 -
+127.0.0.1 - - [25/Dec/2025 07:47:32] "GET /example-oauth/ HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...cFzOYUJmhI
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:43:31+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:43:31+00:00', 'expires_at': '2025-12-26T07:43:31+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '4ad0a9cb37bd66c8e3c62d6c8257218a'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:47:32] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:47:48] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...cFzOYUJmhI
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:43:31+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:43:31+00:00', 'expires_at': '2025-12-26T07:43:31+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '4ad0a9cb37bd66c8e3c62d6c8257218a'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:47:48] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:47:58] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:48:02] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...RwQZ6PAfdpy3avuQ4bxA
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 07:48:09] "[32mGET /example-oauth/auth/aera/callback?code=7aEvGjSshogNNsKTDSAHZEifkboReR2hdcpiNCTHIFQ&state=XA1yZwEEYmTXKq_WR18NtU3d_X3Jd1AvhU-yShlFwL4 HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 07:48:09] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...y3avuQ4bxA
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:48:09+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:48:09+00:00', 'expires_at': '2025-12-26T07:48:09+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '4e4370c1909dc0a1d0643affe8e9bef9'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:48:09] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [25/Dec/2025 07:50:09] "GET /example-oauth/protected HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...y3avuQ4bxA
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:48:09+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:48:09+00:00', 'expires_at': '2025-12-26T07:48:09+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '4e4370c1909dc0a1d0643affe8e9bef9'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:50:09] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:50:31] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...y3avuQ4bxA
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:48:09+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:48:09+00:00', 'expires_at': '2025-12-26T07:48:09+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '4e4370c1909dc0a1d0643affe8e9bef9'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:50:31] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:50:35] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:50:37] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...ZGUg9Ycpd94wrfBc6bKQ
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 07:50:43] "[32mGET /example-oauth/auth/aera/callback?code=WbLT0ZnfW8AO4dYNzvkxuFPgq_qLiPApIuypwDo2Epw&state=4Op40HOYzXIKpBf6lcn_oURJ1B6MQVYYevQhbrJWD3Y HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 07:50:43] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...4wrfBc6bKQ
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:50:43+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:50:43+00:00', 'expires_at': '2025-12-26T07:50:43+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'e0085f488e2886da116e457e1856cde6'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:50:43] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:51:36] "GET /example-oauth/protected HTTP/1.1" 200 -
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [25/Dec/2025 07:52:27] "GET /example-oauth/protected HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...4wrfBc6bKQ
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:50:43+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:50:43+00:00', 'expires_at': '2025-12-26T07:50:43+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'e0085f488e2886da116e457e1856cde6'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:52:27] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:52:42] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...4wrfBc6bKQ
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:50:43+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:50:43+00:00', 'expires_at': '2025-12-26T07:50:43+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'e0085f488e2886da116e457e1856cde6'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:52:42] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:52:51] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:52:52] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...lxrSqbDEKB0MGujby-AU
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 07:52:57] "[32mGET /example-oauth/auth/aera/callback?code=3xqUFWzUQRkA7Gjj7vbhTcZiFKzoOND5Pr04Vch5puU&state=hkaZFdzjoktuH5-rWsgBY1-9Wfl6RckUDew55t7l_pg HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 07:52:57] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...0MGujby-AU
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:52:57+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:52:57+00:00', 'expires_at': '2025-12-26T07:52:57+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '099180dc73e2b634951e0016d3e21f8e'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:52:57] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [25/Dec/2025 07:54:42] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...0MGujby-AU
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:52:57+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:52:57+00:00', 'expires_at': '2025-12-26T07:52:57+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '099180dc73e2b634951e0016d3e21f8e'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:54:42] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:54:44] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:54:46] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...MeSK9ft-La3xys79nDi4
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 07:54:51] "[32mGET /example-oauth/auth/aera/callback?code=UQnstp0jP5upZsbRJJbVnvhWji0ujy__aVu7yo2Rvcc&state=cc2dmgrGfRVpl0acGB1dZAvjAOqqCvqOFxjDaui1PYg HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 07:54:52] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...3xys79nDi4
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:54:51+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:54:51+00:00', 'expires_at': '2025-12-26T07:54:51+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'd5845c9fdde3e091fdcae4f4e0499a86'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:54:52] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [25/Dec/2025 07:56:06] "GET /example-oauth/protected HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:56:07] "GET /example-oauth/static/protected.js?v=20251225_0815 HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:56:07] "GET /example-oauth/style.css?v=20251225_0815 HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...3xys79nDi4
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:54:51+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:54:51+00:00', 'expires_at': '2025-12-26T07:54:51+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'd5845c9fdde3e091fdcae4f4e0499a86'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:56:07] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:56:34] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...3xys79nDi4
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:54:51+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:54:51+00:00', 'expires_at': '2025-12-26T07:54:51+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'd5845c9fdde3e091fdcae4f4e0499a86'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:56:34] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:56:42] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:56:44] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...EhZD-oWNFJzx9rj66WeM
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 07:56:50] "[32mGET /example-oauth/auth/aera/callback?code=vqDlAsEb17Mvs7taZskw2HuUeDDMzVjPauZQnq03iaw&state=vaWWnsx6OPQDioD0vNeWK8Bj0hs5Qq79mzu6BW-sESY HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 07:56:50] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...zx9rj66WeM
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T07:56:50+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T07:56:50+00:00', 'expires_at': '2025-12-26T07:56:50+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'a966f8a04d84e57a6ca173ecf3f26c14'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 07:56:50] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:56:54] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:56:54] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 07:56:54] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:57:03] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 07:57:03] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 07:57:04] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 07:57:04] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [25/Dec/2025 08:59:28] "GET /example-oauth/ HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 08:59:28] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 08:59:28] "[33mGET /example-oauth/favicon.png HTTP/1.1[0m" 404 -
+127.0.0.1 - - [25/Dec/2025 08:59:31] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 08:59:31] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 08:59:32] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 08:59:33] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 08:59:36] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...sNwsqfyw0_6jK4cEGnbo
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 08:59:45] "[32mGET /example-oauth/auth/aera/callback?code=Ydlaka294Y2TeqQK5R6rV2aGL3FK7dyI4Rgq2siWGsU&state=lR9ZZcoCXP1U4AQfkt0gN_xnB-VglzZB8SMG2KK6e3U HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 08:59:45] "GET /example-oauth/protected HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...6jK4cEGnbo
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T08:59:45+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T08:59:45+00:00', 'expires_at': '2025-12-26T08:59:45+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'b1e5b7afc56a2d5200e855990a745937'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 08:59:45] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [25/Dec/2025 09:01:54] "GET /example-oauth/protected HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...6jK4cEGnbo
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T08:59:45+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T08:59:45+00:00', 'expires_at': '2025-12-26T08:59:45+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'b1e5b7afc56a2d5200e855990a745937'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 09:01:54] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 09:01:55] "[36mGET /example-oauth/protected HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...6jK4cEGnbo
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T08:59:45+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T08:59:45+00:00', 'expires_at': '2025-12-26T08:59:45+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'b1e5b7afc56a2d5200e855990a745937'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 09:01:55] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 09:02:04] "GET /example-oauth/ HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...6jK4cEGnbo
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T08:59:45+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T08:59:45+00:00', 'expires_at': '2025-12-26T08:59:45+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'b1e5b7afc56a2d5200e855990a745937'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 09:02:05] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 09:02:58] "[33mGET /example-oauth/favicon.png HTTP/1.1[0m" 404 -
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [25/Dec/2025 09:03:56] "HEAD /example-oauth/favicon.png HTTP/1.1" 200 -
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [25/Dec/2025 09:04:25] "GET /example-oauth/favicon.png?v=20251225 HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 09:04:37] "GET /example-oauth/ HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...6jK4cEGnbo
+127.0.0.1 - - [25/Dec/2025 09:04:37] "GET /example-oauth/favicon.png?v=20251225 HTTP/1.1" 200 -
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T08:59:45+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T08:59:45+00:00', 'expires_at': '2025-12-26T08:59:45+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'b1e5b7afc56a2d5200e855990a745937'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 09:04:37] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 09:04:50] "GET /example-oauth/protected HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...6jK4cEGnbo
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T08:59:45+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T08:59:45+00:00', 'expires_at': '2025-12-26T08:59:45+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'b1e5b7afc56a2d5200e855990a745937'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 09:04:50] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+/var/local/test webside full 0Auth integration AEraLogIn/venv/lib/python3.13/site-packages/flask_limiter/_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+
+🚀 AEra Gate Server starting...
+📍 Base URL: https://aeralogin.com
+🔑 Client ID: aera_ea910...
+🌐 URL Prefix: /example-oauth
+
+💡 Server will be available at:
+   - http://localhost:8001
+   - https://aeralogin.com/example-oauth
+
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://72.60.38.143:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [25/Dec/2025 09:53:44] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 09:53:44] "GET /example-oauth/static/aera-client.js HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...6jK4cEGnbo
+127.0.0.1 - - [25/Dec/2025 09:53:44] "GET /example-oauth/favicon.png?v=20251225c HTTP/1.1" 200 -
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T08:59:45+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T08:59:45+00:00', 'expires_at': '2025-12-26T08:59:45+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': 'b1e5b7afc56a2d5200e855990a745937'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 09:53:44] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 09:54:01] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 09:54:03] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...zjbhlWngLkD-TFOdCykw
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[EXCHANGE] score: 68
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 09:54:18] "[32mGET /example-oauth/auth/aera/callback?code=kVd_lX4vixcg4MDPtHpuxBim2HmkcJP8CyHQgYPxnNY&state=eq07zwvEHrVkn6dg3M_i8cYuj6yAfTfxAN21Yl4jgm4 HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 09:54:18] "GET /example-oauth/protected HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...D-TFOdCykw
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba
+[TOKEN_VERIFY] Score: 68
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T09:54:18+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x9de3772a1b2e958561d8371ee34364dcd90967ba', 'score': 68, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T09:54:18+00:00', 'expires_at': '2025-12-26T09:54:18+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '5c6c3c0f783d46bbf67d9427510c8ee3'}
+[VERIFY] ===== SUCCESS! User: 0x9de3772a1b2e958561d8371ee34364dcd90967ba =====
+127.0.0.1 - - [25/Dec/2025 09:54:19] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 11:12:46] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 11:12:47] "[36mGET /example-oauth/static/aera-client.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [25/Dec/2025 11:12:47] "GET /example-oauth/style.css?v=20251225_0815 HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 11:12:47] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 11:12:47] "[36mGET /example-oauth/favicon.png?v=20251225c HTTP/1.1[0m" 304 -
+127.0.0.1 - - [25/Dec/2025 11:12:55] "GET /example-oauth/ HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 11:12:55] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 11:12:57] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+[EXCHANGE] ===== TOKEN EXCHANGE =====
+[EXCHANGE] Exchanging code for token...
+[EXCHANGE] ===== COMPLETE RESPONSE =====
+[EXCHANGE] Status Code: 200
+[EXCHANGE] Response Keys: ['access_token', 'token_type', 'expires_in', 'wallet', 'score', 'has_nft']
+[EXCHANGE] access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ...hWIZJxH02IOhezuUFTCE
+[EXCHANGE] token_type: Bearer
+[EXCHANGE] expires_in: 86400
+[EXCHANGE] wallet: 0x37d932c3917ed7d61280540353ceb485e3778a8d
+[EXCHANGE] score: 53
+[EXCHANGE] has_nft: True
+[EXCHANGE] ===== END RESPONSE =====
+[CALLBACK] Token AND user data stored in session
+[CALLBACK] User: {'wallet': '0x37d932c3917ed7d61280540353ceb485e3778a8d', 'score': 53, 'has_nft': True}
+127.0.0.1 - - [25/Dec/2025 11:13:03] "[32mGET /example-oauth/auth/aera/callback?code=9jnHIYFSrNl3fdl2MskkxzxMTZ7hmhi2bRSkHIE9bZk&state=JwMe8rJmnOSOdzx2qaHXqA157fpcechLaXkVcEky2m4 HTTP/1.1[0m" 302 -
+127.0.0.1 - - [25/Dec/2025 11:13:03] "GET /example-oauth/protected HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 11:13:03] "[36mGET /example-oauth/static/protected.js?v=20251225_0815 HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: True
+[VERIFY] Calling verify_token()...
+[TOKEN_VERIFY] Verifying token with /api/v1/verify... Token: eyJhbGciOi...OhezuUFTCE
+[TOKEN_VERIFY] Response status: 200
+[TOKEN_VERIFY] ✅ SUCCESS! Token is valid and authenticated
+[TOKEN_VERIFY] User: 0x37d932c3917ed7d61280540353ceb485e3778a8d
+[TOKEN_VERIFY] Score: 53
+[TOKEN_VERIFY] Has NFT: True
+[TOKEN_VERIFY] Expires: 2025-12-26T11:13:03+00:00
+[VERIFY] Token valid! User data: {'wallet': '0x37d932c3917ed7d61280540353ceb485e3778a8d', 'score': 53, 'has_nft': True, 'chain_id': 8453, 'issued_at': '2025-12-25T11:13:03+00:00', 'expires_at': '2025-12-26T11:13:03+00:00', 'client_id': 'aera_ea9109cfb0016b8f79c57c9b6b8e48d6', 'jti': '49bf587ba628629f264679bff8f48151'}
+[VERIFY] ===== SUCCESS! User: 0x37d932c3917ed7d61280540353ceb485e3778a8d =====
+127.0.0.1 - - [25/Dec/2025 11:13:03] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 11:13:10] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 11:13:10] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 11:13:10] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 11:13:10] "GET /example-oauth/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 11:16:00] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 11:16:00] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 11:16:00] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 11:16:14] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 11:16:15] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [25/Dec/2025 11:16:16] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [25/Dec/2025 11:16:16] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [26/Dec/2025 15:00:26] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [26/Dec/2025 15:01:27] "GET /example-oauth/style.css?v=20251225_0815 HTTP/1.1" 200 -
+127.0.0.1 - - [26/Dec/2025 15:01:28] "GET /example-oauth/static/aera-client.js HTTP/1.1" 200 -
+127.0.0.1 - - [27/Dec/2025 13:18:54] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Dec/2025 13:18:54] "GET /example-oauth/style.css?v=20251225_0815 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Dec/2025 13:18:54] "GET /example-oauth/static/aera-client.js HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [27/Dec/2025 13:18:54] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [27/Dec/2025 13:18:56] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -
+127.0.0.1 - - [27/Dec/2025 13:19:30] "[32mGET /example-oauth/auth/aera/login HTTP/1.1[0m" 302 -

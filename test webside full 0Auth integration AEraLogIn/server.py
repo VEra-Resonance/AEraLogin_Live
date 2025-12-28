@@ -177,6 +177,12 @@ def styles():
     return send_from_directory('.', 'style.css')
 
 
+@app.route(f'{URL_PREFIX}/favicon.png')
+def favicon():
+    """Serve Favicon"""
+    return send_from_directory('.', 'favicon.png', mimetype='image/png')
+
+
 @app.route(f'{URL_PREFIX}/auth/aera/login')
 @limiter.limit("5 per minute")
 def aera_login():

@@ -106,12 +106,17 @@ class AEraClient {
   showProtected() {
     if (!this.user) return;
 
-    // Update protected content with user data
-    document.getElementById('wallet-address').textContent = 
-      this.formatAddress(this.user.wallet);
-    document.getElementById('user-score').textContent = this.user.score || '0';
-    document.getElementById('user-status').textContent = 
-      this.user.has_nft ? 'verified' : 'unverified';
+    // SECURITY: Dynamically inject user data ONLY after verification
+    const container = document.getElementById('protected-data-container');
+    if (container) {
+      container.innerHTML = `
+        <div class="data">
+          <p><strong>Wallet:</strong> <code>${this.formatAddress(this.user.wallet)}</code></p>
+          <p><strong>Score:</strong> <span class="score-badge">${this.user.score || '0'}</span></p>
+          <p><strong>Status:</strong> <span class="status-badge status-${this.user.has_nft ? 'verified' : 'unverified'}">${this.user.has_nft ? '✅ Verified' : '❌ Unverified'}</span></p>
+        </div>
+      `;
+    }
 
     document.getElementById('landing').style.display = 'none';
     document.getElementById('authenticated').style.display = 'none';
@@ -119,6 +124,11 @@ class AEraClient {
   }
 
   hideProtected() {
+    // SECURITY: Clear sensitive data when hiding
+    const container = document.getElementById('protected-data-container');
+    if (container) {
+      container.innerHTML = '';
+    }
     this.showAuthenticated();
   }
 

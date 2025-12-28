@@ -21,6 +21,16 @@ main {
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
+  width: 100%;
+}
+
+/* Ensure main stays centered even when content is injected */
+main#protected-content {
+  display: none;
+}
+
+main#protected-content.visible {
+  display: flex !important;
 }
 
 section {
@@ -63,11 +73,59 @@ p {
 }
 
 .data {
-  margin: 1.5rem 0;
+  margin: 1.5rem auto;
+  text-align: center;
+  width: 100%;
 }
 
 .data p {
   font-size: 0.9375rem;
+  text-align: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.data p:last-child {
+  border-bottom: none;
+}
+
+.data strong {
+  font-weight: 500;
+}
+
+.data code {
+  background: #fff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+  color: #0052ff;
+}
+
+.score-badge {
+  background: linear-gradient(135deg, #0052ff, #00d4ff);
+  color: #fff;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.status-verified {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-unverified {
+  background: #f8d7da;
+  color: #721c24;
 }
 
 .powered {
@@ -122,6 +180,8 @@ footer {
 .protected-area {
   max-width: 600px;
   text-align: center;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .success-message {
@@ -136,10 +196,17 @@ footer {
   border-radius: 8px;
   padding: 2rem;
   margin: 2rem 0;
+  text-align: center;
 }
 
 .status-box h2 {
   margin-bottom: 1rem;
+  text-align: center;
+}
+
+#user-data-container,
+#protected-data-container {
+  width: 100%;
 }
 
 .info {

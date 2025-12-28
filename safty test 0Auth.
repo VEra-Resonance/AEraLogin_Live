@@ -1,0 +1,127 @@
+Gerne. Hier ist eine **klare, sachliche interne Information an das AEraLogIn-Team**, so wie sie auch in einem professionellen Security- oder Architektur-Review stehen könnte:
+
+---
+
+### Interne Information – Review der AEraLogIn Demo- & Core-Seiten (Agenten-/Bot-Test)
+
+**Kontext**
+Im Rahmen eines systematischen Tests habe ich AEraLogIn aus der Perspektive eines externen, nicht authentifizierten „intelligenten Agenten“ (Browser, Text-Client, Headless-Zugriff) geprüft. Ziel war es zu verifizieren, ob geschützte Inhalte **vor Authentifizierung** sichtbar oder rekonstruierbar sind und ob das System so demonstriert wird, wie es tatsächlich funktioniert.
+
+---
+
+## 1. Vorgehen
+
+Ich habe folgende Tests durchgeführt:
+
+1. **Zugriff ohne Wallet / ohne Signatur**
+
+   * Navigation über Browser
+   * Klicks auf alle relevanten Menüpunkte
+   * Direkte URL-Aufrufe (Deep Links)
+   * Text-basierte Clients („View Source“ / textueller Abruf)
+
+2. **Untersuchung folgender Bereiche**
+
+   * AEra Core (`user-dashboard.html`)
+   * Dashboard (`dashboard.html`)
+   * OAuth-Demo (`/example-oauth`)
+   * OAuth-Flow (Login-Dialog, Abbruch, Direktaufrufe)
+
+3. **Ziel**
+
+   * Prüfen, ob Inhalte **serverseitig geschützt** sind
+   * Prüfen, ob Inhalte **bereits im HTML ausgeliefert** werden
+   * Prüfen, wie ein externer Tester das System wahrnimmt
+
+---
+
+## 2. Ergebnis – AEra Core & Dashboard
+
+**AEra Core & Dashboard sind korrekt abgesichert.**
+
+* Ohne Wallet-Verbindung:
+
+  * Es wird **keinerlei sensibler Inhalt** ausgeliefert
+  * Nur UI-Hüllen, Platzhalter und Hinweise („Access Restricted“, „Connect Wallet“)
+  * Keine Profile, Scores, Updates oder Nutzerzustände im HTML
+* Geschützte Daten werden **offensichtlich erst nach erfolgreicher Wallet-Signatur** geladen
+* Kein Leak über View-Source oder Text-Clients
+
+**Bewertung:**
+✅ Architektonisch sauber
+✅ Zero-Trust-Ansatz korrekt umgesetzt
+✅ Backend ist die Autorität, nicht das Frontend
+
+---
+
+## 3. Ergebnis – OAuth-Demo (`example-oauth`)
+
+**Hier liegt ein ernstzunehmendes Demonstrationsproblem vor.**
+
+* Der komplette „Protected Content“ (Wallet-Adresse, Score, Status etc.) ist:
+
+  * bereits im **initialen HTML enthalten**
+  * lediglich per JavaScript/CSS ausgeblendet
+* Ein externer Tester kann:
+
+  * den Quelltext lesen
+  * einen Text-Client verwenden
+  * und sieht den gesamten „geschützten“ Inhalt **vor Authentifizierung**
+
+Wichtig:
+👉 **Das ist kein Sicherheitsproblem des AEra-Systems selbst**,
+👉 **aber ein schwerer Fehler in der Demo-Implementierung.**
+
+---
+
+## 4. Warum das problematisch ist
+
+Aus Sicht eines externen Testers ergibt sich folgender Eindruck:
+
+> „Der Content ist schon da – Login blendet ihn nur ein.“
+
+Das führt zu falschen, aber nachvollziehbaren Schlussfolgerungen:
+
+* „Frontend-Gating“
+* „Security nur kosmetisch“
+* „OAuth zeigt Inhalte, statt sie zu schützen“
+
+Das schadet:
+
+* Vertrauen
+* technischer Glaubwürdigkeit
+* Positionierung als Security-/Identity-System
+
+---
+
+## 5. Klare Empfehlung
+
+### **Die OAuth-Demo muss umgebaut werden.**
+
+**Ziel:**
+Die Demo muss mindestens so sicher wirken wie das echte System.
+
+### Empfohlener Standard:
+
+* **Kein geschützter Inhalt im initialen HTML**
+* Geschützte Daten ausschließlich:
+
+  * serverseitig
+  * nach erfolgreicher Authentifizierung
+  * über API-Fetch / Token / Session
+
+### Minimal-Fix (kurzfristig):
+
+* Entfernen aller statischen Protected-Content-Blöcke aus dem HTML
+* Platzhalter anzeigen
+* Content erst **nach OAuth-Callback dynamisch nachladen**
+
+---
+
+## 6. Zusammenfassung in einem Satz
+
+> **AEraLogIn selbst ist sicher – aber die aktuelle OAuth-Demo demonstriert Sicherheit falsch und sollte dringend angepasst werden.**
+
+Das System ist stärker als es die Demo aktuell zeigt.
+
+
