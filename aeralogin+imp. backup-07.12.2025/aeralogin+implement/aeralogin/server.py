@@ -45,6 +45,16 @@ try:
 except ImportError:
     GROUP_BOT_AVAILABLE = False
 
+# ===== IMPORT DISCORD BOT SERVICE =====
+try:
+    from discord_bot_service import discord_bot, create_one_time_discord_invite, check_discord_bot_setup
+    DISCORD_BOT_AVAILABLE = True
+    logger.info("✓ Discord Bot Service imported")
+except ImportError:
+    DISCORD_BOT_AVAILABLE = False
+    discord_bot = None
+    logger.warning("⚠️ Discord Bot Service not available")
+
 # Config
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", 8840))
@@ -818,6 +828,12 @@ async def join_telegram():
     with open(os.path.join(os.path.dirname(__file__), "join-telegram.html"), "r") as f:
         return f.read()
 
+@app.get("/join-discord", response_class=HTMLResponse)
+async def join_discord():
+    """Discord Gate - Uses same page as Telegram with ?source=discord parameter"""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/join-telegram?source=discord", status_code=302)
+
 @app.get("/security-concept.html", response_class=HTMLResponse)
 async def security_concept():
     """Security Concept Documentation - Sybil-Resistance & Bot-Prevention"""
@@ -1314,9 +1330,31 @@ async def telegram_invite(req: Request):
         # Fallback to default link from .env based on platform
         if not invite_link:
             if platform == "discord":
-                invite_link = os.getenv("DISCORD_INVITE_LINK", "")
-                if invite_link:
-                    log_activity("INFO", "DISCORD_GATE", "Using default Discord link from .env")
+                # 🎮 DISCORD: Try Bot API for TRUE one-time links first!
+                if DISCORD_BOT_AVAILABLE and discord_bot and discord_bot.is_configured:
+                    try:
+                        log_activity("INFO", "DISCORD_GATE", "🎮 Attempting Bot API one-time link", address=address[:10])
+                        
+                        success, bot_link = await create_one_time_discord_invite(
+                            wallet_address=address,
+                            expire_seconds=300  # 5 minutes
+                        )
+                        
+                        if success:
+                            invite_link = bot_link
+                            log_activity("INFO", "DISCORD_GATE", "✅ Bot API one-time link created", 
+                                        address=address[:10], 
+                                        link=invite_link[:30] + "...")
+                        else:
+                            log_activity("WARNING", "DISCORD_GATE", f"Bot API failed: {bot_link}, falling back to static link")
+                    except Exception as bot_err:
+                        log_activity("WARNING", "DISCORD_GATE", f"Bot API error: {str(bot_err)}, falling back to static link")
+                
+                # Fallback to static link from .env
+                if not invite_link:
+                    invite_link = os.getenv("DISCORD_INVITE_LINK", "")
+                    if invite_link:
+                        log_activity("INFO", "DISCORD_GATE", "Using default Discord link from .env (static)")
             else:
                 # 🤖 TELEGRAM: Try Bot API for TRUE one-time links first!
                 if telegram_bot.is_configured:
@@ -3526,6 +3564,113 @@ async def oauth_authorize(
                     status.style.display = 'block';
                 }}
                 
+                /**
+                 * Robust wallet signing with multiple fallback strategies
+                 * Handles different wallet implementations (MetaMask, Coinbase, Base, Rainbow, etc.)
+                 * 
+                 * Strategy Order:
+                 * 1. Base Wallet SIWE Capabilities (wallet_connect with signInWithEthereum)
+                 * 2. Standard personal_sign [message, address] (MetaMask, Rainbow, Trust)
+                 * 3. Reversed personal_sign [address, message] (some Coinbase versions)
+                 * 4. Hex-encoded personal_sign (fallback)
+                 */
+                async function robustWalletSign(message, address) {{
+                    const ua = navigator.userAgent.toLowerCase();
+                    const isBaseWallet = ua.includes('base') || 
+                                         ua.includes('coinbasewallet') || 
+                                         (window.ethereum && window.ethereum.isCoinbaseWallet);
+                    
+                    console.log('[OAuth] Attempting signature (Base/Coinbase detected:', isBaseWallet, ')');
+                    
+                    // Extract nonce from SIWE message
+                    const nonceMatch = message.match(/Nonce: ([a-zA-Z0-9]+)/);
+                    const nonce = nonceMatch ? nonceMatch[1] : Date.now().toString();
+                    
+                    // ========================================
+                    // STRATEGY 1: Base Wallet SIWE Capabilities
+                    // ========================================
+                    if (isBaseWallet && window.ethereum) {{
+                        try {{
+                            console.log('[OAuth] Trying Base Wallet SIWE Capabilities...');
+                            const result = await window.ethereum.request({{
+                                method: 'wallet_connect',
+                                params: [{{
+                                    version: '1',
+                                    capabilities: {{
+                                        signInWithEthereum: {{
+                                            nonce: nonce,
+                                            chainId: '0x2105'  // Base Mainnet (8453)
+                                        }}
+                                    }}
+                                }}]
+                            }});
+                            
+                            if (result && result.signature) {{
+                                console.log('[OAuth] ✅ Base Wallet SIWE successful!');
+                                return result.signature;
+                            }}
+                        }} catch (siweError) {{
+                            console.log('[OAuth] Base SIWE not supported:', siweError.message);
+                        }}
+                    }}
+                    
+                    // ========================================
+                    // STRATEGY 2: Standard personal_sign [message, address]
+                    // ========================================
+                    try {{
+                        console.log('[OAuth] Trying standard personal_sign...');
+                        const signature = await window.ethereum.request({{
+                            method: 'personal_sign',
+                            params: [message, address]
+                        }});
+                        if (signature) {{
+                            console.log('[OAuth] ✅ Standard personal_sign successful!');
+                            return signature;
+                        }}
+                    }} catch (error1) {{
+                        console.log('[OAuth] Standard method failed:', error1.message);
+                        
+                        // ========================================
+                        // STRATEGY 3: Reversed personal_sign [address, message]
+                        // ========================================
+                        try {{
+                            console.log('[OAuth] Trying reversed personal_sign...');
+                            const signature = await window.ethereum.request({{
+                                method: 'personal_sign',
+                                params: [address, message]
+                            }});
+                            if (signature) {{
+                                console.log('[OAuth] ✅ Reversed personal_sign successful!');
+                                return signature;
+                            }}
+                        }} catch (error2) {{
+                            console.log('[OAuth] Reversed method failed:', error2.message);
+                            
+                            // ========================================
+                            // STRATEGY 4: Hex-encoded personal_sign
+                            // ========================================
+                            try {{
+                                console.log('[OAuth] Trying hex-encoded personal_sign...');
+                                const hexMessage = '0x' + Array.from(new TextEncoder().encode(message))
+                                    .map(b => b.toString(16).padStart(2, '0')).join('');
+                                const signature = await window.ethereum.request({{
+                                    method: 'personal_sign',
+                                    params: [hexMessage, address]
+                                }});
+                                if (signature) {{
+                                    console.log('[OAuth] ✅ Hex-encoded personal_sign successful!');
+                                    return signature;
+                                }}
+                            }} catch (error3) {{
+                                console.log('[OAuth] All signature methods failed');
+                                throw new Error(`Signature rejected: ${{error1.message}}`);
+                            }}
+                        }}
+                    }}
+                    
+                    throw new Error('No signature received');
+                }}
+                
                 async function connectWallet() {{
                     if (!window.ethereum) {{
                         showStatus('❌ No Web3 wallet found. Please install MetaMask or use a wallet browser.', 'error');
@@ -3565,11 +3710,10 @@ Issued At: ${{issuedAt}}`;
                         
                         showStatus('⏳ Please sign the message in your wallet...', 'success');
                         
-                        // Sign message
-                        const signature = await window.ethereum.request({{
-                            method: 'personal_sign',
-                            params: [messageToSign, address]
-                        }});
+                        // ========================================
+                        // ROBUST WALLET SIGNING (Multi-Strategy)
+                        // ========================================
+                        const signature = await robustWalletSign(messageToSign, address);
                         
                         showStatus('⏳ Verifying identity...', 'success');
                         
@@ -3622,6 +3766,8 @@ async def oauth_complete(req: Request):
     """
     Complete OAuth authorization after wallet signature
     
+    ✅ FIXED: Now supports Smart Contract Wallets (EIP-1271)
+    
     Request:
         {{
             "oauth_nonce": "...",
@@ -3663,19 +3809,119 @@ async def oauth_complete(req: Request):
             conn.close()
             return {"success": False, "error": "Invalid or expired authorization request"}
         
-        # Verify signature
+        # ========================================
+        # ENHANCED SIGNATURE VERIFICATION
+        # Supports: EOA, Smart Contract Wallets (EIP-1271), BASE Wallet
+        # ========================================
+        signature_valid = False
+        
+        # Detect Smart Contract Wallet signature (EIP-6492)
+        # These signatures are much longer than 65 bytes
+        is_smart_wallet_sig = len(signature) > 200 if signature else False
+        
+        log_activity("INFO", "OAUTH", f"Signature verification start", 
+                    address=address[:10],
+                    sig_length=len(signature) if signature else 0,
+                    is_smart_wallet=is_smart_wallet_sig)
+        
         try:
-            from eth_account.messages import encode_defunct
+            from eth_account.messages import encode_defunct, defunct_hash_message
             from eth_account import Account
             
-            msg = encode_defunct(text=message)
-            recovered = Account.recover_message(msg, signature=signature)
+            # ========================================
+            # SMART CONTRACT WALLET (EIP-1271) VERIFICATION
+            # Coinbase Smart Wallet, Safe, Base Wallet, etc.
+            # ========================================
+            if is_smart_wallet_sig and message and nonce in message:
+                log_activity("INFO", "OAUTH", f"Attempting EIP-1271 Smart Contract Wallet verification...")
+                try:
+                    from web3 import Web3
+                    
+                    # Connect to BASE mainnet
+                    w3 = Web3(Web3.HTTPProvider('https://mainnet.base.org'))
+                    
+                    # EIP-1271 ABI - just the isValidSignature function
+                    EIP1271_ABI = [
+                        {
+                            "inputs": [
+                                {"name": "_hash", "type": "bytes32"},
+                                {"name": "_signature", "type": "bytes"}
+                            ],
+                            "name": "isValidSignature",
+                            "outputs": [{"name": "", "type": "bytes4"}],
+                            "stateMutability": "view",
+                            "type": "function"
+                        }
+                    ]
+                    
+                    # Hash the message (EIP-191 personal sign format)
+                    message_hash = defunct_hash_message(text=message)
+                    log_activity("INFO", "OAUTH", f"Message hash: {message_hash.hex()[:20]}...")
+                    
+                    # Create contract instance
+                    wallet_contract = w3.eth.contract(
+                        address=Web3.to_checksum_address(address),
+                        abi=EIP1271_ABI
+                    )
+                    
+                    # Convert signature to bytes
+                    sig_bytes = bytes.fromhex(signature[2:]) if signature.startswith('0x') else bytes.fromhex(signature)
+                    
+                    # Call isValidSignature on the smart contract wallet
+                    try:
+                        result = wallet_contract.functions.isValidSignature(
+                            message_hash,
+                            sig_bytes
+                        ).call()
+                        
+                        # EIP-1271 magic value for valid signature
+                        MAGIC_VALUE = bytes.fromhex('1626ba7e')
+                        
+                        if result == MAGIC_VALUE:
+                            signature_valid = True
+                            log_activity("INFO", "OAUTH", f"✅ EIP-1271 Smart Contract Wallet verification SUCCESS!")
+                        else:
+                            log_activity("INFO", "OAUTH", f"EIP-1271 returned: {result.hex()} (expected 1626ba7e)")
+                    except Exception as contract_error:
+                        log_activity("INFO", "OAUTH", f"EIP-1271 contract call failed: {str(contract_error)}")
+                        
+                except Exception as eip1271_error:
+                    log_activity("INFO", "OAUTH", f"EIP-1271 verification error: {str(eip1271_error)}")
             
-            if recovered.lower() != address:
+            # ========================================
+            # STANDARD EOA SIGNATURE VERIFICATION
+            # MetaMask, Rainbow, Trust, etc.
+            # ========================================
+            if not signature_valid:
+                # If frontend sent the message, use it directly
+                if message and nonce in message:
+                    try:
+                        msg = encode_defunct(text=message)
+                        recovered = Account.recover_message(msg, signature=signature)
+                        
+                        if recovered.lower() == address:
+                            signature_valid = True
+                            log_activity("INFO", "OAUTH", f"✅ EOA signature verification SUCCESS")
+                        else:
+                            log_activity("ERROR", "OAUTH", f"Signature verification FAILED", 
+                                       address=address[:10], 
+                                       recovered=recovered[:10])
+                    except Exception as e:
+                        log_activity("ERROR", "OAUTH", f"EOA verification error: {str(e)}")
+            
+            if not signature_valid:
                 conn.close()
-                return {"success": False, "error": "Signature verification failed"}
+                return {"success": False, "error": "Signature verification failed - wallet signature invalid"}
+            
+            # 🔐 SIWE: Also verify nonce is in the message (anti-replay)
+            if message and nonce not in message:
+                conn.close()
+                log_activity("ERROR", "OAUTH", "SIWE nonce mismatch", address=address[:10])
+                return {"success": False, "error": "Nonce mismatch in SIWE message"}
+                
         except Exception as e:
             conn.close()
+            log_activity("ERROR", "OAUTH", f"Signature verification error: {str(e)}", address=address[:10])
             return {"success": False, "error": f"Signature error: {str(e)}"}
         
         # Check user exists and meets requirements
@@ -3716,7 +3962,7 @@ async def oauth_complete(req: Request):
         conn.commit()
         conn.close()
         
-        log_activity("INFO", "OAUTH", f"Authorization code generated for {address[:10]}", client_id=pending['client_id'])
+        log_activity("INFO", "OAUTH", f"✅ Authorization code generated for {address[:10]}", client_id=pending['client_id'])
         
         return {"success": True, "code": auth_code}
         

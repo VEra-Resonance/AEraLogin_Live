@@ -271,7 +271,8 @@
          * @param {Function} [options.onDeny] - Callback when access is denied
          */
         protect: async function(options = {}) {
-            const selector = options.selector || '[data-aera-protect]';
+            // Support both attribute names for flexibility
+            const selector = options.selector || '[data-aera-protect], [data-aera-protected]';
             const elements = document.querySelectorAll(selector);
             
             log(`Protecting ${elements.length} elements with selector: ${selector}`);
@@ -307,10 +308,11 @@
         },
 
         /**
-         * Auto-protect elements marked with data-aera-protect
+         * Auto-protect elements marked with data-aera-protect or data-aera-protected
          */
         autoProtect: async function() {
-            const elements = document.querySelectorAll('[data-aera-protect]');
+            // Support both attribute names for flexibility
+            const elements = document.querySelectorAll('[data-aera-protect], [data-aera-protected]');
             if (elements.length > 0) {
                 log(`Auto-protecting ${elements.length} elements`);
                 await this.protect({});

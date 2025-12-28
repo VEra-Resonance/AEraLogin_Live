@@ -614,6 +614,7 @@
             <div class="sidebar-section">
                 <h4 class="sidebar-title">Server Integration</h4>
                 <ul class="sidebar-links">
+                    <li><a href="#register-app">Register Your App</a></li>
                     <li><a href="#oauth">OAuth Flow</a></li>
                     <li><a href="#api-verify">API Verification</a></li>
                     <li><a href="#middleware">Middleware</a></li>
@@ -686,8 +687,16 @@
                 
                 <p>
                     The simplest setup requires only a few lines of code. The SDK 
-                    automatically protects all elements with the <code>data-aera-protected</code> attribute.
+                    automatically protects all elements with the <code>data-aera-protect</code> attribute.
                 </p>
+                
+                <div class="info-box">
+                    <div class="info-box-title">💡 Attribute Names</div>
+                    <p>
+                        Both <code>data-aera-protect</code> and <code>data-aera-protected</code> are supported.
+                        Use whichever fits your coding style better.
+                    </p>
+                </div>
                 
                 <div class="code-block">
                     <div class="code-header">
@@ -699,8 +708,13 @@
 <span class="keyword">&lt;div&gt;</span>This content is visible to everyone.<span class="keyword">&lt;/div&gt;</span>
 
 <span class="comment">&lt;!-- Protected Content --&gt;</span>
-<span class="keyword">&lt;div</span> <span class="property">data-aera-protected</span><span class="keyword">&gt;</span>
+<span class="keyword">&lt;div</span> <span class="property">data-aera-protect</span><span class="keyword">&gt;</span>
   Only visible to NFT holders!
+<span class="keyword">&lt;/div&gt;</span>
+
+<span class="comment">&lt;!-- Protected with minimum score --&gt;</span>
+<span class="keyword">&lt;div</span> <span class="property">data-aera-protect</span> <span class="property">data-min-score</span>=<span class="string">"50"</span><span class="keyword">&gt;</span>
+  Requires Score ≥ 50
 <span class="keyword">&lt;/div&gt;</span>
 
 <span class="comment">&lt;!-- Load and initialize SDK --&gt;</span>
@@ -957,52 +971,337 @@ AEraGate.<span class="function">on</span>(<span class="string">'error'</span>, (
                 </div>
             </section>
             
-            <!-- OAuth Flow -->
-            <section id="oauth" class="section">
-                <h2>🔑 OAuth Flow (Server-Side)</h2>
+            <!-- Register Your App -->
+            <section id="register-app" class="section">
+                <h2>📱 Register Your Application</h2>
                 <p>
-                    For server-side verification, use the OAuth 2.0 flow. 
-                    This provides maximum security as verification takes place on your server.
+                    Before using the OAuth flow, you need to register your application to get a 
+                    <code>client_id</code> and <code>client_secret</code>.
                 </p>
                 
-                <h3>1. Autorisierungs-URL</h3>
+                <div class="info-box success">
+                    <div class="info-box-title">✅ Prerequisites</div>
+                    <ul>
+                        <li>An AEra Identity NFT (mint one at <a href="/user-dashboard">AEraCore Dashboard</a>)</li>
+                        <li>Your website URL and callback URL ready</li>
+                    </ul>
+                </div>
+                
+                <h3>Option 1: Via Dashboard (Recommended)</h3>
+                <p>
+                    1. Go to <a href="/user-dashboard">AEraCore Dashboard</a><br>
+                    2. Connect your wallet and sign in<br>
+                    3. Navigate to "SDK Apps" section<br>
+                    4. Click "Register New App" and fill in the details<br>
+                    5. Copy and securely store your <code>client_id</code> and <code>client_secret</code>
+                </p>
+                
+                <h3>Option 2: Via API</h3>
+                <p>Register programmatically using a JWT token from dashboard login:</p>
                 <div class="code-block">
                     <div class="code-header">
-                        <span class="code-lang">URL</span>
+                        <span class="code-lang">HTTP Request</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code>POST https://aeralogin.com/api/oauth/my-apps/register
+Authorization: Bearer &lt;your_dashboard_jwt_token&gt;
+Content-Type: application/json
+
+{
+  "app_name": "My Awesome Website",
+  "website_url": "https://mywebsite.com",
+  "redirect_uri": "https://mywebsite.com/callback",
+  "description": "My protected web application"
+}</code>
+                    </div>
+                </div>
+                
+                <h3>Response</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JSON</span>
+                    </div>
+                    <div class="code-content">
+<code>{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"client_id"</span>: <span class="string">"aera_1a2b3c4d5e6f7g8h..."</span>,
+  <span class="string">"client_secret"</span>: <span class="string">"AbCdEfGhIjKlMnOpQrStUvWxYz..."</span>,
+  <span class="string">"message"</span>: <span class="string">"⚠️ Save your client_secret NOW! It cannot be retrieved later."</span>
+}</code>
+                    </div>
+                </div>
+                
+                <div class="info-box warning">
+                    <div class="info-box-title">⚠️ Security Notice</div>
+                    <ul>
+                        <li>The <code>client_secret</code> is shown ONLY ONCE at registration</li>
+                        <li>Store it securely (e.g., environment variables, secrets manager)</li>
+                        <li>NEVER commit secrets to version control</li>
+                        <li>If compromised, regenerate via the dashboard</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- OAuth Flow -->
+            <section id="oauth" class="section">
+                <h2>🔑 OAuth 2.0 Flow (Server-Side)</h2>
+                <p>
+                    For server-side verification, use the OAuth 2.0 Authorization Code flow. 
+                    This provides maximum security as the token exchange happens on your server
+                    with your <code>client_secret</code> (never exposed to the browser).
+                </p>
+                
+                <div class="info-box warning">
+                    <div class="info-box-title">⚠️ Important: Server-Side Required</div>
+                    <p>
+                        The <code>client_secret</code> must NEVER be used in frontend code!
+                        The Token Exchange (Step 2) must happen on your backend server.
+                    </p>
+                </div>
+                
+                <h3>OAuth Flow Overview</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Flow Diagram</span>
+                    </div>
+                    <div class="code-content">
+<code><span class="comment">┌─────────────┐         ┌─────────────┐         ┌─────────────┐</span>
+<span class="comment">│   Browser   │         │ Your Server │         │  AEraLogIn  │</span>
+<span class="comment">└──────┬──────┘         └──────┬──────┘         └──────┬──────┘</span>
+       │                       │                       │
+       │ 1. Click Login        │                       │
+       │──────────────────────>│                       │
+       │                       │                       │
+       │ 2. Redirect to AEra   │                       │
+       │<──────────────────────│                       │
+       │                       │                       │
+       │ 3. /oauth/authorize ──────────────────────────>│
+       │                       │                       │
+       │ 4. User signs with wallet                     │
+       │<──────────────────────────────────────────────│
+       │                       │                       │
+       │ 5. Redirect with ?code=xxx                    │
+       │──────────────────────>│                       │
+       │                       │                       │
+       │                       │ 6. POST /oauth/token  │
+       │                       │──────────────────────>│
+       │                       │                       │
+       │                       │ 7. access_token       │
+       │                       │<──────────────────────│
+       │                       │                       │
+       │ 8. Set session cookie │                       │
+       │<──────────────────────│                       │
+       │                       │                       │</code>
+                    </div>
+                </div>
+                
+                <h3>1. Authorization URL (Frontend)</h3>
+                <p>Redirect the user to the AEraLogIn authorization page:</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">URL Parameters</span>
                     </div>
                     <div class="code-content">
 <code>https://aeralogin.com/oauth/authorize
   ?client_id=YOUR_CLIENT_ID
   &redirect_uri=https://yoursite.com/callback
   &response_type=code
-  &state=RANDOM_STATE</code>
+  &state=RANDOM_STATE_FOR_CSRF_PROTECTION</code>
                     </div>
                 </div>
                 
-                <h3>2. Token Exchange</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Required</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>client_id</code></td>
+                                <td><span class="badge required">Required</span></td>
+                                <td>Your OAuth Client ID from the AEra Dashboard</td>
+                            </tr>
+                            <tr>
+                                <td><code>redirect_uri</code></td>
+                                <td><span class="badge required">Required</span></td>
+                                <td>Must match exactly one of your registered redirect URIs</td>
+                            </tr>
+                            <tr>
+                                <td><code>response_type</code></td>
+                                <td><span class="badge required">Required</span></td>
+                                <td>Always <code>code</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>state</code></td>
+                                <td><span class="badge optional">Recommended</span></td>
+                                <td>Random string for CSRF protection. Returned unchanged.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h3>2. Token Exchange (Server-Side) ⚠️</h3>
+                <p>After successful authentication, the user is redirected to your <code>redirect_uri</code> with a <code>code</code> parameter. Your server must exchange this for an Access Token:</p>
+                
                 <div class="code-block">
                     <div class="code-header">
-                        <span class="code-lang">JavaScript (Node.js)</span>
+                        <span class="code-lang">Node.js / Express</span>
                         <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                     </div>
                     <div class="code-content">
-<code><span class="keyword">const</span> response = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'https://aeralogin.com/oauth/token'</span>, {
-  <span class="property">method</span>: <span class="string">'POST'</span>,
-  <span class="property">headers</span>: { <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span> },
-  <span class="property">body</span>: JSON.<span class="function">stringify</span>({
-    <span class="property">grant_type</span>: <span class="string">'authorization_code'</span>,
-    <span class="property">code</span>: code,
-    <span class="property">redirect_uri</span>: <span class="string">'https://yoursite.com/callback'</span>,
-    <span class="property">client_id</span>: <span class="string">'YOUR_CLIENT_ID'</span>,
-    <span class="property">client_secret</span>: <span class="string">'YOUR_CLIENT_SECRET'</span>
-  })
-});
-
-<span class="keyword">const</span> { access_token } = <span class="keyword">await</span> response.<span class="function">json</span>();</code>
+<code><span class="comment">// Express.js callback route</span>
+app.<span class="function">get</span>(<span class="string">'/callback'</span>, <span class="keyword">async</span> (req, res) => {
+  <span class="keyword">const</span> { code, state } = req.query;
+  
+  <span class="comment">// 1. Validate state parameter (CSRF protection)</span>
+  <span class="keyword">if</span> (state !== req.session.oauthState) {
+    <span class="keyword">return</span> res.<span class="function">status</span>(<span class="number">403</span>).<span class="function">send</span>(<span class="string">'Invalid state parameter'</span>);
+  }
+  
+  <span class="comment">// 2. Exchange code for access token</span>
+  <span class="keyword">const</span> tokenResponse = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'https://aeralogin.com/oauth/token'</span>, {
+    <span class="property">method</span>: <span class="string">'POST'</span>,
+    <span class="property">headers</span>: { <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span> },
+    <span class="property">body</span>: JSON.<span class="function">stringify</span>({
+      <span class="property">grant_type</span>: <span class="string">'authorization_code'</span>,
+      <span class="property">code</span>: code,
+      <span class="property">redirect_uri</span>: <span class="string">'https://yoursite.com/callback'</span>,
+      <span class="property">client_id</span>: process.env.AERA_CLIENT_ID,
+      <span class="property">client_secret</span>: process.env.AERA_CLIENT_SECRET  <span class="comment">// ⚠️ Server-side only!</span>
+    })
+  });
+  
+  <span class="keyword">const</span> tokenData = <span class="keyword">await</span> tokenResponse.<span class="function">json</span>();
+  
+  <span class="comment">// 3. Check for errors</span>
+  <span class="keyword">if</span> (tokenData.error) {
+    <span class="keyword">return</span> res.<span class="function">status</span>(<span class="number">400</span>).<span class="function">json</span>({ error: tokenData.error_description });
+  }
+  
+  <span class="comment">// 4. Store session and redirect</span>
+  req.session.aeraToken = tokenData.access_token;
+  req.session.wallet = tokenData.wallet;
+  req.session.score = tokenData.score;
+  req.session.hasNFT = tokenData.has_nft;
+  
+  res.<span class="function">redirect</span>(<span class="string">'/dashboard'</span>);
+});</code>
                     </div>
                 </div>
                 
-                <h3>3. NFT Verification</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Python / Flask</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code><span class="keyword">import</span> requests, os
+<span class="keyword">from</span> flask <span class="keyword">import</span> Flask, request, session, redirect
+
+<span class="function">@app.route</span>(<span class="string">'/callback'</span>)
+<span class="keyword">def</span> <span class="function">oauth_callback</span>():
+    code = request.args.<span class="function">get</span>(<span class="string">'code'</span>)
+    state = request.args.<span class="function">get</span>(<span class="string">'state'</span>)
+    
+    <span class="comment"># 1. Validate state</span>
+    <span class="keyword">if</span> state != session.<span class="function">get</span>(<span class="string">'oauth_state'</span>):
+        <span class="keyword">return</span> <span class="string">'Invalid state'</span>, <span class="number">403</span>
+    
+    <span class="comment"># 2. Exchange code for token</span>
+    token_response = requests.<span class="function">post</span>(
+        <span class="string">'https://aeralogin.com/oauth/token'</span>,
+        json={
+            <span class="string">'grant_type'</span>: <span class="string">'authorization_code'</span>,
+            <span class="string">'code'</span>: code,
+            <span class="string">'redirect_uri'</span>: <span class="string">'https://yoursite.com/callback'</span>,
+            <span class="string">'client_id'</span>: os.environ[<span class="string">'AERA_CLIENT_ID'</span>],
+            <span class="string">'client_secret'</span>: os.environ[<span class="string">'AERA_CLIENT_SECRET'</span>]
+        }
+    )
+    
+    token_data = token_response.<span class="function">json</span>()
+    
+    <span class="keyword">if</span> <span class="string">'error'</span> <span class="keyword">in</span> token_data:
+        <span class="keyword">return</span> f<span class="string">"Error: {token_data['error_description']}"</span>, <span class="number">400</span>
+    
+    <span class="comment"># 3. Store in session</span>
+    session[<span class="string">'aera_token'</span>] = token_data[<span class="string">'access_token'</span>]
+    session[<span class="string">'wallet'</span>] = token_data[<span class="string">'wallet'</span>]
+    session[<span class="string">'score'</span>] = token_data[<span class="string">'score'</span>]
+    session[<span class="string">'has_nft'</span>] = token_data[<span class="string">'has_nft'</span>]
+    
+    <span class="keyword">return</span> <span class="function">redirect</span>(<span class="string">'/dashboard'</span>)</code>
+                    </div>
+                </div>
+                
+                <h3>Token Response</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JSON Response</span>
+                    </div>
+                    <div class="code-content">
+<code>{
+  <span class="string">"access_token"</span>: <span class="string">"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."</span>,
+  <span class="string">"token_type"</span>: <span class="string">"Bearer"</span>,
+  <span class="string">"expires_in"</span>: <span class="number">86400</span>,
+  <span class="string">"wallet"</span>: <span class="string">"0x1234567890abcdef1234567890abcdef12345678"</span>,
+  <span class="string">"score"</span>: <span class="number">55</span>,
+  <span class="string">"has_nft"</span>: <span class="keyword">true</span>
+}</code>
+                    </div>
+                </div>
+                
+                <h3>3. Token Verification (Optional Server-Side Check)</h3>
+                <p>You can verify a stored token at any time using the <code>/api/v1/verify</code> endpoint:</p>
+                
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Node.js - Token Verification</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-content">
+<code><span class="comment">// Verify token on each protected request</span>
+<span class="keyword">async function</span> <span class="function">verifyAeraToken</span>(accessToken) {
+  <span class="keyword">const</span> response = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'https://aeralogin.com/api/v1/verify'</span>, {
+    <span class="property">method</span>: <span class="string">'POST'</span>,
+    <span class="property">headers</span>: {
+      <span class="string">'Authorization'</span>: <span class="string">`Bearer ${accessToken}`</span>
+    }
+  });
+  
+  <span class="keyword">return</span> <span class="keyword">await</span> response.<span class="function">json</span>();
+}
+
+<span class="comment">// Usage in middleware</span>
+app.<span class="function">use</span>(<span class="string">'/protected'</span>, <span class="keyword">async</span> (req, res, next) => {
+  <span class="keyword">const</span> token = req.session.aeraToken;
+  <span class="keyword">if</span> (!token) <span class="keyword">return</span> res.<span class="function">redirect</span>(<span class="string">'/login'</span>);
+  
+  <span class="keyword">const</span> result = <span class="keyword">await</span> <span class="function">verifyAeraToken</span>(token);
+  
+  <span class="keyword">if</span> (!result.valid) {
+    <span class="keyword">delete</span> req.session.aeraToken;
+    <span class="keyword">return</span> res.<span class="function">redirect</span>(<span class="string">'/login'</span>);
+  }
+  
+  <span class="comment">// Check NFT requirement</span>
+  <span class="keyword">if</span> (!result.has_nft) {
+    <span class="keyword">return</span> res.<span class="function">status</span>(<span class="number">403</span>).<span class="function">send</span>(<span class="string">'NFT required'</span>);
+  }
+  
+  req.user = result;
+  <span class="function">next</span>();
+});</code>
+                    </div>
+                </div>
+                
+                <h3>4. NFT Verification Endpoint (Alternative)</h3>
+                <p>For additional security, you can verify NFT ownership directly with client credentials:</p>
                 <div class="code-block">
                     <div class="code-header">
                         <span class="code-lang">JavaScript (Node.js)</span>
@@ -1013,15 +1312,51 @@ AEraGate.<span class="function">on</span>(<span class="string">'error'</span>, (
   <span class="property">method</span>: <span class="string">'POST'</span>,
   <span class="property">headers</span>: { <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span> },
   <span class="property">body</span>: JSON.<span class="function">stringify</span>({
-    <span class="property">access_token</span>: access_token,
-    <span class="property">client_id</span>: <span class="string">'YOUR_CLIENT_ID'</span>,
-    <span class="property">client_secret</span>: <span class="string">'YOUR_CLIENT_SECRET'</span>
+    <span class="property">access_token</span>: accessToken,
+    <span class="property">client_id</span>: process.env.AERA_CLIENT_ID,
+    <span class="property">client_secret</span>: process.env.AERA_CLIENT_SECRET
   })
 });
 
 <span class="keyword">const</span> result = <span class="keyword">await</span> verification.<span class="function">json</span>();
 <span class="comment">// { valid: true, wallet: "0x...", has_nft: true, score: 150, chain_id: 8453 }</span></code>
                     </div>
+                </div>
+                
+                <h3>Error Handling</h3>
+                <p>Common OAuth errors and how to handle them:</p>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Error</th>
+                                <th>Description</th>
+                                <th>Solution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>invalid_client</code></td>
+                                <td>Unknown client or invalid secret</td>
+                                <td>Check your client_id and client_secret</td>
+                            </tr>
+                            <tr>
+                                <td><code>invalid_grant</code></td>
+                                <td>Authorization code expired or already used</td>
+                                <td>Code is valid for 60 seconds and single-use only</td>
+                            </tr>
+                            <tr>
+                                <td><code>unsupported_grant_type</code></td>
+                                <td>Wrong grant_type value</td>
+                                <td>Use <code>authorization_code</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>invalid_request</code></td>
+                                <td>Missing required parameters</td>
+                                <td>Include all required fields in your request</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </section>
             
