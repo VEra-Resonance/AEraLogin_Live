@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="/favicon.png?v=20251225c">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="icon" type="image/png" href="/favicon.png?v=20251229a">
     <title>AEra Gate SDK - Documentation</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -517,6 +520,274 @@
                 padding: 24px;
             }
         }
+
+        /* Mobile Optimizations for SDK Docs */
+        @media (max-width: 768px) {
+            /* Overall container padding */
+            .container {
+                padding: 1rem 3% !important;
+                grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+            }
+
+            /* Main content area */
+            .main-content {
+                padding: 0 !important;
+                max-width: 100% !important;
+            }
+
+            /* All sections */
+            .section {
+                padding: 1rem !important;
+                margin-bottom: 1.5rem !important;
+                border-radius: 12px !important;
+            }
+
+            /* Main heading */
+            h1 {
+                font-size: 1.8rem !important;
+            }
+
+            /* Section headings */
+            h2 {
+                font-size: 1.3rem !important;
+                margin-bottom: 1rem !important;
+            }
+
+            /* Sub-headings */
+            h3 {
+                font-size: 1rem !important;
+                margin: 1rem 0 0.75rem !important;
+            }
+
+            /* Paragraphs */
+            p {
+                font-size: 0.9rem !important;
+                line-height: 1.6 !important;
+            }
+
+            /* Code blocks */
+            .code-block {
+                margin: 1rem 0 !important;
+                border-radius: 8px !important;
+            }
+
+            .code-header {
+                padding: 0.75rem 1rem !important;
+            }
+
+            .code-lang {
+                font-size: 0.75rem !important;
+            }
+
+            .copy-btn {
+                font-size: 0.7rem !important;
+                padding: 5px 10px !important;
+            }
+
+            .code-content {
+                padding: 0.75rem !important;
+            }
+
+            .code-content code {
+                font-size: 0.7rem !important;
+                line-height: 1.5 !important;
+                word-break: break-word !important;
+            }
+
+            /* Tables */
+            .table-container {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                margin: 1rem -1rem !important;
+                padding: 0 1rem !important;
+            }
+
+            table {
+                font-size: 0.75rem !important;
+                min-width: 500px !important;
+            }
+
+            th, td {
+                padding: 8px 10px !important;
+                font-size: 0.75rem !important;
+            }
+
+            td code {
+                font-size: 0.7rem !important;
+                padding: 2px 6px !important;
+            }
+
+            /* Info boxes */
+            .info-box {
+                padding: 1rem !important;
+                margin: 1rem 0 !important;
+                border-radius: 8px !important;
+            }
+
+            .info-box-title {
+                font-size: 0.9rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+
+            .info-box p {
+                font-size: 0.85rem !important;
+            }
+
+            .info-box ul {
+                font-size: 0.85rem !important;
+                margin-left: 1.25rem !important;
+            }
+
+            .info-box ul li {
+                margin-bottom: 0.5rem !important;
+            }
+
+            /* Badges */
+            .badge {
+                font-size: 0.65rem !important;
+                padding: 3px 8px !important;
+            }
+
+            /* SPECIFIC TARGETING - Like landing.html */
+            
+            /* "Ready to Get Started" CTA Box - blue gradient */
+            section div[style*="background: linear-gradient"][style*="rgba(0, 82, 255"][style*="text-align: center"] {
+                padding: 1.5rem !important;
+                margin: 1.5rem 0 !important;
+            }
+
+            section div[style*="background: linear-gradient"][style*="rgba(0, 82, 255"] h2 {
+                font-size: 1.4rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+
+            section div[style*="background: linear-gradient"][style*="rgba(0, 82, 255"] p {
+                font-size: 0.9rem !important;
+                margin-bottom: 1rem !important;
+                max-width: 100% !important;
+            }
+
+            /* Buttons in CTA box */
+            section div[style*="background: linear-gradient"][style*="rgba(0, 82, 255"] div[style*="display: flex"] {
+                flex-direction: column !important;
+                gap: 0.75rem !important;
+            }
+
+            section div[style*="background: linear-gradient"][style*="rgba(0, 82, 255"] div[style*="display: flex"] a {
+                width: 100% !important;
+                justify-content: center !important;
+                padding: 0.85rem 1.5rem !important;
+                font-size: 0.9rem !important;
+                margin: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+            }
+
+            /* OAuth 2.0 Integration Box - cyan with border-left */
+            section div[style*="background: rgba(0, 212, 255"][style*="border-left: 4px solid"] {
+                padding: 1.5rem !important;
+                margin: 1.5rem 0 !important;
+            }
+
+            /* OAuth heading with icon */
+            section div[style*="border-left: 4px solid"] div[style*="display: flex"][style*="align-items: center"] {
+                flex-direction: row !important;
+                gap: 0.5rem !important;
+                margin-bottom: 1rem !important;
+            }
+
+            section div[style*="border-left: 4px solid"] div[style*="display: flex"][style*="align-items: center"] span {
+                font-size: 2rem !important;
+            }
+
+            section div[style*="border-left: 4px solid"] div[style*="display: flex"][style*="align-items: center"] h2 {
+                font-size: 1.3rem !important;
+                margin: 0 !important;
+            }
+
+            section div[style*="border-left: 4px solid"] > p {
+                font-size: 0.9rem !important;
+                margin-bottom: 1rem !important;
+            }
+
+            /* OAuth nested containers */
+            section div[style*="border-left: 4px solid"] div[style*="margin-top: 24px"] {
+                margin-top: 1.5rem !important;
+            }
+
+            section div[style*="border-left: 4px solid"] div[style*="margin-top: 24px"] h3 {
+                font-size: 1.1rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+
+            section div[style*="border-left: 4px solid"] div[style*="margin-top: 24px"] p {
+                font-size: 0.85rem !important;
+                margin-bottom: 1rem !important;
+            }
+
+            /* OAuth Demo Buttons */
+            section div[style*="border-left: 4px solid"] div[style*="display: flex"][style*="gap: 12px"] {
+                flex-direction: column !important;
+                gap: 0.75rem !important;
+            }
+
+            section div[style*="border-left: 4px solid"] div[style*="display: flex"][style*="gap: 12px"] a {
+                width: 100% !important;
+                justify-content: center !important;
+                padding: 0.75rem 1.25rem !important;
+                font-size: 0.85rem !important;
+                margin: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+            }
+
+            /* Generic styled divs with padding */
+            section div[style*="padding: 32px"] {
+                padding: 1.5rem !important;
+            }
+
+            section div[style*="padding: 24px"] {
+                padding: 1.25rem !important;
+            }
+
+            section div[style*="padding: 20px"] {
+                padding: 1rem !important;
+            }
+
+            /* All paragraphs with max-width */
+            section p[style*="max-width"] {
+                max-width: 100% !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+
+            /* All divs with max-width */
+            section div[style*="max-width"] {
+                max-width: 100% !important;
+            }
+
+            /* Generic flex containers */
+            section div[style*="display: flex"][style*="justify-content: center"] {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+
+            section div[style*="display: flex"][style*="flex-wrap: wrap"] {
+                flex-direction: column !important;
+            }
+
+            /* All inline-styled links/buttons */
+            section a[style*="padding"] {
+                padding: 0.75rem 1rem !important;
+                font-size: 0.85rem !important;
+                width: 100% !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                margin: 0.5rem 0 !important;
+            }
+        }
         
         /* Scrollbar Styling */
         ::-webkit-scrollbar {
@@ -641,6 +912,65 @@
                         <li>Automatic protection of HTML elements</li>
                         <li>Easy integration in 5 minutes</li>
                     </ul>
+                </div>
+                
+                <!-- Quick Start CTA -->
+                <div style="background: linear-gradient(135deg, rgba(0, 82, 255, 0.1), rgba(99, 102, 241, 0.15)); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 16px; padding: 32px; margin-top: 32px; text-align: center;">
+                    <h2 style="font-size: 1.8rem; margin-bottom: 16px; color: var(--light);">🎯 Ready to Get Started?</h2>
+                    <p style="max-width: 600px; margin: 0 auto 24px; font-size: 1.05rem; color: rgba(240, 244, 255, 0.9);">
+                        Integrate AEra Gate in minutes and offer your users a secure, decentralized authentication experience.
+                    </p>
+                    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                        <a href="#quick-start" style="padding: 14px 28px; font-size: 1rem; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s;">
+                            📋 View Example
+                        </a>
+                        <a href="/example-oauth/" target="_blank" rel="noopener noreferrer" style="padding: 14px 28px; font-size: 1rem; border: 2px solid var(--secondary); border-radius: 8px; color: var(--secondary); font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s;">
+                            🛡️ Try AEra Login
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- OAuth 2.0 Integration Section -->
+                <div style="background: rgba(0, 212, 255, 0.08); border: 1px solid rgba(0, 212, 255, 0.3); border-left: 4px solid var(--secondary); border-radius: 16px; padding: 32px; margin-top: 32px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <span style="font-size: 2.5rem;">🔐</span>
+                        <h2 style="font-size: 1.8rem; margin: 0; color: var(--light);">OAuth 2.0 Integration</h2>
+                    </div>
+                    <p style="font-size: 1.05rem; color: rgba(240, 244, 255, 0.9); margin-bottom: 20px; line-height: 1.7;">
+                        Enable third-party applications to authenticate users with AEraLogIn OAuth 2.0. Perfect for MiniApps, integrations, and external services.
+                    </p>
+                    
+                    <div class="info-box" style="background: rgba(99, 102, 241, 0.1); border-color: var(--accent);">
+                        <div class="info-box-title">🚀 OAuth Features</div>
+                        <ul>
+                            <li><strong>Standard OAuth 2.0 Flow:</strong> Industry-standard authorization code flow</li>
+                            <li><strong>Smart Wallet Support:</strong> Works with Coinbase Smart Wallet & BASE App</li>
+                            <li><strong>Identity NFT Verification:</strong> Automatic NFT ownership validation</li>
+                            <li><strong>Secure Sessions:</strong> JWT-based token management with configurable expiry</li>
+                            <li><strong>Developer Dashboard:</strong> Register and manage OAuth applications</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-top: 24px;">
+                        <h3 style="font-size: 1.3rem; margin-bottom: 12px; color: var(--light);">📱 Try Live Demo</h3>
+                        <p style="font-size: 0.95rem; color: rgba(240, 244, 255, 0.85); margin-bottom: 16px;">
+                            Experience OAuth authentication in action with our interactive MiniApp demo:
+                        </p>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <a href="https://aera-miniapp-demo.vercel.app/app" target="_blank" rel="noopener noreferrer" style="padding: 12px 24px; background: linear-gradient(135deg, var(--secondary), #0088cc); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s;">
+                                <span>🚀</span>
+                                <span>Open OAuth Demo App</span>
+                                <span style="font-size: 1.1rem;">↗</span>
+                            </a>
+                            <a href="/dashboard" style="padding: 12px 24px; border: 2px solid var(--secondary); border-radius: 8px; color: var(--secondary); font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s;">
+                                <span>⚙️</span>
+                                <span>Register OAuth App</span>
+                            </a>
+                        </div>
+                        <p style="font-size: 0.85rem; color: rgba(240, 244, 255, 0.6); margin-top: 12px;">
+                            ℹ️ Requires AEra Identity NFT • Full OAuth 2.0 documentation coming soon
+                        </p>
+                    </div>
                 </div>
             </section>
             
@@ -1495,23 +1825,6 @@ Authorization: Bearer &lt;aera_session_token&gt;</code>
                         For maximum security, we recommend using server-side 
                         middleware in combination with the JavaScript SDK.
                     </p>
-                </div>
-            </section>
-            
-            <!-- Footer CTA -->
-            <section class="section" style="text-align: center;">
-                <h2>🎯 Ready to Get Started?</h2>
-                <p style="max-width: 600px; margin: 0 auto 24px;">
-                    Integrate AEra Gate in minutes and offer your users 
-                    a secure, decentralized authentication experience.
-                </p>
-                <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
-                    <a href="/examples/snippets/basic-integration.html" class="nav-cta-button" style="padding: 14px 28px; font-size: 1rem;">
-                        📋 View Example
-                    </a>
-                    <a href="https://aeralogin.com/example-oauth/" target="_blank" style="padding: 14px 28px; font-size: 1rem; border: 2px solid var(--secondary); border-radius: 8px; color: var(--secondary); font-weight: 600; transition: all 0.3s;">
-                        🛡️ Try AEra Login
-                    </a>
                 </div>
             </section>
         </main>
