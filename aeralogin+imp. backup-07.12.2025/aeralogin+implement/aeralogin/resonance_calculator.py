@@ -12,27 +12,34 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def calculate_resonance_score(address: str, conn: sqlite3.Connection) -> Tuple[int, int, int, int]:
+def calculate_resonance_score(address: str, conn: sqlite3.Connection) -> Tuple[float, float, int, int]:
     """
     Calculate total resonance score for a creator
     
     Formula: Resonance = Own Score + Avg Follower Score
+    
+    With TIERED SCORING: DB stores decimal scores (e.g., 52.75)
+    Blockchain receives integer scores (floor of total_resonance)
     
     Args:
         address: User wallet address
         conn: Database connection
         
     Returns:
-        (own_score, avg_follower_score, follower_count, total_resonance)
+        (own_score, avg_follower_score, follower_count, total_resonance_for_blockchain)
+        - own_score: Float from DB
+        - avg_follower_score: Float average
+        - follower_count: Integer count
+        - total_resonance_for_blockchain: Integer (floored) for blockchain sync
     """
     try:
         address = address.lower()
         cursor = conn.cursor()
         
-        # Get own score (pending_bonus is only for DB rewards, not blockchain sync!)
+        # Get own score (now REAL/float with tiered scoring)
         cursor.execute("SELECT score FROM users WHERE address=?", (address,))
         user = cursor.fetchone()
-        own_score = user[0] if user else 0
+        own_score = float(user[0]) if user and user[0] else 0.0
         
         # Get follower stats
         cursor.execute("""
@@ -43,14 +50,16 @@ def calculate_resonance_score(address: str, conn: sqlite3.Connection) -> Tuple[i
         
         stats = cursor.fetchone()
         follower_count = stats[0] or 0
-        avg_follower_score = int(stats[1] or 0)
+        avg_follower_score = float(stats[1] or 0)
         
-        # Resonance Formula: Own Score + Avg Follower Score (no pending_bonus for blockchain!)
-        total_resonance = own_score + avg_follower_score
+        # Resonance Formula: Own Score + Avg Follower Score
+        # TIERED SCORING: DB scores are floats, blockchain gets integer (floored)
+        total_float = own_score + avg_follower_score
+        total_resonance_blockchain = int(total_float)  # Floor for blockchain
         
-        logger.info(f"📊 Resonance for {address[:10]}: {own_score} + {avg_follower_score} = {total_resonance} ({follower_count} followers)")
+        logger.info(f"📊 Resonance for {address[:10]}: {own_score:.2f} + {avg_follower_score:.2f} = {total_float:.2f} → {total_resonance_blockchain} (blockchain) ({follower_count} followers)")
         
-        return own_score, avg_follower_score, follower_count, total_resonance
+        return own_score, avg_follower_score, follower_count, total_resonance_blockchain
         
     except Exception as e:
         logger.error(f"Error calculating resonance for {address}: {e}")

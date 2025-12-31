@@ -232,7 +232,8 @@ window.BlockchainDashboard = (function() {
 
             data.interactions.forEach((interaction, index) => {
                 const typeName = (interaction.interaction_type_name || 'UNKNOWN').toUpperCase();
-                const otherAddress = interaction.initiator === address 
+                // ✅ FIX: Case-insensitive comparison to correctly identify the other party
+                const otherAddress = interaction.initiator.toLowerCase() === address.toLowerCase()
                     ? interaction.responder 
                     : interaction.initiator;
                 const timestamp = formatTimestamp(interaction.timestamp);

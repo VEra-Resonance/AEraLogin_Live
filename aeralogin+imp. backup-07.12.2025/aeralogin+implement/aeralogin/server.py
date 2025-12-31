@@ -14,6 +14,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.base import BaseHTTPMiddleware
+from typing import Optional
 import sqlite3
 import time
 import json
@@ -73,6 +74,84 @@ INITIAL_SCORE = int(os.getenv("INITIAL_SCORE", 50))
 MAX_SCORE = int(os.getenv("MAX_SCORE", 100))
 SCORE_INCREMENT = int(os.getenv("SCORE_INCREMENT", 1))
 TOKEN_SECRET = os.getenv("TOKEN_SECRET", "aera-secret-key-change-in-production")
+
+# ============================================================================
+# ===== TIERED SCORE SYSTEM - Gestaffeltes Punktesystem =====
+# ============================================================================
+# Score wächst mit abnehmender Rate je höher er ist:
+# 50-60: +1.0 pro Interaktion (10 Interaktionen für 10 Punkte)
+# 60-70: +0.5 pro Interaktion (20 Interaktionen für 10 Punkte)
+# 70-80: +0.2 pro Interaktion (50 Interaktionen für 10 Punkte)
+# 80-90: +0.1 pro Interaktion (100 Interaktionen für 10 Punkte)
+# 90-100: +0.01 pro Interaktion (1000 Interaktionen für 10 Punkte)
+# Total: ~1180 Interaktionen von 50 auf 100 (statt nur 50)
+
+TIERED_SCORE_RATES = {
+    50: 1.0,    # Score 50-59.99: +1.0 pro Interaktion
+    60: 0.5,    # Score 60-69.99: +0.5 pro Interaktion
+    70: 0.2,    # Score 70-79.99: +0.2 pro Interaktion
+    80: 0.1,    # Score 80-89.99: +0.1 pro Interaktion
+    90: 0.01,   # Score 90-99.99: +0.01 pro Interaktion
+}
+
+def calculate_tiered_points(current_score: float, interactions: int = 1) -> float:
+    """
+    Berechnet die Punkte basierend auf dem aktuellen Score (gestaffelt).
+    
+    Args:
+        current_score: Aktueller Score des Users
+        interactions: Anzahl der Interaktionen (default 1)
+    
+    Returns:
+        Die zu vergebenden Punkte (als float)
+    
+    Example:
+        Score 55 → +1.0 pro Interaktion
+        Score 65 → +0.5 pro Interaktion  
+        Score 75 → +0.2 pro Interaktion
+        Score 85 → +0.1 pro Interaktion
+        Score 95 → +0.01 pro Interaktion
+    """
+    # Bestimme die Rate basierend auf dem aktuellen Score
+    if current_score >= 90:
+        rate = TIERED_SCORE_RATES[90]
+    elif current_score >= 80:
+        rate = TIERED_SCORE_RATES[80]
+    elif current_score >= 70:
+        rate = TIERED_SCORE_RATES[70]
+    elif current_score >= 60:
+        rate = TIERED_SCORE_RATES[60]
+    else:
+        rate = TIERED_SCORE_RATES[50]
+    
+    return rate * interactions
+
+def calculate_new_score(current_score: float, interactions: int = 1) -> float:
+    """
+    Berechnet den neuen Score nach Interaktionen (mit Tier-Übergang).
+    
+    Berücksichtigt Score-Tier-Grenzen korrekt - wenn der Score
+    während der Berechnung eine Grenze überschreitet, wird 
+    die Rate entsprechend angepasst.
+    
+    Args:
+        current_score: Aktueller Score
+        interactions: Anzahl Interaktionen
+    
+    Returns:
+        Neuer Score (maximal MAX_SCORE)
+    """
+    new_score = current_score
+    
+    for _ in range(interactions):
+        points = calculate_tiered_points(new_score, 1)
+        new_score = min(new_score + points, MAX_SCORE)
+        
+        # Stop wenn MAX_SCORE erreicht
+        if new_score >= MAX_SCORE:
+            break
+    
+    return round(new_score, 2)  # Auf 2 Dezimalstellen runden
 TOKEN_EXPIRY_MINUTES = int(os.getenv("TOKEN_EXPIRY_MINUTES", 2))  # 2 Minuten Standard
 
 # Airdrop Configuration
@@ -2232,7 +2311,10 @@ async def verify(req: Request):
             # HYBRID-SYSTEM: Score erhöhen + pending_bonus aktivieren
             if is_new_login_session:
                 # Echter neuer Login: Score + pending_bonus aktivieren
-                new_score = min(user['score'] + 1 + pending_bonus, 100)
+                # TIERED SCORING: Gestaffelte Punkte basierend auf aktuellem Score
+                # Login = 1 Interaktion, pending_bonus = Anzahl Follower-Interaktionen
+                total_interactions = 1 + int(pending_bonus)  # Login + pending follower bonuses
+                new_score = calculate_new_score(user['score'], total_interactions)
                 login_count = user['login_count'] + 1
             else:
                 # Wiederholter Call innerhalb 60 Sekunden: Keine Änderung
@@ -2335,6 +2417,31 @@ async def verify(req: Request):
                                             activation="next_login")
                             except Exception as bonus_err:
                                 log_activity("WARNING", "BONUS", f"Could not add pending bonus: {str(bonus_err)}")
+                            
+                            # ===== BLOCKCHAIN: RECORD FOLLOW INTERACTION =====
+                            try:
+                                dashboard_link = f"{PUBLIC_URL}/dashboard?owner={owner_wallet}"
+                                success, result = await web3_service.record_interaction(
+                                    initiator=address,          # Follower initiates the follow
+                                    responder=owner_wallet,     # Owner receives the follow
+                                    interaction_type=0,         # 0 = FOLLOW
+                                    metadata=dashboard_link     # Dashboard link as metadata
+                                )
+                                
+                                if success:
+                                    log_activity("INFO", "BLOCKCHAIN", "✓ Follow interaction recorded on-chain",
+                                                initiator=address[:10],
+                                                responder=owner_wallet[:10],
+                                                type="FOLLOW",
+                                                tx_hash=str(result)[:20] if result else "unknown")
+                                else:
+                                    log_activity("WARNING", "BLOCKCHAIN", f"Follow interaction recording failed: {result}",
+                                                initiator=address[:10],
+                                                responder=owner_wallet[:10])
+                            except Exception as blockchain_err:
+                                log_activity("WARNING", "BLOCKCHAIN", f"Follow interaction error (non-critical): {str(blockchain_err)}",
+                                            initiator=address[:10],
+                                            responder=owner_wallet[:10])
                     except Exception as e:
                         log_activity("WARNING", "FOLLOWER", f"Could not create/update follower entry: {str(e)}")
             
@@ -2387,6 +2494,31 @@ async def verify(req: Request):
                                         activation="next_login")
                         except Exception as bonus_err:
                             log_activity("WARNING", "BONUS", f"Could not add pending bonus: {str(bonus_err)}")
+                        
+                        # ===== BLOCKCHAIN: RECORD FOLLOW INTERACTION =====
+                        try:
+                            dashboard_link = f"{PUBLIC_URL}/dashboard?owner={owner_wallet}"
+                            success, result = await web3_service.record_interaction(
+                                initiator=address,          # Follower initiates the follow
+                                responder=owner_wallet,     # Owner receives the follow
+                                interaction_type=0,         # 0 = FOLLOW
+                                metadata=dashboard_link     # Dashboard link as metadata
+                            )
+                            
+                            if success:
+                                log_activity("INFO", "BLOCKCHAIN", "✓ Follow interaction recorded on-chain (new user)",
+                                            initiator=address[:10],
+                                            responder=owner_wallet[:10],
+                                            type="FOLLOW",
+                                            tx_hash=str(result)[:20] if result else "unknown")
+                            else:
+                                log_activity("WARNING", "BLOCKCHAIN", f"Follow interaction recording failed: {result}",
+                                            initiator=address[:10],
+                                            responder=owner_wallet[:10])
+                        except Exception as blockchain_err:
+                            log_activity("WARNING", "BLOCKCHAIN", f"Follow interaction error (non-critical): {str(blockchain_err)}",
+                                        initiator=address[:10],
+                                        responder=owner_wallet[:10])
                     except Exception as e:
                         log_activity("WARNING", "FOLLOWER", f"Could not register follower: {str(e)}")
             
@@ -2920,6 +3052,390 @@ async def privacy_policy():
     """📜 Privacy Policy - GDPR Compliant"""
     with open(os.path.join(os.path.dirname(__file__), "privacy-policy.html"), "r") as f:
         return HTMLResponse(content=f.read())
+
+
+# ============================================================================
+# ===== NFT METADATA API - For Wallet Display (OpenSea, Rainbow, etc.) =====
+# ============================================================================
+
+@app.get("/api/nft/metadata/{token_id}")
+async def get_nft_metadata(token_id: int):
+    """
+    🎨 NFT Metadata Endpoint (ERC-721 Standard)
+    
+    Returns JSON metadata for AEra Identity NFT.
+    This endpoint should be set as the tokenURI base in the smart contract.
+    
+    Example: https://aeralogin.com/api/nft/metadata/10
+    
+    Response:
+        {
+            "name": "AEra Identity #10",
+            "description": "Verified human identity...",
+            "image": "https://aeralogin.com/api/nft/image/10",
+            "external_url": "https://aeralogin.com/dashboard",
+            "attributes": [
+                {"trait_type": "Resonance Score", "value": 72, "max_value": 100},
+                {"trait_type": "Followers", "value": 16},
+                ...
+            ]
+        }
+    """
+    try:
+        # Get wallet address from token ID
+        address = await get_address_from_token_id(token_id)
+        
+        if not address:
+            return {
+                "name": f"AEra Identity #{token_id}",
+                "description": "AEra Identity NFT - Verified Human on BASE",
+                "image": f"{PUBLIC_URL}/api/nft/image/{token_id}",
+                "attributes": [
+                    {"trait_type": "Status", "value": "Unknown"}
+                ]
+            }
+        
+        # Get user data from database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT score, login_count, created_at, identity_status
+            FROM users WHERE address = ?
+        """, (address.lower(),))
+        user = cursor.fetchone()
+        
+        # Get follower count
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM followers WHERE owner_wallet = ?
+        """, (address.lower(),))
+        follower_result = cursor.fetchone()
+        follower_count = follower_result['count'] if follower_result else 0
+        
+        # Get interaction count (follows made)
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM followers WHERE follower_address = ?
+        """, (address.lower(),))
+        interaction_result = cursor.fetchone()
+        interaction_count = interaction_result['count'] if interaction_result else 0
+        
+        conn.close()
+        
+        if not user:
+            return {
+                "name": f"AEra Identity #{token_id}",
+                "description": "AEra Identity NFT - Verified Human on BASE",
+                "image": f"{PUBLIC_URL}/api/nft/image/{token_id}",
+                "attributes": [
+                    {"trait_type": "Status", "value": "Inactive"}
+                ]
+            }
+        
+        # Calculate score tier
+        score = float(user['score']) if user['score'] else 50
+        if score >= 90:
+            tier = "Legendary"
+            tier_emoji = "🏆"
+        elif score >= 80:
+            tier = "Epic"
+            tier_emoji = "💎"
+        elif score >= 70:
+            tier = "Rare"
+            tier_emoji = "🌟"
+        elif score >= 60:
+            tier = "Uncommon"
+            tier_emoji = "✨"
+        else:
+            tier = "Common"
+            tier_emoji = "🌀"
+        
+        # Format join date
+        created_at = user['created_at']
+        if created_at:
+            try:
+                join_date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                member_since = join_date.strftime("%B %Y")
+            except:
+                member_since = "2025"
+        else:
+            member_since = "2025"
+        
+        return {
+            "name": f"AEra Identity #{token_id}",
+            "description": f"Verified human identity on BASE blockchain. {tier_emoji} {tier} Tier with {int(score)} Resonance Score.",
+            "image": f"{PUBLIC_URL}/api/nft/image/{token_id}",
+            "external_url": f"{PUBLIC_URL}/dashboard?owner={address}",
+            "background_color": "050814",
+            "attributes": [
+                {
+                    "trait_type": "Resonance Score",
+                    "value": int(score),
+                    "max_value": 100,
+                    "display_type": "number"
+                },
+                {
+                    "trait_type": "Tier",
+                    "value": tier
+                },
+                {
+                    "trait_type": "Followers",
+                    "value": follower_count,
+                    "display_type": "number"
+                },
+                {
+                    "trait_type": "Interactions",
+                    "value": interaction_count + follower_count,
+                    "display_type": "number"
+                },
+                {
+                    "trait_type": "Logins",
+                    "value": user['login_count'] if user['login_count'] else 1,
+                    "display_type": "number"
+                },
+                {
+                    "trait_type": "Member Since",
+                    "value": member_since
+                },
+                {
+                    "trait_type": "Status",
+                    "value": "Active" if user['identity_status'] == 'active' else "Pending"
+                },
+                {
+                    "trait_type": "Chain",
+                    "value": "BASE"
+                }
+            ]
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "NFT_METADATA", f"Error getting metadata for token {token_id}: {str(e)}")
+        return {
+            "name": f"AEra Identity #{token_id}",
+            "description": "AEra Identity NFT",
+            "image": f"{PUBLIC_URL}/api/nft/image/{token_id}",
+            "attributes": []
+        }
+
+
+@app.get("/api/nft/image/{token_id}")
+async def get_nft_image(token_id: int):
+    """
+    🎨 Dynamic NFT Image (SVG)
+    
+    Generates a beautiful SVG image showing the current Resonance Score.
+    Updates automatically when score changes!
+    
+    Returns: image/svg+xml
+    """
+    from fastapi.responses import Response
+    
+    try:
+        # Get wallet address from token ID
+        address = await get_address_from_token_id(token_id)
+        
+        score = 50
+        follower_count = 0
+        interaction_count = 0
+        tier = "Common"
+        tier_color = "#667eea"
+        
+        if address:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("SELECT score FROM users WHERE address = ?", (address.lower(),))
+            user = cursor.fetchone()
+            if user and user['score']:
+                score = int(float(user['score']))
+            
+            cursor.execute("SELECT COUNT(*) as count FROM followers WHERE owner_wallet = ?", (address.lower(),))
+            result = cursor.fetchone()
+            follower_count = result['count'] if result else 0
+            
+            cursor.execute("SELECT COUNT(*) as count FROM followers WHERE follower_address = ?", (address.lower(),))
+            result = cursor.fetchone()
+            interaction_count = result['count'] if result else 0
+            
+            conn.close()
+        
+        # Determine tier and colors
+        if score >= 90:
+            tier = "LEGENDARY"
+            tier_color = "#FFD700"
+            glow_color = "#FFD700"
+            bg_gradient = "url(#legendaryGrad)"
+        elif score >= 80:
+            tier = "EPIC"
+            tier_color = "#9B59B6"
+            glow_color = "#9B59B6"
+            bg_gradient = "url(#epicGrad)"
+        elif score >= 70:
+            tier = "RARE"
+            tier_color = "#3498DB"
+            glow_color = "#3498DB"
+            bg_gradient = "url(#rareGrad)"
+        elif score >= 60:
+            tier = "UNCOMMON"
+            tier_color = "#2ECC71"
+            glow_color = "#2ECC71"
+            bg_gradient = "url(#uncommonGrad)"
+        else:
+            tier = "COMMON"
+            tier_color = "#667eea"
+            glow_color = "#667eea"
+            bg_gradient = "url(#commonGrad)"
+        
+        # Calculate progress bar width (0-100%)
+        progress_width = min(score, 100) * 2.4  # 240px max width
+        
+        svg = f'''<?xml version="1.0" encoding="UTF-8"?>
+<svg width="350" height="350" viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background Gradients -->
+    <linearGradient id="commonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#050814"/>
+      <stop offset="100%" style="stop-color:#0a0e27"/>
+    </linearGradient>
+    <linearGradient id="uncommonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a1a0f"/>
+      <stop offset="100%" style="stop-color:#052e16"/>
+    </linearGradient>
+    <linearGradient id="rareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a1628"/>
+      <stop offset="100%" style="stop-color:#0c2445"/>
+    </linearGradient>
+    <linearGradient id="epicGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a0a28"/>
+      <stop offset="100%" style="stop-color:#2d1045"/>
+    </linearGradient>
+    <linearGradient id="legendaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1505"/>
+      <stop offset="100%" style="stop-color:#2d2408"/>
+    </linearGradient>
+    
+    <!-- Progress Bar Gradient -->
+    <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0052ff"/>
+      <stop offset="50%" style="stop-color:#00d4ff"/>
+      <stop offset="100%" style="stop-color:{tier_color}"/>
+    </linearGradient>
+    
+    <!-- Glow Effect -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="350" height="350" rx="20" fill="{bg_gradient}"/>
+  
+  <!-- Border Glow -->
+  <rect width="346" height="346" x="2" y="2" rx="18" fill="none" stroke="{tier_color}" stroke-width="2" opacity="0.5"/>
+  
+  <!-- Logo Circle -->
+  <circle cx="175" cy="80" r="40" fill="none" stroke="{tier_color}" stroke-width="2" filter="url(#glow)"/>
+  <text x="175" y="95" text-anchor="middle" font-size="40" fill="{tier_color}">🌀</text>
+  
+  <!-- Title -->
+  <text x="175" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">AEra Identity</text>
+  <text x="175" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="{tier_color}">#{token_id}</text>
+  
+  <!-- Tier Badge -->
+  <rect x="125" y="175" width="100" height="24" rx="12" fill="{tier_color}" opacity="0.2"/>
+  <text x="175" y="192" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="{tier_color}">{tier}</text>
+  
+  <!-- Score Section -->
+  <text x="175" y="230" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#888">RESONANCE SCORE</text>
+  <text x="175" y="265" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="white" filter="url(#glow)">{score}</text>
+  <text x="210" y="265" text-anchor="start" font-family="Arial, sans-serif" font-size="16" fill="#666">/100</text>
+  
+  <!-- Progress Bar -->
+  <rect x="55" y="280" width="240" height="8" rx="4" fill="#1a1a2e"/>
+  <rect x="55" y="280" width="{progress_width}" height="8" rx="4" fill="url(#progressGrad)"/>
+  
+  <!-- Stats -->
+  <text x="90" y="320" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#888">👥 {follower_count}</text>
+  <text x="90" y="335" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#555">Followers</text>
+  
+  <text x="175" y="320" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#888">⛓️ {interaction_count + follower_count}</text>
+  <text x="175" y="335" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#555">Interactions</text>
+  
+  <text x="260" y="320" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#888">✅</text>
+  <text x="260" y="335" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#555">Verified</text>
+</svg>'''
+        
+        return Response(content=svg, media_type="image/svg+xml")
+        
+    except Exception as e:
+        log_activity("ERROR", "NFT_IMAGE", f"Error generating image for token {token_id}: {str(e)}")
+        # Return a simple fallback SVG
+        fallback_svg = f'''<?xml version="1.0" encoding="UTF-8"?>
+<svg width="350" height="350" viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg">
+  <rect width="350" height="350" rx="20" fill="#050814"/>
+  <text x="175" y="175" text-anchor="middle" font-family="Arial" font-size="40" fill="#667eea">🌀</text>
+  <text x="175" y="220" text-anchor="middle" font-family="Arial" font-size="16" fill="white">AEra #{token_id}</text>
+</svg>'''
+        return Response(content=fallback_svg, media_type="image/svg+xml")
+
+
+async def get_address_from_token_id(token_id: int) -> Optional[str]:
+    """
+    Get wallet address from NFT token ID
+    
+    Uses database lookup first (fastest), then falls back to blockchain query
+    """
+    try:
+        # Method 1: Database lookup (fastest)
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT address FROM users WHERE identity_nft_token_id = ?",
+            (token_id,)
+        )
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result:
+            return result['address']
+        
+        # Method 2: Blockchain query (ownerOf)
+        try:
+            from web3 import Web3
+            
+            IDENTITY_NFT_ADDRESS = os.getenv("IDENTITY_NFT_ADDRESS", "0xF9ff5DC523927B9632049bd19e17B610E9197d53")
+            
+            w3 = Web3(Web3.HTTPProvider('https://mainnet.base.org'))
+            
+            # Minimal ABI with ownerOf
+            abi = [
+                {
+                    "inputs": [{"name": "tokenId", "type": "uint256"}],
+                    "name": "ownerOf",
+                    "outputs": [{"name": "", "type": "address"}],
+                    "stateMutability": "view",
+                    "type": "function"
+                }
+            ]
+            
+            contract = w3.eth.contract(
+                address=Web3.to_checksum_address(IDENTITY_NFT_ADDRESS),
+                abi=abi
+            )
+            
+            owner = contract.functions.ownerOf(token_id).call()
+            return owner.lower()
+            
+        except Exception as blockchain_err:
+            log_activity("WARNING", "NFT", f"Could not get owner from blockchain: {str(blockchain_err)}")
+            return None
+        
+    except Exception as e:
+        log_activity("ERROR", "NFT", f"Error getting address for token {token_id}: {str(e)}")
+        return None
 
 
 # ===== BLOCKCHAIN API ENDPOINTS =====
@@ -5037,7 +5553,7 @@ async def verify_dashboard_signature(data: dict):
                 current_score = result[2] if len(result) > 2 else INITIAL_SCORE
                 
                 # ===== SYNC YOUR SCORE FROM REGISTRY CONTRACT ON LOGIN =====
-                # Your Score = 50 (Initial) + Interaction Count
+                # Your Score = 50 (Initial) + Interaction Count + Follow Bonuses
                 try:
                     log_activity("INFO", "BLOCKCHAIN", "🔄 Reading Your Score from Registry Contract", address=owner[:10])
                     
@@ -5049,26 +5565,46 @@ async def verify_dashboard_signature(data: dict):
                     # Read interaction count from blockchain (each interaction = 1 point)
                     interaction_count = await web3_service.get_user_interaction_count(owner)
                     
-                    # Calculate total: INITIAL_SCORE (50) + interactions
-                    total_score = INITIAL_SCORE + interaction_count
+                    # Calculate base score from blockchain: INITIAL_SCORE (50) + interactions
+                    blockchain_base_score = INITIAL_SCORE + interaction_count
                     
-                    # Update score in DB if different
-                    if total_score != db_score:
+                    # Calculate follow bonuses (local points not yet on blockchain)
+                    # These are points from follow interactions that haven't been synced to blockchain yet
+                    follow_bonus = max(0, db_score - blockchain_base_score)
+                    
+                    # Total score = blockchain base + local follow bonuses
+                    total_score = blockchain_base_score + follow_bonus
+                    
+                    # Only update if blockchain shows more interactions than we have locally
+                    # This handles the case where user made onchain interactions we didn't track yet
+                    if blockchain_base_score > db_score:
+                        # User has more onchain interactions than local score
                         cursor.execute(
                             """UPDATE users SET score=? WHERE address=?""",
-                            (total_score, owner)
+                            (blockchain_base_score, owner)
                         )
                         conn.commit()
-                        log_activity("INFO", "BLOCKCHAIN", "✓ Your Score synced from Registry Contract", 
+                        log_activity("INFO", "BLOCKCHAIN", "✓ Your Score synced UP from Registry Contract", 
                                     address=owner[:10], 
                                     old_score=db_score, 
-                                    new_score=total_score,
+                                    new_score=blockchain_base_score,
                                     interactions=interaction_count)
-                        sync_status["steps_completed"].append(f"✓ Score synced: {db_score} → {total_score}")
+                        sync_status["steps_completed"].append(f"✓ Score synced UP: {db_score} → {blockchain_base_score}")
+                    elif blockchain_base_score < db_score:
+                        # Blockchain API returns fewer events than DB score
+                        # This can happen due to Blockscout API caching/indexing delays
+                        # DO NOT correct score downwards - trust the local DB
+                        log_activity("INFO", "BLOCKCHAIN", f"⚠️ Blockscout API lag detected (API: {blockchain_base_score}, DB: {db_score}) - keeping DB score", 
+                                    address=owner[:10], 
+                                    db_score=db_score, 
+                                    api_score=blockchain_base_score,
+                                    interactions=interaction_count)
+                        sync_status["steps_completed"].append(f"⚠️ Blockscout lag: API shows {blockchain_base_score}, keeping DB score {db_score}")
                     else:
-                        log_activity("INFO", "BLOCKCHAIN", "✓ Your Score already in sync", 
+                        # Score is in sync (blockchain_base_score <= db_score and we have follow bonuses)
+                        log_activity("INFO", "BLOCKCHAIN", f"✓ Your Score in sync (blockchain: {blockchain_base_score} + follow bonus: {follow_bonus} = {total_score})", 
                                     address=owner[:10], score=db_score, interactions=interaction_count)
-                        sync_status["steps_completed"].append(f"✓ Score already in sync: {db_score}")
+                        sync_status["steps_completed"].append(f"✓ Score in sync: {db_score} (base: {blockchain_base_score} + follow: {follow_bonus})")
                     
                     sync_status["score_synced"] = True
                     
@@ -5426,34 +5962,9 @@ async def confirm_follower(req: Request):
                     owner=owner[:10],
                     follower=follower[:10])
         
-        # ===== BLOCKCHAIN: RECORD INTERACTION =====
-        try:
-            # Record follow interaction on-chain (Type 0 = FOLLOW)
-            dashboard_link = f"{PUBLIC_URL}/dashboard?owner={owner}"
-            success, result = await web3_service.record_interaction(
-                initiator=follower,         # Follower initiates the follow
-                responder=owner,            # Owner receives the follow
-                interaction_type=0,         # 0 = FOLLOW
-                metadata=dashboard_link     # Dashboard link as metadata
-            )
-            
-            if success:
-                tx_hash = result
-                log_activity("INFO", "BLOCKCHAIN", "✓ Interaction recorded on-chain",
-                            initiator=follower[:10],
-                            responder=owner[:10],
-                            type="FOLLOW",
-                            tx_hash=str(tx_hash)[:20] if tx_hash else "unknown")
-            else:
-                error_msg = result
-                log_activity("WARNING", "BLOCKCHAIN", f"Interaction recording failed: {error_msg}",
-                            initiator=follower[:10],
-                            responder=owner[:10])
-        
-        except Exception as e:
-            log_activity("WARNING", "BLOCKCHAIN", f"Interaction recording error (non-critical): {str(e)}",
-                        initiator=follower[:10],
-                        responder=owner[:10])
+        # NOTE: record_interaction() is NOT called here anymore!
+        # The blockchain interaction was already recorded when the follower first followed.
+        # This endpoint only confirms an existing follow - no duplicate blockchain write needed.
         
         # ===== TRIGGER BLOCKCHAIN SCORE SYNC =====
         # After follow confirmation, check if owner's score needs blockchain sync

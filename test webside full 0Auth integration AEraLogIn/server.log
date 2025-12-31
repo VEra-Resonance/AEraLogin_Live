@@ -2368,3 +2368,4 @@ nohup: ignoring input
 [VERIFY] Token in session: False
 [VERIFY] No token in session
 127.0.0.1 - - [29/Dec/2025 07:44:16] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [29/Dec/2025 10:31:50] "[31m[1mGET /example-oauth/ HTTP/1.1[0m" 416 -
