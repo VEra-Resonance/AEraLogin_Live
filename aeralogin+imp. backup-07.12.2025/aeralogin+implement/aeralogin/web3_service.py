@@ -42,6 +42,9 @@ class Web3Service:
         self.resonance_score_address = os.getenv("RESONANCE_SCORE_ADDRESS")
         self.resonance_registry_address = os.getenv("RESONANCE_REGISTRY_ADDRESS")
         
+        # Profile NFT Contract (OPTIONAL - Public Display Layer)
+        self.profile_nft_address = os.getenv("PROFILE_NFT_ADDRESS")
+        
         # Blockscout API for event queries (BASE Sepolia uses Blockscout, not Basescan!)
         self.blockscout_api_url = os.getenv("BLOCKSCOUT_API_URL", "https://base-sepolia.blockscout.com/api/v2")
         
@@ -167,6 +170,142 @@ class Web3Service:
             }
         ]
         
+        # Profile NFT ABI (OPTIONAL - Public Display Layer with Privacy Features)
+        # Corrected ABI based on actual deployed contract
+        profile_nft_abi = [
+            {
+                "inputs": [{"internalType": "address", "name": "to", "type": "address"}],
+                "name": "mint",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+                "name": "burn",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "address", "name": "", "type": "address"}],
+                "name": "tokenOf",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "address", "name": "owner", "type": "address"}],
+                "name": "balanceOf",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+                "name": "isPublic",
+                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}, {"internalType": "bool", "name": "visibility", "type": "bool"}],
+                "name": "setVisibility",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+                "name": "bumpMetadataNonce",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+                "name": "getMetadataNonce",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "soulboundMode",
+                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+                "name": "tokenURI",
+                "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "contractURI",
+                "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "totalSupply",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "string", "name": "publicURI", "type": "string"}, {"internalType": "string", "name": "privateURI", "type": "string"}],
+                "name": "setBaseURIs",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "string", "name": "uri", "type": "string"}],
+                "name": "setContractURI",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+                "name": "getDelegate",
+                "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}, {"internalType": "address", "name": "delegate", "type": "address"}],
+                "name": "setDelegate",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "anonymous": False,
+                "inputs": [
+                    {"indexed": True, "internalType": "address", "name": "from", "type": "address"},
+                    {"indexed": True, "internalType": "address", "name": "to", "type": "address"},
+                    {"indexed": True, "internalType": "uint256", "name": "tokenId", "type": "uint256"}
+                ],
+                "name": "Transfer",
+                "type": "event"
+            },
+            {
+                "anonymous": False,
+                "inputs": [
+                    {"indexed": True, "internalType": "uint256", "name": "tokenId", "type": "uint256"},
+                    {"indexed": False, "internalType": "bool", "name": "isPublic", "type": "bool"}
+                ],
+                "name": "VisibilityChanged",
+                "type": "event"
+            }
+        ]
+        
         # Initialize contract instances
         if self.identity_nft_address:
             self.identity_nft = self.w3.eth.contract(
@@ -197,6 +336,17 @@ class Web3Service:
         else:
             logger.warning("⚠️ RESONANCE_REGISTRY_ADDRESS not set")
             self.resonance_registry = None
+        
+        # Profile NFT Contract (OPTIONAL)
+        if self.profile_nft_address:
+            self.profile_nft = self.w3.eth.contract(
+                address=Web3.to_checksum_address(self.profile_nft_address),
+                abi=profile_nft_abi
+            )
+            logger.info(f"✅ Profile NFT Contract: {self.profile_nft_address}")
+        else:
+            logger.info("ℹ️ PROFILE_NFT_ADDRESS not set (optional)")
+            self.profile_nft = None
     
     async def _get_next_nonce(self) -> int:
         """
@@ -737,6 +887,334 @@ class Web3Service:
                 "status": "disconnected",
                 "error": str(e)
             }
+
+    # ============================================
+    # PROFILE NFT FUNCTIONS (OPTIONAL - Public Display Layer)
+    # ============================================
+    
+    async def has_profile_nft(self, address: str) -> bool:
+        """Check if address has an optional Profile NFT using balanceOf"""
+        try:
+            if not self.profile_nft:
+                logger.debug("Profile NFT contract not initialized (optional)")
+                return False
+            
+            checksum_address = Web3.to_checksum_address(address)
+            # Use balanceOf - returns > 0 if user has a token
+            balance = self.profile_nft.functions.balanceOf(checksum_address).call()
+            return balance > 0
+            
+        except Exception as e:
+            logger.error(f"Error checking Profile NFT for {address}: {e}")
+            return False
+    
+    async def get_profile_token_id(self, address: str) -> Optional[int]:
+        """Get Profile NFT token ID for address using tokenOf"""
+        try:
+            if not self.profile_nft:
+                return None
+            
+            checksum_address = Web3.to_checksum_address(address)
+            # tokenOf returns 0 if no token, otherwise returns the token ID
+            token_id = self.profile_nft.functions.tokenOf(checksum_address).call()
+            
+            if token_id == 0:
+                return None
+            
+            return int(token_id)
+            
+        except Exception as e:
+            logger.error(f"Error getting Profile token ID for {address}: {e}")
+            return None
+    
+    async def get_profile_visibility(self, token_id: int) -> bool:
+        """Check if Profile NFT is PUBLIC (visible on marketplaces)"""
+        try:
+            if not self.profile_nft:
+                return False
+            
+            is_public = self.profile_nft.functions.isPublic(token_id).call()
+            return is_public
+            
+        except Exception as e:
+            logger.error(f"Error checking Profile visibility for token {token_id}: {e}")
+            return False
+    
+    async def get_profile_data(self, address: str) -> Optional[Dict[str, Any]]:
+        """Get all Profile NFT data for an address"""
+        try:
+            if not self.profile_nft:
+                return None
+            
+            checksum_address = Web3.to_checksum_address(address)
+            # Use tokenOf - returns 0 if no token
+            token_id = self.profile_nft.functions.tokenOf(checksum_address).call()
+            
+            if token_id == 0:
+                return None
+            
+            is_public = self.profile_nft.functions.isPublic(token_id).call()
+            metadata_nonce = self.profile_nft.functions.getMetadataNonce(token_id).call()
+            token_uri = self.profile_nft.functions.tokenURI(token_id).call()
+            soulbound = self.profile_nft.functions.soulboundMode().call()
+            
+            return {
+                "token_id": int(token_id),
+                "is_public": is_public,
+                "metadata_nonce": int(metadata_nonce),
+                "token_uri": token_uri,
+                "soulbound_mode": soulbound,
+                "contract_address": self.profile_nft_address
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting Profile data for {address}: {e}")
+            return None
+    
+    async def mint_profile_nft(self, address: str) -> Tuple[bool, Dict[str, Any]]:
+        """Mint a new Profile NFT for a user (USER-INITIATED ONLY!)"""
+        try:
+            if not self.profile_nft:
+                return False, {"error": "Profile NFT contract not configured"}
+            
+            if not self.account:
+                return False, {"error": "Backend wallet not configured"}
+            
+            checksum_address = Web3.to_checksum_address(address)
+            
+            # Check if user already has a token using balanceOf
+            balance = self.profile_nft.functions.balanceOf(checksum_address).call()
+            if balance > 0:
+                token_id = self.profile_nft.functions.tokenOf(checksum_address).call()
+                return False, {"error": f"User already has Profile NFT #{token_id}"}
+            
+            logger.info(f"🎨 Minting Profile NFT for {checksum_address[:10]}...")
+            
+            async with self._nonce_lock:
+                nonce = await self._get_next_nonce()
+                
+                # Build mint transaction
+                tx = self.profile_nft.functions.mint(checksum_address).build_transaction({
+                    'from': self.account.address,
+                    'nonce': nonce,
+                    'gas': 250000,
+                    'maxFeePerGas': self.w3.eth.gas_price * 2,
+                    'maxPriorityFeePerGas': self.w3.to_wei(0.001, 'gwei'),
+                    'chainId': int(os.getenv("BASE_NETWORK_CHAIN_ID", 8453))
+                })
+                
+                # Sign and send
+                signed_tx = self.account.sign_transaction(tx)
+                tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+                
+                logger.info(f"📤 Profile NFT mint TX sent: {tx_hash.hex()[:20]}...")
+                
+                # Wait for confirmation
+                receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
+                
+                if receipt['status'] != 1:
+                    return False, {"error": "Transaction failed", "tx_hash": tx_hash.hex()}
+                
+                # Extract token ID from Transfer event
+                transfer_event = self.profile_nft.events.Transfer().process_receipt(receipt)
+                if transfer_event:
+                    token_id = transfer_event[0]['args']['tokenId']
+                else:
+                    # Fallback: query directly
+                    token_id = self.profile_nft.functions.tokenOf(checksum_address).call()
+                
+                logger.info(f"✅ Profile NFT #{token_id} minted for {checksum_address[:10]}!")
+                
+                return True, {
+                    "token_id": int(token_id),
+                    "tx_hash": tx_hash.hex(),
+                    "contract_address": self.profile_nft_address
+                }
+                
+        except Exception as e:
+            logger.error(f"Error minting Profile NFT for {address}: {e}")
+            return False, {"error": str(e)}
+    
+    async def burn_profile_nft(self, token_id: int) -> Tuple[bool, Dict[str, Any]]:
+        """Burn a Profile NFT (requires MINTER_ROLE)"""
+        try:
+            if not self.profile_nft:
+                return False, {"error": "Profile NFT contract not configured"}
+            
+            if not self.account:
+                return False, {"error": "Backend wallet not configured"}
+            
+            logger.info(f"🔥 Burning Profile NFT #{token_id}...")
+            
+            async with self._nonce_lock:
+                nonce = await self._get_next_nonce()
+                
+                tx = self.profile_nft.functions.burn(token_id).build_transaction({
+                    'from': self.account.address,
+                    'nonce': nonce,
+                    'gas': 150000,
+                    'maxFeePerGas': self.w3.eth.gas_price * 2,
+                    'maxPriorityFeePerGas': self.w3.to_wei(0.001, 'gwei'),
+                    'chainId': int(os.getenv("BASE_NETWORK_CHAIN_ID", 8453))
+                })
+                
+                signed_tx = self.account.sign_transaction(tx)
+                tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+                
+                receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
+                
+                if receipt['status'] != 1:
+                    return False, {"error": "Burn transaction failed", "tx_hash": tx_hash.hex()}
+                
+                logger.info(f"✅ Profile NFT #{token_id} burned!")
+                
+                return True, {"tx_hash": tx_hash.hex()}
+                
+        except Exception as e:
+            logger.error(f"Error burning Profile NFT #{token_id}: {e}")
+            return False, {"error": str(e)}
+    
+    async def get_profile_total_supply(self) -> int:
+        """Get total number of minted Profile NFTs"""
+        try:
+            if not self.profile_nft:
+                return 0
+            
+            return self.profile_nft.functions.totalSupply().call()
+            
+        except Exception as e:
+            logger.error(f"Error getting Profile NFT total supply: {e}")
+            return 0
+    
+    async def get_profile_delegate(self, token_id: int) -> Optional[str]:
+        """Get the delegate address for a Profile NFT token"""
+        try:
+            if not self.profile_nft:
+                return None
+            
+            delegate = self.profile_nft.functions.getDelegate(token_id).call()
+            return delegate if delegate != "0x0000000000000000000000000000000000000000" else None
+            
+        except Exception as e:
+            logger.error(f"Error getting delegate for Profile NFT #{token_id}: {e}")
+            return None
+    
+    async def is_backend_delegate(self, token_id: int) -> bool:
+        """Check if the backend wallet is set as delegate for this token"""
+        try:
+            if not self.profile_nft or not self.account:
+                return False
+            
+            delegate = await self.get_profile_delegate(token_id)
+            return delegate and delegate.lower() == self.account.address.lower()
+            
+        except Exception as e:
+            logger.error(f"Error checking delegate status for Profile NFT #{token_id}: {e}")
+            return False
+    
+    async def set_profile_visibility(self, token_id: int, is_public: bool) -> Tuple[bool, Dict[str, Any]]:
+        """
+        Set visibility of a Profile NFT (PUBLIC or PRIVATE)
+        
+        Args:
+            token_id: The token ID
+            is_public: True for public, False for private
+            
+        Returns:
+            (success, result_dict)
+        """
+        try:
+            if not self.profile_nft or not self.account:
+                return False, {"error": "Profile NFT or backend wallet not configured"}
+            
+            logger.info(f"Setting visibility for Profile NFT #{token_id} to {'PUBLIC' if is_public else 'PRIVATE'}")
+            
+            # Build transaction using the backend account
+            nonce = self.w3.eth.get_transaction_count(self.account.address)
+            
+            tx = self.profile_nft.functions.setVisibility(
+                token_id,
+                is_public
+            ).build_transaction({
+                'from': self.account.address,
+                'nonce': nonce,
+                'gas': 100000,
+                'maxFeePerGas': self.w3.to_wei(0.1, 'gwei'),
+                'maxPriorityFeePerGas': self.w3.to_wei(0.05, 'gwei'),
+                'chainId': 8453  # Base Mainnet
+            })
+            
+            # Sign and send
+            signed_tx = self.account.sign_transaction(tx)
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+            
+            logger.info(f"Visibility TX sent: {tx_hash.hex()}")
+            
+            # Wait for confirmation
+            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=60)
+            
+            if receipt['status'] == 1:
+                logger.info(f"✅ Visibility set successfully for Profile NFT #{token_id}")
+                return True, {"tx_hash": tx_hash.hex(), "is_public": is_public}
+            else:
+                return False, {"error": "Transaction failed", "tx_hash": tx_hash.hex()}
+                
+        except Exception as e:
+            logger.error(f"Error setting visibility for Profile NFT #{token_id}: {e}")
+            return False, {"error": str(e)}
+    
+    async def increment_metadata_nonce(self, token_id: int) -> Tuple[bool, Dict[str, Any]]:
+        """
+        Increment the metadata nonce to force OpenSea to refresh
+        
+        This triggers EIP-4906 MetadataUpdate event.
+        
+        Args:
+            token_id: The token ID
+            
+        Returns:
+            (success, result_dict)
+        """
+        try:
+            if not self.profile_nft or not self.account:
+                return False, {"error": "Profile NFT or backend wallet not configured"}
+            
+            logger.info(f"Bumping metadata nonce for Profile NFT #{token_id}")
+            
+            # Build transaction - use bumpMetadataNonce (correct function name)
+            nonce = self.w3.eth.get_transaction_count(self.account.address)
+            
+            tx = self.profile_nft.functions.bumpMetadataNonce(
+                token_id
+            ).build_transaction({
+                'from': self.account.address,
+                'nonce': nonce,
+                'gas': 80000,
+                'maxFeePerGas': self.w3.to_wei(0.1, 'gwei'),
+                'maxPriorityFeePerGas': self.w3.to_wei(0.05, 'gwei'),
+                'chainId': 8453  # Base Mainnet
+            })
+            
+            # Sign and send
+            signed_tx = self.account.sign_transaction(tx)
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+            
+            logger.info(f"Metadata nonce TX sent: {tx_hash.hex()}")
+            
+            # Wait for confirmation
+            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=60)
+            
+            if receipt['status'] == 1:
+                # Get new nonce value
+                new_nonce = self.profile_nft.functions.getMetadataNonce(token_id).call()
+                logger.info(f"✅ Metadata nonce bumped to {new_nonce} for Profile NFT #{token_id}")
+                return True, {"tx_hash": tx_hash.hex(), "new_nonce": new_nonce}
+            else:
+                return False, {"error": "Transaction failed", "tx_hash": tx_hash.hex()}
+                
+        except Exception as e:
+            logger.error(f"Error bumping metadata nonce for Profile NFT #{token_id}: {e}")
+            return False, {"error": str(e)}
 
 
 # Global instance

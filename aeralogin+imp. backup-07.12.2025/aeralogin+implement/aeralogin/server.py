@@ -10,10 +10,11 @@ Verifies wallet addresses and manages Resonance Scores
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 from typing import Optional
 import sqlite3
 import time
@@ -152,6 +153,86 @@ def calculate_new_score(current_score: float, interactions: int = 1) -> float:
             break
     
     return round(new_score, 2)  # Auf 2 Dezimalstellen runden
+
+
+# ============================================================================
+# Helper Functions for NFT Tiers
+# ============================================================================
+
+def get_tier_name(score: float) -> str:
+    """
+    Get tier name based on Resonance Score (50-200)
+    
+    Score Composition:
+    - Base Score: 50-100 (own activities/logins)
+    - Owner Score: 0-100 (from followers' average scores)
+    - Total Resonance Score: 50-200
+    
+    Tier Thresholds:
+    - < 51: No Tier (not eligible)
+    - 51-100: Common (base level with followers)
+    - 101-130: Uncommon (growing influence)
+    - 131-160: Rare (strong community)
+    - 161-180: Epic (major influence)
+    - 181-200: Legendary (maximum resonance)
+    """
+    if score < 51:
+        return "No Tier"  # Below minimum threshold
+    elif score >= 181:
+        return "Legendary"  # 181-200
+    elif score >= 161:
+        return "Epic"       # 161-180
+    elif score >= 131:
+        return "Rare"       # 131-160
+    elif score >= 101:
+        return "Uncommon"   # 101-130
+    else:
+        return "Common"     # 51-100
+
+
+def get_tier_colors(tier: str) -> dict:
+    """Get tier-specific colors for NFT images"""
+    tier_color_map = {
+        "Legendary": {  # 181-200: Gold/Orange (Maximum Resonance)
+            "bg1": "#1a0a2e",
+            "bg2": "#2d1b4e",
+            "accent1": "#ffd700",
+            "accent2": "#ff8c00"
+        },
+        "Epic": {  # 161-180: Purple/Blue (Major Influence)
+            "bg1": "#1a0a2e", 
+            "bg2": "#2d1b4e",
+            "accent1": "#a855f7",
+            "accent2": "#6366f1"
+        },
+        "Rare": {  # 131-160: Blue/Cyan (Strong Community)
+            "bg1": "#0a1a2e",
+            "bg2": "#1b2d4e", 
+            "accent1": "#3b82f6",
+            "accent2": "#06b6d4"
+        },
+        "Uncommon": {  # 101-130: Green (Growing Influence)
+            "bg1": "#0a2e1a",
+            "bg2": "#1b4e2d",
+            "accent1": "#22c55e",
+            "accent2": "#10b981"
+        },
+        "Common": {  # 51-100: Gray/Blue (Base Level)
+            "bg1": "#0f1729",
+            "bg2": "#1a2332",
+            "accent1": "#64748b",
+            "accent2": "#475569"
+        },
+        "No Tier": {  # < 51: Dark (Below Threshold)
+            "bg1": "#050814",
+            "bg2": "#0c1628",
+            "accent1": "#334155",
+            "accent2": "#1e293b"
+        }
+    }
+    return tier_color_map.get(tier, tier_color_map["Common"])
+
+
 TOKEN_EXPIRY_MINUTES = int(os.getenv("TOKEN_EXPIRY_MINUTES", 2))  # 2 Minuten Standard
 
 # Airdrop Configuration
@@ -526,6 +607,27 @@ def init_db():
     # Migration: Add platform column if not exists
     try:
         cursor.execute("ALTER TABLE telegram_invites ADD COLUMN platform TEXT DEFAULT 'telegram'")
+    except:
+        pass  # Column already exists
+    
+    # Migration: Add Profile NFT columns (OPTIONAL - Public Display Layer)
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN profile_nft_token_id INTEGER")
+    except:
+        pass  # Column already exists
+    
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN profile_nft_visibility TEXT DEFAULT 'private'")
+    except:
+        pass  # Column already exists
+    
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN profile_nft_minted_at TEXT")
+    except:
+        pass  # Column already exists
+    
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN profile_nft_mint_tx_hash TEXT")
     except:
         pass  # Column already exists
     
@@ -3435,6 +3537,742 @@ async def get_address_from_token_id(token_id: int) -> Optional[str]:
         
     except Exception as e:
         log_activity("ERROR", "NFT", f"Error getting address for token {token_id}: {str(e)}")
+        return None
+
+
+# ============================================================================
+# ===== PROFILE NFT API - Optional Public Display Layer =====
+# ============================================================================
+
+@app.get("/api/profile-nft/status/{address}")
+async def get_profile_nft_status(address: str):
+    """
+    🎨 Get Profile NFT status for a user
+    
+    This is the OPTIONAL public display NFT, separate from Identity NFT.
+    
+    Returns:
+        {
+            "has_profile_nft": true/false,
+            "token_id": 1,
+            "is_public": false,
+            "metadata_nonce": 0,
+            "soulbound_mode": false,
+            "contract_address": "0x...",
+            "minted_at": "2024-12-31T...",
+            "backend_is_delegate": true/false  // Can backend change visibility for free?
+        }
+    """
+    try:
+        address = address.lower()
+        
+        # Check blockchain first
+        profile_data = await web3_service.get_profile_data(address)
+        
+        if profile_data:
+            # Get additional DB info
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT profile_nft_minted_at, profile_nft_mint_tx_hash FROM users WHERE address=?",
+                (address,)
+            )
+            db_result = cursor.fetchone()
+            conn.close()
+            
+            # Check if backend is delegate (for free visibility changes)
+            backend_is_delegate = await web3_service.is_backend_delegate(profile_data["token_id"])
+            
+            return {
+                "has_profile_nft": True,
+                "token_id": profile_data["token_id"],
+                "is_public": profile_data["is_public"],
+                "metadata_nonce": profile_data["metadata_nonce"],
+                "token_uri": profile_data["token_uri"],
+                "soulbound_mode": profile_data["soulbound_mode"],
+                "contract_address": profile_data["contract_address"],
+                "minted_at": db_result["profile_nft_minted_at"] if db_result else None,
+                "mint_tx_hash": db_result["profile_nft_mint_tx_hash"] if db_result else None,
+                "opensea_url": f"https://opensea.io/assets/base/{profile_data['contract_address']}/{profile_data['token_id']}",
+                "backend_is_delegate": backend_is_delegate,
+                "backend_address": os.getenv("BACKEND_ADDRESS", "0x22A2cAcB19e77D25DA063A787870A3eE6BAC8Dfe")
+            }
+        else:
+            return {
+                "has_profile_nft": False,
+                "token_id": None,
+                "is_public": None,
+                "contract_address": os.getenv("PROFILE_NFT_ADDRESS"),
+                "message": "No Profile NFT minted. This is optional.",
+                "backend_is_delegate": False,
+                "backend_address": os.getenv("BACKEND_ADDRESS", "0x22A2cAcB19e77D25DA063A787870A3eE6BAC8Dfe")
+            }
+            
+    except Exception as e:
+        log_activity("ERROR", "PROFILE_NFT", f"Error getting profile status for {address}: {str(e)}")
+        return {"error": str(e), "has_profile_nft": False}
+
+
+@app.post("/api/profile-nft/mint")
+async def mint_profile_nft(request: Request):
+    """
+    🎨 Mint a new Profile NFT (USER-INITIATED WITH WALLET SIGNATURE!)
+    
+    This is an OPTIONAL action - users can use AEra without this NFT.
+    Requires wallet signature for authorization.
+    
+    Request Body:
+        {
+            "address": "0x...",
+            "signature": "0x...",
+            "message": "...",
+            "timestamp": 1234567890
+        }
+    
+    Returns:
+        {"success": true, "token_id": 1, "tx_hash": "0x..."}
+    """
+    try:
+        data = await request.json()
+        address = data.get("address", "").lower()
+        signature = data.get("signature", "")
+        message = data.get("message", "")
+        timestamp = data.get("timestamp", 0)
+        
+        if not address:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "Address required"}
+            )
+        
+        # ===== SIGNATURE VERIFICATION =====
+        if not signature or not message:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False, 
+                    "error": "Wallet signature required",
+                    "message": "Please confirm the mint request in your wallet"
+                }
+            )
+        
+        # Verify timestamp is recent (within 5 minutes)
+        current_time = int(time.time() * 1000)
+        if abs(current_time - timestamp) > 300000:  # 5 minutes
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "Request expired. Please try again."}
+            )
+        
+        # Verify the signature matches the address
+        try:
+            from eth_account.messages import encode_defunct
+            from eth_account import Account
+            
+            encoded_message = encode_defunct(text=message)
+            recovered_address = Account.recover_message(encoded_message, signature=signature).lower()
+            
+            if recovered_address != address:
+                log_activity("WARNING", "PROFILE_NFT", f"❌ Signature mismatch: expected {address[:10]}, got {recovered_address[:10]}")
+                return JSONResponse(
+                    status_code=400,
+                    content={"success": False, "error": "Signature verification failed. Wrong wallet?"}
+                )
+            
+            log_activity("INFO", "PROFILE_NFT", f"✅ Signature verified for {address[:10]}...")
+            
+        except Exception as sig_err:
+            log_activity("ERROR", "PROFILE_NFT", f"Signature verification error: {str(sig_err)}")
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": f"Signature verification failed: {str(sig_err)}"}
+            )
+        
+        # ===== PRE-MINT CHECKS =====
+        # Verify user has Identity NFT first (prerequisite)
+        has_identity = await web3_service.has_identity_nft(address)
+        if not has_identity:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False, 
+                    "error": "Identity NFT required before minting Profile NFT"
+                }
+            )
+        
+        # Check if already has Profile NFT
+        has_profile = await web3_service.has_profile_nft(address)
+        if has_profile:
+            profile_data = await web3_service.get_profile_data(address)
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "error": f"User already has Profile NFT #{profile_data['token_id']}"
+                }
+            )
+        
+        # ===== MINT THE NFT =====
+        success, result = await web3_service.mint_profile_nft(address)
+        
+        if success:
+            # Save to database
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE users 
+                SET profile_nft_token_id=?, profile_nft_visibility='private', 
+                    profile_nft_minted_at=?, profile_nft_mint_tx_hash=?
+                WHERE address=?
+            """, (result["token_id"], datetime.utcnow().isoformat(), result["tx_hash"], address))
+            conn.commit()
+            conn.close()
+            
+            log_activity("INFO", "PROFILE_NFT", f"Minted Profile NFT #{result['token_id']} for {address[:10]}...")
+            
+            return {
+                "success": True,
+                "token_id": result["token_id"],
+                "tx_hash": result["tx_hash"],
+                "contract_address": result["contract_address"],
+                "opensea_url": f"https://opensea.io/assets/base/{result['contract_address']}/{result['token_id']}"
+            }
+        else:
+            return JSONResponse(
+                status_code=500,
+                content={"success": False, "error": result.get("error", "Unknown error")}
+            )
+            
+    except Exception as e:
+        log_activity("ERROR", "PROFILE_NFT", f"Error minting profile: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+
+@app.post("/api/profile-nft/visibility")
+async def set_profile_visibility(request: Request):
+    """
+    👁️ Set Profile NFT visibility (PUBLIC/PRIVATE)
+    
+    Privacy by default - user can opt-in to public display.
+    
+    Request Body:
+        {"address": "0x...", "is_public": true/false}
+    """
+    try:
+        data = await request.json()
+        address = data.get("address", "").lower()
+        is_public = data.get("is_public", False)
+        
+        if not address:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "Address required"}
+            )
+        
+        # Get token ID first
+        profile_data = await web3_service.get_profile_data(address)
+        if not profile_data:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "No Profile NFT found for this address"}
+            )
+        
+        token_id = profile_data["token_id"]
+        
+        # Set visibility on-chain
+        success, result = await web3_service.set_profile_visibility(token_id, is_public)
+        
+        if success:
+            # Update database
+            visibility_str = "public" if is_public else "private"
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE users 
+                SET profile_nft_visibility=?
+                WHERE address=?
+            """, (visibility_str, address))
+            conn.commit()
+            conn.close()
+            
+            log_activity("INFO", "PROFILE_NFT", f"Set visibility to {visibility_str} for token #{token_id}")
+            
+            return {
+                "success": True,
+                "token_id": token_id,
+                "is_public": is_public,
+                "visibility": visibility_str,
+                "tx_hash": result.get("tx_hash")
+            }
+        else:
+            return JSONResponse(
+                status_code=500,
+                content={"success": False, "error": result.get("error", "Unknown error")}
+            )
+            
+    except Exception as e:
+        log_activity("ERROR", "PROFILE_NFT", f"Error setting visibility: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+
+@app.post("/api/profile-nft/refresh")
+async def refresh_profile_metadata(request: Request):
+    """
+    🔄 Refresh Profile NFT metadata
+    
+    Increments the metadata nonce to force OpenSea/marketplaces to refresh.
+    Uses EIP-4906 MetadataUpdate event.
+    
+    Request Body:
+        {"address": "0x..."}
+    """
+    try:
+        data = await request.json()
+        address = data.get("address", "").lower()
+        
+        if not address:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "Address required"}
+            )
+        
+        # Get token ID first
+        profile_data = await web3_service.get_profile_data(address)
+        if not profile_data:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "No Profile NFT found for this address"}
+            )
+        
+        token_id = profile_data["token_id"]
+        
+        # Increment metadata nonce on-chain
+        success, result = await web3_service.increment_metadata_nonce(token_id)
+        
+        if success:
+            log_activity("INFO", "PROFILE_NFT", f"Refreshed metadata for token #{token_id}")
+            
+            return {
+                "success": True,
+                "token_id": token_id,
+                "new_nonce": result.get("new_nonce"),
+                "tx_hash": result.get("tx_hash"),
+                "message": "Metadata refresh requested. OpenSea will update within 1-24 hours."
+            }
+        else:
+            return JSONResponse(
+                status_code=500,
+                content={"success": False, "error": result.get("error", "Unknown error")}
+            )
+            
+    except Exception as e:
+        log_activity("ERROR", "PROFILE_NFT", f"Error refreshing metadata: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+
+@app.post("/api/profile-nft/burn")
+async def burn_profile_nft(request: Request):
+    """
+    🔥 Burn a Profile NFT (removes it completely)
+    
+    This is a destructive action! User can re-mint later.
+    
+    Request Body:
+        {"address": "0x..."}
+    """
+    try:
+        data = await request.json()
+        address = data.get("address", "").lower()
+        
+        if not address:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "Address required"}
+            )
+        
+        # Get token ID first
+        profile_data = await web3_service.get_profile_data(address)
+        if not profile_data:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "No Profile NFT to burn"}
+            )
+        
+        token_id = profile_data["token_id"]
+        
+        # Burn the NFT
+        success, result = await web3_service.burn_profile_nft(token_id)
+        
+        if success:
+            # Update database
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE users 
+                SET profile_nft_token_id=NULL, profile_nft_visibility=NULL, 
+                    profile_nft_minted_at=NULL, profile_nft_mint_tx_hash=NULL
+                WHERE address=?
+            """, (address,))
+            conn.commit()
+            conn.close()
+            
+            log_activity("INFO", "PROFILE_NFT", f"Burned Profile NFT #{token_id} for {address[:10]}...")
+            
+            return {
+                "success": True,
+                "burned_token_id": token_id,
+                "tx_hash": result["tx_hash"]
+            }
+        else:
+            return JSONResponse(
+                status_code=500,
+                content={"success": False, "error": result.get("error", "Unknown error")}
+            )
+            
+    except Exception as e:
+        log_activity("ERROR", "PROFILE_NFT", f"Error burning profile: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+
+@app.get("/api/profile-nft/total-supply")
+async def get_profile_nft_total_supply():
+    """📊 Get total number of minted Profile NFTs"""
+    try:
+        total = await web3_service.get_profile_total_supply()
+        return {
+            "total_supply": total,
+            "contract_address": os.getenv("PROFILE_NFT_ADDRESS")
+        }
+    except Exception as e:
+        return {"error": str(e), "total_supply": 0}
+
+
+# ============================================================================
+# ===== PROFILE NFT METADATA ENDPOINTS - For OpenSea/Marketplaces =====
+# ============================================================================
+
+# Support both /api/profile/public/1 and /api/profile/public/1.json
+@app.get("/api/profile/public/{token_id}.json")
+@app.get("/api/profile/public/{token_id}")
+async def get_profile_public_metadata(token_id: int):
+    """
+    🌐 Public Profile NFT Metadata
+    
+    Returns full metadata when visibility is PUBLIC.
+    """
+    try:
+        # Get owner address from token ID
+        address = await get_profile_address_from_token_id(token_id)
+        if not address:
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Token not found"}
+            )
+        
+        # Check visibility
+        is_public = await web3_service.get_profile_visibility(token_id)
+        if not is_public:
+            # Redirect to private endpoint
+            return await get_profile_private_metadata(token_id)
+        
+        # Get user data from DB
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT score, blockchain_score, login_count, created_at, display_name
+            FROM users WHERE address=?
+        """, (address,))
+        user = cursor.fetchone()
+        
+        # Get follower count
+        cursor.execute("SELECT COUNT(*) FROM followers WHERE owner_wallet=?", (address,))
+        follower_count = cursor.fetchone()[0] or 0
+        conn.close()
+        
+        if not user:
+            return JSONResponse(status_code=404, content={"error": "User not found"})
+        
+        # Use blockchain_score if available, otherwise fallback to DB score
+        blockchain_score = user['blockchain_score'] or user['score'] or 50
+        db_score = user['score'] or 50
+        tier = get_tier_name(blockchain_score)
+        display_name = user['display_name'] or f"AEra User"
+        
+        # Calculate owner score (blockchain - db = pending score from owned followers)
+        owner_score = blockchain_score - db_score if blockchain_score > db_score else 0
+        
+        attributes = [
+            {"trait_type": "Token ID", "value": token_id, "display_type": "number"},
+            {"trait_type": "Visibility", "value": "Public"},
+            {"trait_type": "Tier", "value": tier},
+            {"trait_type": "Resonance Score", "value": blockchain_score, "display_type": "number"},
+            {"trait_type": "Followers", "value": follower_count, "display_type": "number"},
+            {"trait_type": "Logins", "value": user['login_count'] or 0, "display_type": "number"},
+            {"trait_type": "Member Since", "value": int(datetime.fromisoformat(user['created_at']).timestamp()) if user['created_at'] else 0, "display_type": "date"}
+        ]
+        
+        # Add Owner Score if user has earned from followers
+        if owner_score > 0:
+            attributes.insert(4, {"trait_type": "Owner Score", "value": owner_score, "display_type": "number"})
+        
+        return {
+            "name": f"AEra Profile #{token_id}",
+            "description": f"Public AEra Profile for {display_name}. Verified on-chain identity with Resonance Score {blockchain_score}.",
+            "image": f"https://aeralogin.com/api/profile/image/{token_id}",
+            "external_url": f"https://aeralogin.com/profile/{address}",
+            "attributes": attributes
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "PROFILE_NFT", f"Error getting public metadata for {token_id}: {str(e)}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+# Handle double-slash issue from contract URI construction
+@app.get("/api/profile/private//{token_id}.json")
+async def get_profile_private_metadata_double_slash(token_id: int):
+    """Redirect from double-slash URL"""
+    return await get_profile_private_metadata(token_id)
+
+@app.get("/api/profile/public//{token_id}.json")
+async def get_profile_public_metadata_double_slash(token_id: int):
+    """Redirect from double-slash URL"""
+    return await get_profile_public_metadata(token_id)
+
+
+# Support both /api/profile/private/1 and /api/profile/private/1.json
+@app.get("/api/profile/private/{token_id}.json")
+@app.get("/api/profile/private/{token_id}")
+async def get_profile_private_metadata(token_id: int):
+    """
+    🔒 Private Profile NFT Metadata
+    
+    Returns minimal placeholder when visibility is PRIVATE.
+    """
+    try:
+        return {
+            "name": f"AEra Profile #{token_id}",
+            "description": "Private AEra Profile NFT. Owner has chosen to keep details private.",
+            "image": "https://aeralogin.com/api/profile/image/private",
+            "external_url": "https://aeralogin.com",
+            "attributes": [
+                {"trait_type": "Visibility", "value": "Private"}
+            ]
+        }
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.get("/api/profile/contract.json")
+async def get_profile_contract_metadata():
+    """
+    📄 Profile NFT Collection Metadata (OpenSea Collection Info)
+    """
+    return {
+        "name": "AEra Profile",
+        "description": "Official AEra Profile NFT Collection with Privacy Features. Each NFT represents a verified on-chain identity with user-controlled visibility settings.",
+        "image": "https://aeralogin.com/favicon.png",
+        "external_link": "https://aeralogin.com",
+        "seller_fee_basis_points": 0,
+        "fee_recipient": ""
+    }
+
+
+@app.get("/api/profile/image/{token_id}")
+async def get_profile_image(token_id: str):
+    """
+    🎨 Dynamic Profile NFT Image (SVG)
+    
+    Generates a custom SVG based on user's profile data.
+    """
+    try:
+        # Special case: private placeholder
+        if token_id == "private":
+            svg = '''<?xml version="1.0" encoding="UTF-8"?>
+<svg width="350" height="350" viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+  </defs>
+  <rect width="350" height="350" rx="20" fill="url(#bgGrad)"/>
+  <text x="175" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="60" fill="#667eea">🔒</text>
+  <text x="175" y="210" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="white">Private Profile</text>
+  <text x="175" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#888">AEra Identity</text>
+</svg>'''
+            return Response(content=svg, media_type="image/svg+xml")
+        
+        # Convert to int
+        token_id_int = int(token_id)
+        
+        # Get owner address
+        address = await get_profile_address_from_token_id(token_id_int)
+        if not address:
+            # Return private placeholder directly (no recursion)
+            return Response(content=get_private_placeholder_svg(), media_type="image/svg+xml")
+        
+        # Check visibility
+        is_public = await web3_service.get_profile_visibility(token_id_int)
+        if not is_public:
+            # Return private placeholder directly (no recursion)
+            return Response(content=get_private_placeholder_svg(), media_type="image/svg+xml")
+        
+        # Get user data
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT score, blockchain_score, display_name FROM users WHERE address=?
+        """, (address,))
+        user = cursor.fetchone()
+        
+        cursor.execute("SELECT COUNT(*) FROM followers WHERE owner_wallet=?", (address,))
+        follower_count = cursor.fetchone()[0] or 0
+        conn.close()
+        
+        # Use blockchain score if available, otherwise fallback to DB score
+        blockchain_score = user['blockchain_score'] or user['score'] or 50 if user else 50
+        db_score = user['score'] or 50 if user else 50
+        display_name = user['display_name'] or f"AEra User" if user else "AEra User"
+        tier = get_tier_name(blockchain_score)
+        tier_colors = get_tier_colors(tier)
+        
+        # Calculate owner score
+        owner_score = blockchain_score - db_score if blockchain_score > db_score else 0
+        
+        short_addr = f"{address[:6]}...{address[-4:]}"
+        
+        svg = f'''<?xml version="1.0" encoding="UTF-8"?>
+<svg width="350" height="350" viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:{tier_colors['bg1']}"/>
+      <stop offset="100%" style="stop-color:{tier_colors['bg2']}"/>
+    </linearGradient>
+    <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:{tier_colors['accent1']}"/>
+      <stop offset="100%" style="stop-color:{tier_colors['accent2']}"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="350" height="350" rx="20" fill="url(#bgGrad)"/>
+  
+  <!-- Border -->
+  <rect x="10" y="10" width="330" height="330" rx="15" fill="none" stroke="url(#scoreGrad)" stroke-width="2" opacity="0.5"/>
+  
+  <!-- Token ID Badge (Top Right) -->
+  <rect x="280" y="20" width="50" height="24" rx="12" fill="url(#scoreGrad)" opacity="0.8"/>
+  <text x="305" y="37" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white" font-weight="bold">#{token_id_int}</text>
+  
+  <!-- Profile Icon -->
+  <circle cx="175" cy="90" r="40" fill="url(#scoreGrad)" opacity="0.3"/>
+  <text x="175" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="40" fill="white">🌀</text>
+  
+  <!-- Display Name -->
+  <text x="175" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="white" font-weight="bold">{display_name[:20]}</text>
+  
+  <!-- Address -->
+  <text x="175" y="185" text-anchor="middle" font-family="monospace" font-size="12" fill="#888">{short_addr}</text>
+  
+  <!-- Tier Badge -->
+  <rect x="120" y="200" width="110" height="28" rx="14" fill="url(#scoreGrad)"/>
+  <text x="175" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="white" font-weight="bold">{tier}</text>
+  
+  <!-- Score -->
+  <text x="175" y="270" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" fill="url(#scoreGrad)" font-weight="bold">{int(blockchain_score)}</text>
+  <text x="175" y="295" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#888">Resonance Score</text>
+  
+  <!-- Followers -->
+  <text x="175" y="330" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#666">👥 {follower_count} Followers</text>
+</svg>'''
+        
+        return Response(content=svg, media_type="image/svg+xml")
+        
+    except Exception as e:
+        log_activity("ERROR", "PROFILE_NFT", f"Error generating profile image: {str(e)}")
+        # Return private placeholder on error (no recursion)
+        return Response(content=get_private_placeholder_svg(), media_type="image/svg+xml")
+
+
+def get_private_placeholder_svg() -> str:
+    """Returns the SVG content for a private profile placeholder"""
+    return '''<?xml version="1.0" encoding="UTF-8"?>
+<svg width="350" height="350" viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+  </defs>
+  <rect width="350" height="350" rx="20" fill="url(#bgGrad)"/>
+  <text x="175" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="60" fill="#667eea">🔒</text>
+  <text x="175" y="210" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="white">Private Profile</text>
+  <text x="175" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#888">AEra Identity</text>
+</svg>'''
+
+
+async def get_profile_address_from_token_id(token_id: int) -> Optional[str]:
+    """Get wallet address from Profile NFT token ID"""
+    try:
+        # Method 1: Database lookup
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT address FROM users WHERE profile_nft_token_id = ?",
+            (token_id,)
+        )
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result:
+            return result['address']
+        
+        # Method 2: Blockchain query (ownerOf)
+        try:
+            from web3 import Web3
+            
+            PROFILE_NFT_ADDRESS = os.getenv("PROFILE_NFT_ADDRESS")
+            if not PROFILE_NFT_ADDRESS:
+                return None
+            
+            w3 = Web3(Web3.HTTPProvider('https://mainnet.base.org'))
+            
+            abi = [
+                {
+                    "inputs": [{"name": "tokenId", "type": "uint256"}],
+                    "name": "ownerOf",
+                    "outputs": [{"name": "", "type": "address"}],
+                    "stateMutability": "view",
+                    "type": "function"
+                }
+            ]
+            
+            contract = w3.eth.contract(
+                address=Web3.to_checksum_address(PROFILE_NFT_ADDRESS),
+                abi=abi
+            )
+            
+            owner = contract.functions.ownerOf(token_id).call()
+            return owner.lower()
+            
+        except Exception:
+            return None
+        
+    except Exception as e:
+        log_activity("ERROR", "PROFILE_NFT", f"Error getting address for profile token {token_id}: {str(e)}")
         return None
 
 
