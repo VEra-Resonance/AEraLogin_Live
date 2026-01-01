@@ -833,6 +833,74 @@ Licensed under the Apache License, Version 2.0
         .opensea-link:hover {
             background: rgba(32, 129, 226, 0.3);
         }
+
+        /* ===== CTA Button Styles (matching landing.html / dashboard.html) ===== */
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: white;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .cta-button:active {
+            transform: translateY(-1px);
+        }
+
+        .cta-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Secondary Button (for Refresh Metadata) */
+        .cta-secondary-small {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.85rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            box-shadow: 0 4px 16px rgba(0, 82, 255, 0.3);
+        }
+
+        .cta-secondary-small:hover {
+            box-shadow: 0 6px 24px rgba(0, 82, 255, 0.4);
+        }
+
+        /* Danger Button (for Remove NFT) */
+        .cta-danger-small {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.85rem;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+        }
+
+        .cta-danger-small:hover {
+            box-shadow: 0 6px 24px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Success Button (for Enable Free Toggle) */
+        .cta-success-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            background: linear-gradient(135deg, var(--success), #059669);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .cta-success-small:hover {
+            box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -1006,12 +1074,12 @@ Licensed under the Apache License, Version 2.0
                         <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
                             <div style="font-size: 1.2rem;">💡</div>
                             <div style="flex: 1;">
-                                <div style="font-weight: 600; font-size: 0.85rem; color: var(--success);">Tipp: Kostenlose Umschaltung aktivieren</div>
+                                <div style="font-weight: 600; font-size: 0.85rem; color: var(--success);">Tip: Enable Free Toggle</div>
                                 <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem;">
-                                    Einmalig (~$0.001): Erlaube AEra, deine Visibility kostenlos zu ändern.
+                                    One-time (~$0.001): Allow AEra to change your visibility for free.
                                 </div>
-                                <button class="profile-nft-btn" id="setupDelegateBtn" onclick="setupBackendDelegate()" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; margin-top: 0.5rem; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.3);">
-                                    <span class="btn-icon">⚡</span> Kostenlos aktivieren
+                                <button class="cta-button cta-success-small" id="setupDelegateBtn" onclick="setupBackendDelegate()">
+                                    ⚡ Enable Free Toggle
                                 </button>
                             </div>
                         </div>
@@ -1019,11 +1087,11 @@ Licensed under the Apache License, Version 2.0
 
                     <!-- Action Buttons -->
                     <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
-                        <button class="profile-nft-btn secondary-btn" onclick="refreshMetadata()">
-                            <span class="btn-icon">🔄</span> Refresh Metadata
+                        <button class="cta-button cta-secondary-small" onclick="refreshMetadata()">
+                            🔄 Refresh Metadata
                         </button>
-                        <button class="profile-nft-btn danger-btn" onclick="confirmBurnNft()">
-                            <span class="btn-icon">🔥</span> Remove NFT
+                        <button class="cta-button cta-danger-small" onclick="confirmBurnNft()">
+                            🔥 Remove NFT
                         </button>
                     </div>
                 </div>
@@ -1310,10 +1378,10 @@ Licensed under the Apache License, Version 2.0
                     if (delegateNotice) {
                         if (data.backend_is_delegate) {
                             delegateNotice.style.display = 'none';
-                            if (toggleHint) toggleHint.textContent = '✅ Kostenlos umschalten (Delegate aktiv)';
+                            if (toggleHint) toggleHint.textContent = '✅ Free toggle (Delegate active)';
                         } else {
                             delegateNotice.style.display = 'block';
-                            if (toggleHint) toggleHint.textContent = '💳 Du bezahlst Gas (~$0.001 pro Änderung)';
+                            if (toggleHint) toggleHint.textContent = '💳 You pay gas (~$0.001 per change)';
                         }
                     }
                     
