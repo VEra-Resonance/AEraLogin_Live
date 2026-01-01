@@ -823,6 +823,94 @@ Licensed under the Apache License, Version 2.0
             gap: 8px;
         }
         
+        /* Feed Items */
+        .feed-item {
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .feed-item:hover {
+            border-color: var(--secondary);
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .feed-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .feed-item-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--light);
+        }
+
+        .feed-item-timestamp {
+            font-size: 0.75rem;
+            color: var(--light);
+            opacity: 0.5;
+        }
+
+        .feed-item-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.5rem;
+        }
+
+        .badge-update {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .badge-security {
+            background: rgba(0, 82, 255, 0.2);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .badge-integration {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+            border: 1px solid #a855f7;
+        }
+
+        .feed-item-content {
+            color: var(--light);
+            opacity: 0.8;
+            line-height: 1.6;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .feed-item-link {
+            color: var(--secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .feed-item-link:hover {
+            gap: 0.75rem;
+            color: var(--primary);
+        }
+        
         /* Animations */
         @keyframes fadeInUp {
             from {
@@ -907,6 +995,42 @@ Licensed under the Apache License, Version 2.0
                 padding: 12px 16px;
                 font-size: 12px;
             }
+            
+            /* Feed Items Mobile */
+            .feed-item {
+                padding: 1rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .feed-item-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .feed-item-title {
+                font-size: 0.9rem;
+            }
+            
+            .feed-item-timestamp {
+                font-size: 0.7rem;
+                order: 2;
+            }
+            
+            .feed-item-badge {
+                font-size: 0.6rem;
+                padding: 0.2rem 0.6rem;
+                margin-top: 0.25rem;
+            }
+            
+            .feed-item-content {
+                font-size: 0.85rem;
+                line-height: 1.5;
+            }
+            
+            .feed-item-link {
+                font-size: 0.8rem;
+            }
         }
 
         /* Desktop: Always show nav, hide mobile elements */
@@ -947,9 +1071,6 @@ Licensed under the Apache License, Version 2.0
             <span>AEraLogIn</span>
         </div>
         <nav>
-            <a onclick="scrollToSection('stats')">Stats</a>
-            <a onclick="scrollToSection('followers')">Followers</a>
-            <a onclick="scrollToSection('blockchain')">Blockchain</a>
             <a onclick="navigateToCore()">AEra Core</a>
             <a href="/">Home</a>
         </nav>
@@ -962,9 +1083,6 @@ Licensed under the Apache License, Version 2.0
 
     <!-- Mobile Navigation (outside header for proper z-index stacking) -->
     <nav class="mobile-menu" id="mobileMenu">
-        <a onclick="scrollToSection('stats'); closeMenu();">Stats</a>
-        <a onclick="scrollToSection('followers'); closeMenu();">Followers</a>
-        <a onclick="scrollToSection('blockchain'); closeMenu();">Blockchain</a>
         <a onclick="navigateToCore(); closeMenu();">AEra Core</a>
         <a href="/">Home</a>
     </nav>
@@ -982,23 +1100,25 @@ Licensed under the Apache License, Version 2.0
         </div>
         
         <div class="owner-section">
-            <h2>💼 Dashboard - Your Account - Connect Wallet</h2>
+            <h2>🌀 Your Account - Connect Wallet</h2>
             <div class="input-group">
                 <input type="text" id="ownerInput" placeholder="Enter your wallet address (0x...)" value="">
                 <button id="metamaskBtn" onclick="connectMetaMask()" style="background: linear-gradient(135deg, var(--primary), var(--accent));">
                     🔗 Connect Web3 Wallet
                 </button>
-                <button onclick="loadDashboard()">Load Dashboard</button>
+                <button id="disconnectBtn" onclick="disconnectWallet()" style="display: none; background: linear-gradient(135deg, var(--primary), var(--accent));">
+                    🔌 Disconnect
+                </button>
             </div>
             <div id="statusMessage"></div>
-            <div style="margin-top: 10px; padding: 12px; background: #f0f0f0; border-radius: 6px; font-size: 12px; color: #666; display: none;" id="walletInfo">
+            <div id="walletInfo" style="display: none;">
                 <span id="walletAddress"></span>
-                <button onclick="disconnectWallet()" style="float: right; padding: 4px 8px; font-size: 11px;">Disconnect</button>
             </div>
         </div>
         
-        <!-- Follower Link Generation (ALWAYS VISIBLE) -->
-        <div class="owner-section">
+        <!-- ===== FOLLOWER LINK, NFT-GATED GROUP & SDK SECTIONS - HIDDEN (moved to user-dashboard) ===== -->
+        <div class="owner-section" style="display: none !important;">
+            <!-- Follower Link Generation (ALWAYS VISIBLE) -->
             <h2>📤 Share Your Follower Link</h2>
             <div class="link-section">
                 <p>Generate a custom link to share with your followers on social media</p>
@@ -1094,7 +1214,7 @@ Licensed under the Apache License, Version 2.0
         </div>
         
         <!-- ===== SDK APP REGISTRATION SECTION ===== -->
-        <div class="owner-section" id="sdkAppsSection">
+        <div class="owner-section" id="sdkAppsSection" style="display: none !important;">
             <h2>🔧 SDK Integration - Register Your Website</h2>
             <div class="link-section">
                 <p>Register your website to use AEra Gate authentication. Get your Client ID and Secret to integrate NFT-gated access on any website.</p>
@@ -1159,6 +1279,7 @@ Licensed under the Apache License, Version 2.0
                 </div>
             </div>
         </div>
+        <!-- ===== END HIDDEN SECTIONS ===== -->
         
         <div id="dashboardContent" style="display: none;">
             <!-- Owner Stats -->
@@ -1251,7 +1372,21 @@ Licensed under the Apache License, Version 2.0
                 </div>
             </div>
         </div>
-    </div>
+    
+        <!-- Latest Updates Feed - Shown after wallet connection -->
+        <div class="owner-section" id="latestUpdatesSection" style="display: none;">
+            <h2>📰 Latest Updates</h2>
+            <p style="font-size: 13px; opacity: 0.7; margin-bottom: 15px;">Project news & updates</p>
+            <div id="feedContent" class="collapsible-content">
+                <div id="feedContainer">
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        <div class="loading"></div> Loading updates...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- End of .container -->
     
     <!-- Blockchain Dashboard Integration - MUST load before inline scripts -->
     <script src="blockchain-dashboard.js?v=20251204-2"></script>
@@ -1259,6 +1394,93 @@ Licensed under the Apache License, Version 2.0
     <script>
         // ✅ Define API_BASE globally
         const API_BASE = window.location.origin || 'http://localhost:8840';
+        
+        // Project Update Feed Data
+        const feedData = [
+            {
+                id: 1,
+                title: "AEra Gate SDK Infrastructure Live",
+                badge: "integration",
+                timestamp: "Dec 20, 2025",
+                content: "Complete SDK infrastructure deployed: New server endpoints for authentication and NFT verification added, comprehensive SDK documentation portal launched at /sdk-docs with integration guides and code examples, developer resources including basic-integration demo with live authentication testing available.",
+                link: "/sdk-docs"
+            },
+            {
+                id: 2,
+                title: "Android Intent-Bridge Live",
+                badge: "integration",
+                timestamp: "Dec 19, 2025",
+                content: "AEra now supports direct Telegram access from Android wallet browsers including MetaMask Mobile, Base Wallet, and Trust Wallet.",
+                link: null
+            },
+            {
+                id: 3,
+                title: "EIP-1271 Smart Contract Wallet Support",
+                badge: "security",
+                timestamp: "Dec 18, 2025",
+                content: "Added full support for Smart Contract Wallets including Base Wallet and Coinbase Smart Wallet signature verification via isValidSignature().",
+                link: null
+            },
+            {
+                id: 4,
+                title: "iOS Universal Links Enabled",
+                badge: "update",
+                timestamp: "Dec 17, 2025",
+                content: "Improved iOS Telegram integration with Universal Links support for seamless deep linking from wallet browsers.",
+                link: null
+            },
+            {
+                id: 5,
+                title: "Multi-Wallet Signature Support",
+                badge: "update",
+                timestamp: "Dec 15, 2025",
+                content: "AEra supports signature verification across MetaMask, Rainbow, Trust Wallet, Base Wallet, and Coinbase Wallet with automatic fallback strategies.",
+                link: null
+            },
+            {
+                id: 6,
+                title: "BASE Mainnet Deployment",
+                badge: "integration",
+                timestamp: "Dec 10, 2025",
+                content: "AEra Identity NFT and Resonance Registry contracts are now live on BASE Mainnet (Chain ID: 8453).",
+                link: null
+            }
+        ];
+        
+        // Load Feed Function
+        function loadFeed() {
+            console.log('📰 Loading feed...');
+            
+            const feedContainer = document.getElementById('feedContainer');
+            if (!feedContainer) return;
+            
+            if (feedData.length === 0) {
+                feedContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: rgba(240, 244, 255, 0.5);">
+                        <div style="font-size: 2rem; margin-bottom: 10px;">📭</div>
+                        <div>No updates yet. Check back soon!</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Render feed items
+            feedContainer.innerHTML = feedData.map(item => `
+                <div class="feed-item">
+                    <div class="feed-item-header">
+                        <div>
+                            <div class="feed-item-title">${item.title}</div>
+                            <span class="feed-item-badge badge-${item.badge}">${item.badge.toUpperCase()}</span>
+                        </div>
+                        <div class="feed-item-timestamp">${item.timestamp}</div>
+                    </div>
+                    <div class="feed-item-content">${item.content}</div>
+                    ${item.link ? `<a href="${item.link}" class="feed-item-link">Learn more →</a>` : ''}
+                </div>
+            `).join('');
+            
+            console.log('✅ Feed loaded');
+        }
         
         async function loadDashboard() {
             const owner = document.getElementById('ownerInput').value.toLowerCase().trim();
@@ -1347,6 +1569,8 @@ Licensed under the Apache License, Version 2.0
                 `;
                 // ✅ Show dashboard even with 0 followers - user is registered and has NFT
                 document.getElementById('dashboardContent').style.display = 'block';
+                // Load the feed
+                loadFeed();
                 return;
             }
             
@@ -1384,6 +1608,9 @@ Licensed under the Apache License, Version 2.0
             
             // Show dashboard
             document.getElementById('dashboardContent').style.display = 'block';
+            
+            // Load the feed
+            loadFeed();
         }
         
         async function generateLink() {
@@ -1461,8 +1688,8 @@ Licensed under the Apache License, Version 2.0
                         `;
                         
                         // Pre-fill form with current config
-                        document.getElementById('telegramGroupName').value = statsData.group_name || '';
-                        document.getElementById('telegramInviteLink').value = statsData.telegram_link || '';
+                        document.getElementById('privateGroupName').value = statsData.group_name || '';
+                        document.getElementById('privateGroupInviteLink').value = statsData.telegram_link || '';
                     } else {
                         groupInfoDiv.innerHTML = `
                             <strong style="color: #f59e0b;">⚠️ No Telegram group configured yet</strong><br>
@@ -1906,8 +2133,15 @@ Issued At: ${issuedAt}`;
                 walletInfo.style.display = 'block';
                 document.getElementById('walletAddress').innerHTML = 
                     `✓ Connected: <strong>${walletAddress.substring(0, 10)}...${walletAddress.substring(38)}</strong>`;
-                // 🎯 Do NOT auto-load dashboard - user must click "Load Dashboard" button
-                // But now loadDashboard() will NOT need wallet signature confirmation
+                
+                // 🎯 Toggle buttons: Hide Connect, Show Disconnect
+                document.getElementById('metamaskBtn').style.display = 'none';
+                document.getElementById('disconnectBtn').style.display = 'inline-block';
+                
+                // 📰 Show and load the Latest Updates feed immediately
+                document.getElementById('latestUpdatesSection').style.display = 'block';
+                loadFeed();
+                
             } catch (error) {
                 console.error('❌ Error in connectMetaMask:', error);
                 console.error('❌ Error details:', {
@@ -1937,6 +2171,13 @@ Issued At: ${issuedAt}`;
             document.getElementById('statusMessage').innerHTML = '';
             dashboardToken = null;
             connectedWallet = null;
+            
+            // 🎯 Toggle buttons: Show Connect, Hide Disconnect
+            document.getElementById('metamaskBtn').style.display = 'inline-block';
+            document.getElementById('disconnectBtn').style.display = 'none';
+            
+            // 📰 Hide the Latest Updates feed
+            document.getElementById('latestUpdatesSection').style.display = 'none';
             
             // Clear sessionStorage for AEra Core access
             sessionStorage.removeItem('aeraDashboardWallet');

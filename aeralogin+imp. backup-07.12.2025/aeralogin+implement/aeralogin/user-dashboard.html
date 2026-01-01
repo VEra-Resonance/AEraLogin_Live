@@ -267,7 +267,7 @@ Licensed under the Apache License, Version 2.0
 
         /* Main Container */
         .main-container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
             position: relative;
@@ -313,6 +313,12 @@ Licensed under the Apache License, Version 2.0
             border: 1px solid rgba(99, 102, 241, 0.2);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
             margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 15px 50px rgba(0, 82, 255, 0.2);
         }
 
         /* Profile Section */
@@ -379,15 +385,23 @@ Licensed under the Apache License, Version 2.0
             opacity: 0.6;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 0.5rem;
+            margin-top: 0.5rem;
         }
 
         .stat-value {
             font-size: 1.5rem;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--light);
+            line-height: 1.3;
+        }
+
+        .stat-value a {
+            color: var(--secondary);
+            text-decoration: none;
+        }
+
+        .stat-value a:hover {
+            text-decoration: underline;
         }
 
         /* Section Title */
@@ -901,6 +915,153 @@ Licensed under the Apache License, Version 2.0
         .cta-success-small:hover {
             box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
         }
+
+        /* ===== Link Display Styles ===== */
+        .link-display {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* ===== Filter Button Styles ===== */
+        .filter-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: var(--light);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--accent);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* ===== Collapse Button Styles ===== */
+        .collapse-btn {
+            padding: 6px 12px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: var(--light);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .collapse-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .collapse-btn.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        /* ===== Collapsible Content ===== */
+        .collapsible-content {
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0;
+        }
+
+        /* ===== Table Styles ===== */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .data-table th {
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tbody tr {
+            transition: background 0.3s;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* ===== Score Badge ===== */
+        .score-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        /* ===== Platform Badge ===== */
+        .platform-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: var(--secondary);
+        }
+
+        /* ===== BaseScan Link ===== */
+        .basescan-link {
+            color: var(--secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s;
+        }
+
+        .basescan-link:hover {
+            color: var(--primary);
+        }
+
+        /* ===== Responsive Adjustments for New Sections ===== */
+        @media (max-width: 768px) {
+            .filter-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filter-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .data-table {
+                font-size: 0.75rem;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px 6px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -953,7 +1114,7 @@ Licensed under the Apache License, Version 2.0
             </div>
         </div>
 
-        <!-- Profile Section -->
+        <!-- Profile Section - TEMPORARILY HIDDEN
         <div class="card" id="profileSection">
             <div class="profile-header">
                 <div class="profile-avatar">👤</div>
@@ -982,11 +1143,61 @@ Licensed under the Apache License, Version 2.0
                 </div>
             </div>
         </div>
+        END TEMPORARILY HIDDEN -->
+
+        <!-- ===== OWNER STATS SECTION ===== -->
+        <div class="card" id="ownerStatsSection">
+            <div class="section-title" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                <span style="font-size: 1.5rem;" id="statsAvatar">👤</span>
+                <div>
+                    <span id="statsProfileName" style="font-size: 1.25rem;">Builder</span>
+                    <span id="statsProfileAddress" style="font-size: 0.8rem; opacity: 0.6; font-family: 'Courier New', monospace; display: block;">Loading...</span>
+                </div>
+            </div>
+            <div class="stats-grid" id="ownerStats">
+                <div class="stat-card">
+                    <div class="stat-value" id="followerCount">0</div>
+                    <div class="stat-label">Verified Followers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avgScore">0</div>
+                    <div class="stat-label">Average Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="yourScore">0</div>
+                    <div class="stat-label">Your Score</div>
+                </div>
+            </div>
+            
+            <!-- Blockchain Stats -->
+            <div class="stats-grid" style="margin-top: 16px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="identityStatus"><span class="spinner"></span></div>
+                    <div class="stat-label">Identity NFT Status</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="blockchainScore"><span class="spinner"></span></div>
+                    <div class="stat-label">Blockchain Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="syncStatus"><span class="spinner"></span></div>
+                    <div class="stat-label">Sync Status</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="blockchainHealth"><span class="spinner"></span></div>
+                    <div class="stat-label">Blockchain Health</div>
+                </div>
+            </div>
+        </div>
 
         <!-- ===== OPTIONAL PROFILE NFT SECTION ===== -->
         <div class="card" id="profileNftSection">
-            <h3 class="section-title">🎨 Optional Identity Display NFT</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 class="section-title" style="margin-bottom: 0;">🎨 Optional Identity Display NFT</h3>
+                <button class="collapse-btn collapsed" onclick="toggleCollapse('profileNftContent')">▼</button>
+            </div>
             
+            <div id="profileNftContent" class="collapsible-content collapsed">
             <!-- Explanation Banner -->
             <div class="profile-nft-info" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem;">
                 <p style="font-size: 0.9rem; opacity: 0.8; margin: 0;">
@@ -1105,9 +1316,225 @@ Licensed under the Apache License, Version 2.0
                     <div style="font-size: 0.85rem; opacity: 0.7;">This may take a few seconds</div>
                 </div>
             </div>
+            </div>
         </div>
 
-        <!-- Living Feed Section -->
+        <!-- ===== FOLLOWER LINK GENERATION SECTION ===== -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 class="section-title" style="margin-bottom: 0;">📤 Share Your Follower Link</h3>
+                <button class="collapse-btn collapsed" onclick="toggleCollapse('followerLinkContent')">▼</button>
+            </div>
+            <p style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 1rem;">Generate a custom link to share with your followers on social media</p>
+            
+            <div id="followerLinkContent" class="collapsible-content collapsed">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Select Platform:</label>
+                        <select id="platformSelect" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                            <option value="direct">⚡ Direct Link</option>
+                            <option value="twitter">𝕏 X / Twitter</option>
+                            <option value="reddit">🤖 Reddit</option>
+                            <option value="telegram">✈️ Telegram</option>
+                            <option value="discord">💬 Discord</option>
+                            <option value="signal">🔒 Signal</option>
+                            <option value="slack">💬 Slack</option>
+                            <option value="farcaster">🎭 Farcaster</option>
+                            <option value="whatsapp">💚 WhatsApp</option>
+                            <option value="vk">🐻 VK</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button class="cta-button cta-secondary-small" onclick="generateLink()" style="width: 100%;">Generate Link</button>
+                    </div>
+                </div>
+                <div class="link-display" id="linkDisplay" style="display: none;">
+                    <input type="text" id="generatedLink" readonly style="flex: 1; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                    <button class="cta-button cta-success-small" onclick="copyToClipboard()">Copy</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== NFT-GATED GROUP LINK SECTION ===== -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 class="section-title" style="margin-bottom: 0;">🔐 Your NFT-Gated Group Link</h3>
+                <button class="collapse-btn collapsed" onclick="toggleCollapse('nftGatedContent')">▼</button>
+            </div>
+            <p style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 1rem;">Create platform-specific NFT-gated links for your private communities</p>
+            
+            <div id="nftGatedContent" class="collapsible-content collapsed">
+            <div style="margin-bottom: 20px; padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--secondary);">🔧 Configure Your Private Group</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Select Platform:</label>
+                        <select id="gateplatformSelect" onchange="showPlatformWarning()" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                            <optgroup label="⭐ Recommended for NFT-Gating">
+                                <option value="telegram">✈️ Telegram (Best for communities)</option>
+                                <option value="discord">💬 Discord (Ideal for Web3)</option>
+                                <option value="signal">🔒 Signal (Privacy-focused)</option>
+                            </optgroup>
+                            <optgroup label="✅ Also Supported">
+                                <option value="slack">💬 Slack (Professional)</option>
+                                <option value="farcaster">🎭 Farcaster (Web3-native)</option>
+                                <option value="vk">🐻 VK</option>
+                            </optgroup>
+                            <optgroup label="⚠️ Limited Support">
+                                <option value="whatsapp">💚 WhatsApp (Max 1024 members)</option>
+                            </optgroup>
+                        </select>
+                        <div id="platformWarning" style="display: none; margin-top: 8px; padding: 8px; background: rgba(255, 165, 0, 0.1); border-left: 3px solid #FFA500; border-radius: 4px; font-size: 11px; color: #FFA500;"></div>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Group Name (optional):</label>
+                        <input type="text" id="privateGroupName" placeholder="My Private Group" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Group Invite Link:</label>
+                        <input type="text" id="privateGroupInviteLink" placeholder="https://..." style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                    </div>
+                </div>
+                <button class="cta-button cta-secondary-small" onclick="savePrivateGroup()" style="width: 100%;">💾 Save Group Configuration</button>
+                <div id="privateGroupConfigStatus" style="margin-top: 8px; font-size: 12px; display: none;"></div>
+            </div>
+            
+            <!-- Generate & Share Link -->
+            <div style="margin-bottom: 15px;">
+                <button class="cta-button cta-secondary-small" onclick="generateGateLink()" style="width: 100%;">🔐 Generate NFT-Gated Link</button>
+            </div>
+            <div class="link-display" id="gateLinkDisplay" style="display: none;">
+                <input type="text" id="generatedGateLink" readonly style="flex: 1; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                <button class="cta-button cta-success-small" onclick="copyGateLink()">Copy</button>
+            </div>
+            <div id="gateStats" style="margin-top: 16px; padding: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; display: none;">
+                <p style="font-size: 13px; color: rgba(240, 244, 255, 0.7); margin: 0;">
+                    <strong style="color: var(--secondary);">Access Statistics:</strong> 
+                    <span id="gateInviteCount">0</span> users joined via your link
+                    <span id="gateGroupInfo" style="display: block; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.15);"></span>
+                </p>
+            </div>
+            </div>
+        </div>
+
+        <!-- ===== SDK INTEGRATION SECTION ===== -->
+        <div class="card" id="sdkAppsSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 class="section-title" style="margin-bottom: 0;">🔧 SDK Integration - Register Your Website</h3>
+                <button class="collapse-btn collapsed" onclick="toggleCollapse('sdkContent')">▼</button>
+            </div>
+            <p style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 1rem;">Register your website to use AEra Gate authentication. Get your Client ID and Secret to integrate NFT-gated access on any website.</p>
+            
+            <div id="sdkContent" class="collapsible-content collapsed">
+                <!-- Register New App Form -->
+                <div style="margin-bottom: 20px; padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                    <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--secondary);">➕ Register New Website</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">App Name *</label>
+                            <input type="text" id="sdkAppName" placeholder="My Awesome Website" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Website URL *</label>
+                            <input type="text" id="sdkWebsiteUrl" placeholder="https://yourwebsite.com" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                        </div>
+                    </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Redirect URI *</label>
+                        <input type="text" id="sdkRedirectUri" placeholder="https://yourwebsite.com/callback" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Description (optional)</label>
+                        <input type="text" id="sdkAppDescription" placeholder="Brief description of your app" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                    </div>
+                </div>
+                <button class="cta-button cta-secondary-small" onclick="registerSdkApp()" style="width: 100%;">🚀 Register App & Get Credentials</button>
+                <div id="registerAppStatus" style="margin-top: 10px; display: none;"></div>
+            </div>
+            
+            <!-- New Credentials Display (shown after registration) -->
+            <div id="newCredentialsDisplay" style="display: none; margin-bottom: 20px; padding: 16px; background: rgba(16, 185, 129, 0.1); border: 2px solid var(--success); border-radius: 8px;">
+                <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--success);">✅ App Registered Successfully!</h4>
+                <div style="background: rgba(5, 8, 20, 0.8); padding: 12px; border-radius: 6px; margin-bottom: 10px;">
+                    <div style="margin-bottom: 8px;">
+                        <label style="font-size: 11px; color: rgba(240, 244, 255, 0.6); display: block;">CLIENT ID:</label>
+                        <code id="newClientId" style="font-size: 13px; color: var(--secondary); word-break: break-all;"></code>
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; color: rgba(240, 244, 255, 0.6); display: block;">CLIENT SECRET:</label>
+                        <code id="newClientSecret" style="font-size: 13px; color: #f59e0b; word-break: break-all;"></code>
+                    </div>
+                </div>
+                <p style="font-size: 12px; color: #f59e0b; margin: 0;">⚠️ <strong>IMPORTANT:</strong> Copy your Client Secret NOW! It will NOT be shown again.</p>
+                <button class="cta-button cta-success-small" onclick="copyCredentials()" style="margin-top: 10px;">📋 Copy Both to Clipboard</button>
+            </div>
+            
+            <!-- My Apps List -->
+            <div id="myAppsSection" style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h4 style="margin: 0; font-size: 14px; color: var(--secondary);">📱 My Registered Apps</h4>
+                    <button class="cta-button cta-secondary-small" onclick="loadMyApps()" style="padding: 5px 10px; font-size: 11px;">🔄 Refresh</button>
+                </div>
+                <div id="myAppsList" style="display: grid; gap: 12px;">
+                    <div style="text-align: center; padding: 30px; color: rgba(240, 244, 255, 0.5);">
+                        <p>Loading your registered apps...</p>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- ===== FOLLOWERS TABLE SECTION ===== -->
+        <div class="card" id="followersSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 class="section-title" style="margin-bottom: 0;">🌀 Your Followers</h3>
+                <button class="collapse-btn collapsed" onclick="toggleCollapse('followersTable')">▼</button>
+            </div>
+            <p id="followerCount2" style="font-size: 0.85rem; opacity: 0.7; margin-bottom: 1rem;">0 verified followers</p>
+            
+            <!-- Platform Filter -->
+            <div class="filter-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem;">
+                <span style="font-size: 12px; color: var(--light); opacity: 0.7; margin-right: 8px;">Filter by Platform:</span>
+                <button class="filter-btn active" data-platform="all" onclick="filterByPlatform('all')">All</button>
+                <button class="filter-btn" data-platform="twitter" onclick="filterByPlatform('twitter')">🐦 Twitter</button>
+                <button class="filter-btn" data-platform="telegram" onclick="filterByPlatform('telegram')">✈️ Telegram</button>
+                <button class="filter-btn" data-platform="discord" onclick="filterByPlatform('discord')">🎮 Discord</button>
+                <button class="filter-btn" data-platform="facebook" onclick="filterByPlatform('facebook')">👍 Facebook</button>
+                <button class="filter-btn" data-platform="reddit" onclick="filterByPlatform('reddit')">🤖 Reddit</button>
+                <button class="filter-btn" data-platform="direct" onclick="filterByPlatform('direct')">🔗 Direct</button>
+            </div>
+            
+            <!-- Followers Table -->
+            <div id="followersTable" class="collapsible-content collapsed">
+                <div id="followersContainer">
+                    <div style="text-align: center; padding: 40px; color: rgba(240, 244, 255, 0.5);">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 10px;">Loading followers...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== BLOCKCHAIN INTERACTION HISTORY SECTION ===== -->
+        <div class="card" id="interactionHistorySection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 class="section-title" style="margin-bottom: 0;">⛓️ Blockchain Interaction History</h3>
+                <button class="collapse-btn collapsed" onclick="toggleCollapse('interactionsTable')">▼</button>
+            </div>
+            <p id="interactionCount" style="font-size: 0.85rem; opacity: 0.7; margin-bottom: 1rem;">Loading...</p>
+            
+            <div id="interactionsTable" class="collapsible-content collapsed">
+                <div id="interactionsContainer">
+                    <div style="text-align: center; padding: 40px; color: rgba(240, 244, 255, 0.5);">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 10px;">Loading blockchain data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Living Feed Section - AUSKOMMENTIERT
         <div class="card">
             <h3 class="section-title">📰 Latest Updates</h3>
             <div id="feedContainer">
@@ -1117,6 +1544,7 @@ Licensed under the Apache License, Version 2.0
                 </div>
             </div>
         </div>
+        -->
 
     </div>
 
@@ -1730,6 +2158,713 @@ Licensed under the Apache License, Version 2.0
         }
 
         // ========================================
+        // FOLLOWER LINK FUNCTIONS
+        // ========================================
+        async function generateLink() {
+            const platform = document.getElementById('platformSelect').value;
+            const linkDisplay = document.getElementById('linkDisplay');
+            const linkInput = document.getElementById('generatedLink');
+            
+            if (!connectedWallet) {
+                alert('Please connect your wallet first');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/follower-link?owner=${connectedWallet}&source=${platform}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error);
+                }
+                
+                linkInput.value = data.follower_link;
+                linkDisplay.style.display = 'flex';
+                
+            } catch (error) {
+                alert('Error generating link: ' + error.message);
+            }
+        }
+        
+        function copyToClipboard() {
+            const linkInput = document.getElementById('generatedLink');
+            linkInput.select();
+            document.execCommand('copy');
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Copied!';
+            setTimeout(() => btn.textContent = originalText, 2000);
+        }
+
+        // ========================================
+        // NFT-GATED LINK FUNCTIONS
+        // ========================================
+        async function generateGateLink() {
+            const linkDisplay = document.getElementById('gateLinkDisplay');
+            const linkInput = document.getElementById('generatedGateLink');
+            const statsDiv = document.getElementById('gateStats');
+            
+            if (!connectedWallet) {
+                alert('Please connect your wallet first');
+                return;
+            }
+            
+            try {
+                const baseUrl = window.location.origin;
+                const gateLink = `${baseUrl}/join-telegram?owner=${connectedWallet}`;
+                
+                linkInput.value = gateLink;
+                linkDisplay.style.display = 'flex';
+                
+                // Fetch Gate Statistics from Backend
+                const statsResponse = await fetch(`${API_BASE}/api/telegram-gate/stats/${connectedWallet}`);
+                const statsData = await statsResponse.json();
+                
+                if (statsData.success) {
+                    document.getElementById('gateInviteCount').textContent = statsData.invite_count;
+                    
+                    const groupInfoDiv = document.getElementById('gateGroupInfo');
+                    if (statsData.has_configured_group) {
+                        groupInfoDiv.innerHTML = `
+                            <strong>🔗 Your Group:</strong> 
+                            ${statsData.group_name || 'Unnamed Group'}<br>
+                            <span style="font-size: 11px; opacity: 0.7;">${statsData.telegram_link}</span>
+                        `;
+                        
+                        document.getElementById('privateGroupName').value = statsData.group_name || '';
+                        document.getElementById('privateGroupInviteLink').value = statsData.telegram_link || '';
+                    } else {
+                        groupInfoDiv.innerHTML = `
+                            <strong style="color: #f59e0b;">⚠️ No group configured yet</strong><br>
+                            <span style="font-size: 11px;">Configure your group above to start using this gate link</span>
+                        `;
+                    }
+                    
+                    statsDiv.style.display = 'block';
+                } else {
+                    statsDiv.style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('Error generating gate link:', error);
+                linkDisplay.style.display = 'flex';
+            }
+        }
+        
+        function showPlatformWarning() {
+            const platform = document.getElementById('gateplatformSelect').value;
+            const warningDiv = document.getElementById('platformWarning');
+            
+            const warnings = {
+                'whatsapp': '⚠️ WhatsApp groups are limited to 1024 members maximum. Consider Telegram or Discord for larger communities.',
+                'farcaster': 'ℹ️ Farcaster is a decentralized social network. Make sure your community is familiar with Web3 platforms.',
+                'slack': 'ℹ️ Slack is great for professional communities but requires a workspace setup.'
+            };
+            
+            if (warnings[platform]) {
+                warningDiv.textContent = warnings[platform];
+                warningDiv.style.display = 'block';
+            } else {
+                warningDiv.style.display = 'none';
+            }
+        }
+        
+        async function savePrivateGroup() {
+            const platform = document.getElementById('gateplatformSelect').value;
+            const groupName = document.getElementById('privateGroupName').value.trim();
+            const inviteLink = document.getElementById('privateGroupInviteLink').value.trim();
+            const statusDiv = document.getElementById('privateGroupConfigStatus');
+            
+            if (!connectedWallet) {
+                alert('Please connect your wallet first');
+                return;
+            }
+            
+            if (!inviteLink || !inviteLink.startsWith('https://')) {
+                statusDiv.textContent = '❌ Invalid invite link. Must start with https://';
+                statusDiv.style.color = '#ef4444';
+                statusDiv.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/telegram-gate/set-group`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        owner: connectedWallet,
+                        telegram_link: inviteLink,
+                        group_name: groupName || `${platform} Group`,
+                        platform: platform
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    statusDiv.textContent = '✅ Group configured successfully!';
+                    statusDiv.style.color = '#10b981';
+                    statusDiv.style.display = 'block';
+                    
+                    setTimeout(() => generateGateLink(), 500);
+                } else {
+                    statusDiv.textContent = '❌ ' + (data.error || 'Failed to save configuration');
+                    statusDiv.style.color = '#ef4444';
+                    statusDiv.style.display = 'block';
+                }
+                
+            } catch (error) {
+                console.error('Error saving private group:', error);
+                statusDiv.textContent = '❌ Failed to save: ' + error.message;
+                statusDiv.style.color = '#ef4444';
+                statusDiv.style.display = 'block';
+            }
+        }
+        
+        function copyGateLink() {
+            const linkInput = document.getElementById('generatedGateLink');
+            linkInput.select();
+            document.execCommand('copy');
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Copied!';
+            setTimeout(() => btn.textContent = originalText, 2000);
+        }
+
+        // ========================================
+        // SDK APP MANAGEMENT FUNCTIONS
+        // ========================================
+        function getAuthToken() {
+            return localStorage.getItem('aera_jwt_token');
+        }
+        
+        async function registerSdkApp() {
+            const statusDiv = document.getElementById('registerAppStatus');
+            const appName = document.getElementById('sdkAppName').value.trim();
+            const websiteUrl = document.getElementById('sdkWebsiteUrl').value.trim();
+            const redirectUri = document.getElementById('sdkRedirectUri').value.trim();
+            const description = document.getElementById('sdkAppDescription').value.trim();
+            
+            if (!appName || appName.length < 3) {
+                statusDiv.innerHTML = '<div style="color: #ef4444;">❌ App name must be at least 3 characters</div>';
+                statusDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!websiteUrl || !websiteUrl.startsWith('http')) {
+                statusDiv.innerHTML = '<div style="color: #ef4444;">❌ Valid website URL required (https://...)</div>';
+                statusDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!redirectUri || !redirectUri.startsWith('http')) {
+                statusDiv.innerHTML = '<div style="color: #ef4444;">❌ Valid redirect URI required (https://...)</div>';
+                statusDiv.style.display = 'block';
+                return;
+            }
+            
+            const token = getAuthToken();
+            if (!token) {
+                statusDiv.innerHTML = '<div style="color: #ef4444;">❌ Please connect your wallet first and ensure you have an AEra NFT</div>';
+                statusDiv.style.display = 'block';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<div style="color: var(--secondary);">⏳ Registering your app...</div>';
+            statusDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/oauth/my-apps/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        app_name: appName,
+                        website_url: websiteUrl,
+                        redirect_uri: redirectUri,
+                        description: description
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('newClientId').textContent = data.client_id;
+                    document.getElementById('newClientSecret').textContent = data.client_secret;
+                    document.getElementById('newCredentialsDisplay').style.display = 'block';
+                    
+                    document.getElementById('sdkAppName').value = '';
+                    document.getElementById('sdkWebsiteUrl').value = '';
+                    document.getElementById('sdkRedirectUri').value = '';
+                    document.getElementById('sdkAppDescription').value = '';
+                    
+                    statusDiv.innerHTML = '<div style="color: var(--success);">✅ App registered successfully! Copy your credentials above.</div>';
+                    
+                    loadMyApps();
+                } else {
+                    statusDiv.innerHTML = `<div style="color: #ef4444;">❌ ${data.error}</div>`;
+                }
+            } catch (error) {
+                console.error('Register app error:', error);
+                statusDiv.innerHTML = '<div style="color: #ef4444;">❌ Network error. Please try again.</div>';
+            }
+        }
+        
+        function copyCredentials() {
+            const clientId = document.getElementById('newClientId').textContent;
+            const clientSecret = document.getElementById('newClientSecret').textContent;
+            const text = `AERA_CLIENT_ID=${clientId}\nAERA_CLIENT_SECRET=${clientSecret}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Credentials copied to clipboard!\n\nAdd these to your .env file.');
+            }).catch(err => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ Credentials copied to clipboard!');
+            });
+        }
+        
+        async function loadMyApps() {
+            const token = getAuthToken();
+            const container = document.getElementById('myAppsList');
+            
+            if (!token) {
+                container.innerHTML = '<div style="text-align: center; padding: 30px; color: rgba(240, 244, 255, 0.5);"><p>Connect your wallet to view your registered apps</p></div>';
+                return;
+            }
+            
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: rgba(240, 244, 255, 0.5);">⏳ Loading your apps...</div>';
+            
+            try {
+                const response = await fetch('/api/oauth/my-apps', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.apps.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; padding: 30px; color: rgba(240, 244, 255, 0.5);"><p>No apps registered yet. Create your first app above!</p></div>';
+                    } else {
+                        container.innerHTML = data.apps.map(app => `
+                            <div style="padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; transition: all 0.3s;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                                    <div>
+                                        <h4 style="margin: 0; color: var(--light); font-size: 14px;">${app.app_name}</h4>
+                                        <a href="${app.website_url}" target="_blank" style="font-size: 12px; color: var(--secondary); text-decoration: none;">${app.website_url}</a>
+                                    </div>
+                                    <span style="font-size: 10px; padding: 3px 8px; background: ${app.is_active ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${app.is_active ? 'var(--success)' : '#ef4444'}; border-radius: 4px;">${app.is_active ? '✓ Active' : '✗ Inactive'}</span>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <label style="font-size: 10px; color: rgba(240, 244, 255, 0.5); display: block;">CLIENT ID:</label>
+                                    <code style="font-size: 11px; color: var(--secondary); word-break: break-all;">${app.client_id}</code>
+                                </div>
+                                ${app.description ? `<p style="font-size: 11px; color: rgba(240, 244, 255, 0.6); margin: 0 0 10px 0;">${app.description}</p>` : ''}
+                                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                                    <button onclick="regenerateSecret('${app.client_id}')" class="cta-button" style="flex: 1; padding: 6px; font-size: 11px; background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #f59e0b;">🔄 New Secret</button>
+                                    <button onclick="deleteApp('${app.client_id}', '${app.app_name}')" class="cta-button" style="flex: 1; padding: 6px; font-size: 11px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444;">🗑️ Delete</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    const countInfo = document.createElement('div');
+                    countInfo.style.cssText = 'text-align: right; font-size: 11px; color: rgba(240, 244, 255, 0.5); margin-top: 8px;';
+                    countInfo.textContent = `${data.count}/${data.max_apps} apps used`;
+                    container.appendChild(countInfo);
+                } else {
+                    container.innerHTML = `<div style="color: #ef4444; padding: 20px;">❌ ${data.error}</div>`;
+                }
+            } catch (error) {
+                console.error('Load apps error:', error);
+                container.innerHTML = '<div style="color: #ef4444; padding: 20px;">❌ Failed to load apps</div>';
+            }
+        }
+        
+        async function regenerateSecret(clientId) {
+            if (!confirm('⚠️ Are you sure you want to generate a new secret?\n\nThe old secret will stop working immediately!')) {
+                return;
+            }
+            
+            const token = getAuthToken();
+            if (!token) {
+                alert('❌ Please connect your wallet first');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/oauth/my-apps/${clientId}/regenerate-secret`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('newClientId').textContent = data.client_id;
+                    document.getElementById('newClientSecret').textContent = data.client_secret;
+                    document.getElementById('newCredentialsDisplay').style.display = 'block';
+                    
+                    document.getElementById('newCredentialsDisplay').scrollIntoView({ behavior: 'smooth' });
+                    
+                    alert('✅ New secret generated! Copy it from above - it won\'t be shown again.');
+                } else {
+                    alert(`❌ ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Regenerate secret error:', error);
+                alert('❌ Network error. Please try again.');
+            }
+        }
+        
+        async function deleteApp(clientId, appName) {
+            if (!confirm(`🗑️ Delete "${appName}"?\n\nThis action cannot be undone and all integrations using this app will stop working.`)) {
+                return;
+            }
+            
+            const token = getAuthToken();
+            if (!token) {
+                alert('❌ Please connect your wallet first');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/oauth/my-apps/${clientId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ ${data.message}`);
+                    loadMyApps();
+                } else {
+                    alert(`❌ ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Delete app error:', error);
+                alert('❌ Network error. Please try again.');
+            }
+        }
+
+        // ========================================
+        // FOLLOWERS & BLOCKCHAIN DATA FUNCTIONS
+        // ========================================
+        async function loadOwnerStats() {
+            if (!connectedWallet) return;
+            
+            try {
+                console.log('📊 Loading owner stats...');
+                // Use correct endpoint: /admin/followers?owner=...
+                const response = await fetch(`${API_BASE}/admin/followers?owner=${connectedWallet}`);
+                const data = await response.json();
+                
+                console.log('📊 Followers API response:', data);
+                
+                if (data.success) {
+                    // Map correct field names from API response
+                    document.getElementById('followerCount').textContent = data.total_followers || 0;
+                    document.getElementById('avgScore').textContent = (data.statistics?.average_score || 0).toFixed(2);
+                    document.getElementById('yourScore').textContent = data.owner_score || 0;
+                    document.getElementById('followerCount2').textContent = `${data.total_followers || 0} verified followers`;
+                    
+                    // Display followers table
+                    displayFollowersTable(data.followers || []);
+                } else {
+                    console.warn('⚠️ Followers API returned error:', data.error);
+                    // Show empty state
+                    document.getElementById('followerCount').textContent = '0';
+                    document.getElementById('avgScore').textContent = '0';
+                    document.getElementById('followerCount2').textContent = '0 verified followers';
+                    displayFollowersTable([]);
+                }
+            } catch (error) {
+                console.error('❌ Error loading owner stats:', error);
+                // Show error state
+                document.getElementById('followerCount').textContent = '—';
+                document.getElementById('avgScore').textContent = '—';
+                document.getElementById('followerCount2').textContent = 'Error loading followers';
+            }
+        }
+        
+        function displayFollowersTable(followers) {
+            const container = document.getElementById('followersContainer');
+            
+            if (!followers || followers.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(240, 244, 255, 0.5);"><p>No followers yet. Share your link to get started!</p></div>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Follower Address</th>
+                            <th>Score</th>
+                            <th>Platform</th>
+                            <th>Verified At</th>
+                            <th>Logins</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${followers.map(f => `
+                            <tr data-platform="${f.source_platform || 'direct'}">
+                                <td>${f.display_name || (f.follower_address ? f.follower_address.substring(0, 10) + '...' : 'Unknown')}</td>
+                                <td><span class="score-badge">${f.resonance_score || 0}/100</span></td>
+                                <td><span class="platform-badge">${f.source_platform || 'direct'}</span></td>
+                                <td>${f.verified_at ? new Date(f.verified_at).toLocaleDateString() : '-'}</td>
+                                <td>${f.login_count || 1}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+        
+        function filterByPlatform(platform) {
+            console.log('🔍 Filtering by platform:', platform);
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeBtn = document.querySelector(`[data-platform="${platform}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            const rows = document.querySelectorAll('#followersContainer tbody tr');
+            rows.forEach(row => {
+                const rowPlatform = row.getAttribute('data-platform');
+                if (platform === 'all' || rowPlatform === platform) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        async function loadBlockchainData() {
+            if (!connectedWallet) return;
+            
+            try {
+                console.log('⛓️ Loading blockchain data...');
+                
+                // Identity NFT Status - use correct endpoint
+                const nftResponse = await fetch(`${API_BASE}/api/blockchain/identity/${connectedWallet}`);
+                const nftData = await nftResponse.json();
+                
+                console.log('⛓️ Identity NFT data:', nftData);
+                
+                if (nftData.has_identity && nftData.token_id) {
+                    const tokenId = nftData.token_id;
+                    const explorerUrl = nftData.basescan_url || `https://basescan.org/nft/${nftData.contract_address}/${tokenId}`;
+                    document.getElementById('identityStatus').innerHTML = `
+                        ✅ <span style="color: var(--light);">Minted</span>
+                        <br><span style="font-size: 0.7rem; opacity: 0.7;">Token #${tokenId}</span>
+                        <br><a href="${explorerUrl}" target="_blank" style="color: var(--secondary); font-size: 0.65rem;">View on BaseScan →</a>
+                    `;
+                } else if (nftData.identity_status === 'minting') {
+                    document.getElementById('identityStatus').innerHTML = `
+                        ⏳ <span style="color: var(--light);">Minting...</span>
+                        <br><span style="font-size: 0.7rem; opacity: 0.7;">Please wait 30-60s</span>
+                    `;
+                } else {
+                    document.getElementById('identityStatus').innerHTML = `
+                        ⏳ <span style="color: var(--light);">Not Minted</span>
+                        <br><span style="font-size: 0.7rem; opacity: 0.7;">Will auto-mint on first login</span>
+                    `;
+                }
+                
+                // Blockchain Score - use correct response fields with full breakdown
+                const scoreResponse = await fetch(`${API_BASE}/api/blockchain/score/${connectedWallet}`);
+                const scoreData = await scoreResponse.json();
+                
+                console.log('⛓️ Score data:', scoreData);
+                
+                if (scoreData.blockchain_score !== undefined) {
+                    const bcScore = scoreData.blockchain_score || 0;
+                    const ownScore = scoreData.own_score || 0;
+                    const followerBonus = scoreData.follower_bonus || 0;
+                    const followerCount = scoreData.follower_count || 0;
+                    const syncPending = scoreData.sync_pending || 0;
+                    const lastSync = scoreData.last_sync ? formatTimestamp(scoreData.last_sync) : 'Never';
+                    
+                    // Blockchain Score with breakdown
+                    document.getElementById('blockchainScore').innerHTML = `
+                        ✅ <span style="color: var(--light);">${bcScore}</span>
+                        <br><span style="font-size: 0.6rem; opacity: 0.85;">Own: ${ownScore} + Follower Bonus: ${followerBonus}${followerCount > 0 ? ` (${followerCount} followers)` : ''}</span>
+                    `;
+                    
+                    // Sync Status with pending info
+                    if (syncPending > 0) {
+                        document.getElementById('syncStatus').innerHTML = `
+                            ⏳ <span style="color: var(--light);">Pending (+${syncPending})</span>
+                            <br><span style="font-size: 0.65rem; opacity: 0.7;">${lastSync}</span>
+                        `;
+                    } else if (lastSync === 'Never') {
+                        document.getElementById('syncStatus').innerHTML = `
+                            ⏸️ <span style="color: var(--light);">Not Started</span>
+                            <br><span style="font-size: 0.65rem; opacity: 0.7;">Waiting for first sync</span>
+                        `;
+                    } else {
+                        document.getElementById('syncStatus').innerHTML = `
+                            ✅ <span style="color: var(--light);">Synced</span>
+                            <br><span style="font-size: 0.65rem; opacity: 0.7;">${lastSync}</span>
+                        `;
+                    }
+                } else if (scoreData.error) {
+                    document.getElementById('blockchainScore').textContent = '—';
+                    document.getElementById('syncStatus').innerHTML = `❌ <span style="color: var(--light);">Error</span>`;
+                }
+                
+                // Blockchain Health with block number
+                try {
+                    const healthResponse = await fetch(`${API_BASE}/api/blockchain/stats`);
+                    const healthData = await healthResponse.json();
+                    const health = healthData.blockchain_health || {};
+                    
+                    if (health.status === 'connected') {
+                        document.getElementById('blockchainHealth').innerHTML = `
+                            🟢 <span style="color: var(--light);">Online</span>
+                            <br><span style="font-size: 0.65rem; opacity: 0.7;">Block ${health.block_number || 'N/A'}</span>
+                        `;
+                    } else {
+                        document.getElementById('blockchainHealth').innerHTML = `
+                            🔴 <span style="color: var(--light);">Offline</span>
+                            <br><span style="font-size: 0.65rem; opacity: 0.7;">${health.error || 'Connection error'}</span>
+                        `;
+                    }
+                } catch (healthErr) {
+                    document.getElementById('blockchainHealth').innerHTML = `
+                        ❌ <span style="color: var(--light);">Error</span>
+                    `;
+                }
+                
+                // Load interaction history
+                loadInteractionHistory();
+                
+            } catch (error) {
+                console.error('❌ Error loading blockchain data:', error);
+                document.getElementById('identityStatus').textContent = '❌ Error';
+                document.getElementById('blockchainScore').textContent = '—';
+                document.getElementById('syncStatus').textContent = '❌ Error';
+                document.getElementById('blockchainHealth').textContent = '❌ Error';
+            }
+        }
+        
+        // Helper function to format timestamp
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'N/A';
+            
+            let date;
+            if (typeof timestamp === 'number') {
+                date = new Date(timestamp * 1000);
+            } else if (typeof timestamp === 'string') {
+                date = new Date(timestamp);
+            } else {
+                return 'Invalid Date';
+            }
+            
+            if (isNaN(date.getTime())) return 'Invalid Date';
+            
+            return date.toLocaleString('de-DE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        async function loadInteractionHistory() {
+            if (!connectedWallet) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/blockchain/interactions/${connectedWallet}`);
+                const data = await response.json();
+                
+                console.log('⛓️ Interactions data:', data);
+                
+                const container = document.getElementById('interactionsContainer');
+                const walletLower = connectedWallet.toLowerCase();
+                
+                // API doesn't return 'success' field - check for interactions array
+                if (data.interactions && data.interactions.length > 0) {
+                    document.getElementById('interactionCount').textContent = `${data.total || data.interactions.length} interactions`;
+                    
+                    container.innerHTML = `
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>With</th>
+                                    <th>Date</th>
+                                    <th>TX</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.interactions.slice(0, 20).map(i => {
+                                    // Determine if this user is initiator or responder
+                                    const isInitiator = i.initiator?.toLowerCase() === walletLower;
+                                    const otherAddress = isInitiator ? i.responder : i.initiator;
+                                    const typeIcon = i.interaction_type_name || 'FOLLOW';
+                                    const typeDisplay = isInitiator ? `➡️ ${typeIcon}` : `⬅️ ${typeIcon}`;
+                                    const shortAddr = otherAddress ? `${otherAddress.substring(0, 6)}...${otherAddress.substring(38)}` : '-';
+                                    // timestamp from API is Unix timestamp (seconds)
+                                    const dateStr = i.timestamp ? new Date(i.timestamp * 1000).toLocaleDateString() : '-';
+                                    
+                                    return `
+                                        <tr>
+                                            <td>${typeDisplay}</td>
+                                            <td>${shortAddr}</td>
+                                            <td>${dateStr}</td>
+                                            <td>${i.tx_hash ? `<a href="https://basescan.org/tx/${i.tx_hash}" target="_blank" class="basescan-link">🔗</a>` : '-'}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    document.getElementById('interactionCount').textContent = 'No interactions yet';
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(240, 244, 255, 0.5);"><p>No blockchain interactions recorded yet.</p></div>';
+                }
+            } catch (error) {
+                console.error('❌ Error loading interactions:', error);
+                document.getElementById('interactionsContainer').innerHTML = '<div style="color: #ef4444; padding: 20px;">❌ Failed to load interactions</div>';
+            }
+        }
+        
+        function toggleCollapse(contentId) {
+            const content = document.getElementById(contentId);
+            const btn = event.target;
+            
+            if (!content) return;
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                btn.textContent = '▼';
+            } else {
+                content.classList.add('collapsed');
+                btn.textContent = '▶';
+            }
+        }
+
+        // ========================================
         // INITIALIZATION
         // ========================================
         async function initDashboard() {
@@ -1783,6 +2918,13 @@ Licensed under the Apache License, Version 2.0
             
             // Load Profile NFT status
             await loadProfileNFTStatus();
+            
+            // Load owner stats, followers & blockchain data
+            await loadOwnerStats();
+            await loadBlockchainData();
+            
+            // Load SDK apps
+            loadMyApps();
         }
         
         // Show access denied message and redirect
@@ -1817,8 +2959,16 @@ Licensed under the Apache License, Version 2.0
                 
                 // Update basic profile immediately
                 const shortAddr = connectedWallet.substring(0, 6) + '...' + connectedWallet.substring(38);
-                document.getElementById('profileName').textContent = `Welcome, Builder`;
-                document.getElementById('profileAddress').textContent = connectedWallet;
+                
+                // Profile Section is hidden, but check if elements exist
+                const profileNameEl = document.getElementById('profileName');
+                const profileAddressEl = document.getElementById('profileAddress');
+                if (profileNameEl) profileNameEl.textContent = `Welcome, Builder`;
+                if (profileAddressEl) profileAddressEl.textContent = connectedWallet;
+                
+                // Update Stats Section header with wallet info
+                document.getElementById('statsProfileName').textContent = `Builder ${shortAddr}`;
+                document.getElementById('statsProfileAddress').textContent = connectedWallet;
                 
                 // Get user info from backend
                 const response = await fetch(`${API_BASE}/api/user/profile`, {
@@ -1834,55 +2984,62 @@ Licensed under the Apache License, Version 2.0
                     userNFTData = data;
                     
                     // Update profile with real data
-                    document.getElementById('profileName').textContent = data.display_name || `Builder ${shortAddr}`;
-                    document.getElementById('profileAddress').textContent = connectedWallet;
+                    const displayName = data.display_name || `Builder ${shortAddr}`;
+                    if (profileNameEl) profileNameEl.textContent = displayName;
+                    if (profileAddressEl) profileAddressEl.textContent = connectedWallet;
+                    
+                    // Update Stats Section header with display name
+                    document.getElementById('statsProfileName').textContent = displayName;
+                    
+                    // Profile Section elements (may be hidden/commented out)
+                    const userStatusEl = document.getElementById('userStatus');
+                    const userScoreEl = document.getElementById('userScore');
+                    const communityCountEl = document.getElementById('communityCount');
+                    const memberSinceEl = document.getElementById('memberSince');
                     
                     // Status with NFT info
-                    if (data.nft_verified) {
-                        document.getElementById('userStatus').innerHTML = `<span style="color: var(--success);">Verified ✓</span>`;
-                    } else {
-                        document.getElementById('userStatus').innerHTML = `<span style="color: var(--warning);">Pending</span>`;
+                    if (userStatusEl) {
+                        if (data.nft_verified) {
+                            userStatusEl.innerHTML = `<span style="color: var(--success);">Verified ✓</span>`;
+                        } else {
+                            userStatusEl.innerHTML = `<span style="color: var(--warning);">Pending</span>`;
+                        }
                     }
                     
                     // Score display with breakdown
-                    const totalScore = data.score || 0;
-                    const ownScore = data.own_score || 0;
-                    const followerBonus = data.follower_bonus || 0;
-                    document.getElementById('userScore').innerHTML = `
-                        ${totalScore.toFixed(0)}
-                        <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 4px;">
-                            Own: ${ownScore.toFixed(0)} + Bonus: ${followerBonus.toFixed(0)}
-                        </div>
-                    `;
+                    if (userScoreEl) {
+                        const totalScore = data.score || 0;
+                        const ownScore = data.own_score || 0;
+                        const followerBonus = data.follower_bonus || 0;
+                        userScoreEl.innerHTML = `
+                            ${totalScore.toFixed(0)}
+                            <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 4px;">
+                                Own: ${ownScore.toFixed(0)} + Bonus: ${followerBonus.toFixed(0)}
+                            </div>
+                        `;
+                    }
                     
                     // Community count
-                    document.getElementById('communityCount').textContent = data.communities || '0';
+                    if (communityCountEl) communityCountEl.textContent = data.communities || '0';
                     
                     // Format member since date
-                    if (data.join_date) {
-                        const joinDate = new Date(data.join_date);
-                        const options = { month: 'short', year: 'numeric' };
-                        document.getElementById('memberSince').textContent = joinDate.toLocaleDateString('en-US', options);
-                    } else {
-                        document.getElementById('memberSince').textContent = 'New';
+                    if (memberSinceEl) {
+                        if (data.join_date) {
+                            const joinDate = new Date(data.join_date);
+                            const options = { month: 'short', year: 'numeric' };
+                            memberSinceEl.textContent = joinDate.toLocaleDateString('en-US', options);
+                        } else {
+                            memberSinceEl.textContent = 'New';
+                        }
                     }
                     
                     console.log('✅ User data loaded:', data);
                 } else {
                     console.warn('⚠️ Could not load user data:', data.error);
-                    // Show defaults
-                    document.getElementById('userStatus').textContent = 'Unknown';
-                    document.getElementById('userScore').textContent = '—';
-                    document.getElementById('communityCount').textContent = '—';
-                    document.getElementById('memberSince').textContent = '—';
                 }
             } catch (error) {
                 console.error('❌ Error loading user data:', error);
-                // Show defaults on error
-                document.getElementById('userStatus').textContent = 'Error';
-                document.getElementById('userScore').textContent = '—';
-                document.getElementById('communityCount').textContent = '—';
-                document.getElementById('memberSince').textContent = '—';
+                // Profile Section may be hidden - no error handling needed
             }
         }
 
@@ -1893,6 +3050,10 @@ Licensed under the Apache License, Version 2.0
             console.log('📰 Loading feed...');
             
             const feedContainer = document.getElementById('feedContainer');
+            if (!feedContainer) {
+                console.log('📰 Feed container not found - feed section is disabled');
+                return;
+            }
             
             if (feedData.length === 0) {
                 feedContainer.innerHTML = `
