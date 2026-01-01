@@ -1116,6 +1116,31 @@ Licensed under the Apache License, Version 2.0
             </div>
         </div>
         
+        <!-- Platzhalter vor Wallet-Verbindung -->
+        <div class="owner-section" id="preConnectPlaceholder">
+            <div style="text-align: center; padding: 30px 20px;">
+                <div style="font-size: 2.5rem; margin-bottom: 16px; opacity: 0.6;">🔐</div>
+                <h3 style="font-size: 1.3rem; margin-bottom: 12px; color: var(--light);">Connect Your Wallet to Get Started</h3>
+                <p style="color: rgba(240, 244, 255, 0.7); font-size: 0.9rem; line-height: 1.6; max-width: 100%; margin: 0 auto;">
+                    Welcome to <strong style="color: var(--accent);">AEra</strong> — your gateway to decentralized identity and community engagement. Connect your Web3 wallet to unlock your personal dashboard, view the latest project updates, and access powerful tools in <strong style="color: var(--secondary);">AEra Core</strong>.
+                </p>
+                <p style="color: rgba(240, 244, 255, 0.5); font-size: 0.82rem; line-height: 1.5; max-width: 100%; margin: 16px auto 0; padding: 12px 16px; background: rgba(99, 102, 241, 0.08); border-radius: 10px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                    💎 <strong>First-Time Users:</strong> When you connect for the first time, your unique <strong style="color: var(--accent);">Identity NFT</strong> will be minted automatically on the BASE blockchain. This process is <strong style="color: var(--success);">completely free</strong> (community-funded) and takes only a few seconds. Your Identity NFT serves as your on-chain reputation — it stores your Resonance Score and verifies your authenticity across the AEra ecosystem.
+                </p>
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 20px; font-size: 0.8rem; color: var(--success);">
+                        📰 Latest Updates & News
+                    </span>
+                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 20px; font-size: 0.8rem; color: var(--accent);">
+                        🌀 AEra Core Tools
+                    </span>
+                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 20px; font-size: 0.8rem; color: var(--secondary);">
+                        ⛓️ On-Chain Statistics
+                    </span>
+                </div>
+            </div>
+        </div>
+        
         <!-- ===== FOLLOWER LINK, NFT-GATED GROUP & SDK SECTIONS - HIDDEN (moved to user-dashboard) ===== -->
         <div class="owner-section" style="display: none !important;">
             <!-- Follower Link Generation (ALWAYS VISIBLE) -->
@@ -1399,6 +1424,14 @@ Licensed under the Apache License, Version 2.0
         const feedData = [
             {
                 id: 1,
+                title: "🎉 AEra Officially Live!",
+                badge: "update",
+                timestamp: "Jan 01, 2026",
+                content: "We're officially live! AEra is now ready to revolutionize blockchain identity and community engagement. Join us on our journey to build the future of decentralized social connections.",
+                link: "https://x.com/AEraResonant/status/2006733563044167694"
+            },
+            {
+                id: 2,
                 title: "AEra Gate SDK Infrastructure Live",
                 badge: "integration",
                 timestamp: "Dec 20, 2025",
@@ -1406,7 +1439,7 @@ Licensed under the Apache License, Version 2.0
                 link: "/sdk-docs"
             },
             {
-                id: 2,
+                id: 3,
                 title: "Android Intent-Bridge Live",
                 badge: "integration",
                 timestamp: "Dec 19, 2025",
@@ -1414,7 +1447,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 3,
+                id: 4,
                 title: "EIP-1271 Smart Contract Wallet Support",
                 badge: "security",
                 timestamp: "Dec 18, 2025",
@@ -1422,7 +1455,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 4,
+                id: 5,
                 title: "iOS Universal Links Enabled",
                 badge: "update",
                 timestamp: "Dec 17, 2025",
@@ -1430,7 +1463,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 5,
+                id: 6,
                 title: "Multi-Wallet Signature Support",
                 badge: "update",
                 timestamp: "Dec 15, 2025",
@@ -1438,7 +1471,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 6,
+                id: 7,
                 title: "BASE Mainnet Deployment",
                 badge: "integration",
                 timestamp: "Dec 10, 2025",
@@ -1549,6 +1582,10 @@ Licensed under the Apache License, Version 2.0
             console.log('📊 displayDashboard received:', JSON.stringify(data, null, 2));
             console.log('📊 total_followers:', data.total_followers);
             console.log('📊 followers array:', data.followers);
+            
+            // ✅ Hide placeholder, show news feed
+            const placeholder = document.getElementById('preConnectPlaceholder');
+            if (placeholder) placeholder.style.display = 'none';
             
             // Update stats
             document.getElementById('followerCount').textContent = data.total_followers;
@@ -2138,6 +2175,10 @@ Issued At: ${issuedAt}`;
                 document.getElementById('metamaskBtn').style.display = 'none';
                 document.getElementById('disconnectBtn').style.display = 'inline-block';
                 
+                // ✅ Hide placeholder when wallet is connected
+                const placeholder = document.getElementById('preConnectPlaceholder');
+                if (placeholder) placeholder.style.display = 'none';
+                
                 // 📰 Show and load the Latest Updates feed immediately
                 document.getElementById('latestUpdatesSection').style.display = 'block';
                 loadFeed();
@@ -2178,6 +2219,10 @@ Issued At: ${issuedAt}`;
             
             // 📰 Hide the Latest Updates feed
             document.getElementById('latestUpdatesSection').style.display = 'none';
+            
+            // ✅ Show placeholder again
+            const placeholder = document.getElementById('preConnectPlaceholder');
+            if (placeholder) placeholder.style.display = 'block';
             
             // Clear sessionStorage for AEra Core access
             sessionStorage.removeItem('aeraDashboardWallet');
