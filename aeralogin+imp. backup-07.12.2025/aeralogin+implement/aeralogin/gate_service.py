@@ -342,13 +342,22 @@ class GateService:
         conn.row_factory = sqlite3.Row
         return conn
     
-    async def get_gate_config(self, owner_wallet: str, platform: str) -> Optional[Dict]:
+    async def get_gate_config(
+        self, 
+        owner_wallet: str, 
+        platform: str, 
+        group_id: Optional[str] = None
+    ) -> Optional[Dict]:
         """
         Holt Gate-Konfiguration aus der Datenbank.
+        
+        MULTI-GATE SUPPORT: Wenn group_id angegeben, wird das spezifische Gate geholt.
+        Ohne group_id wird das erste aktive Gate für die Plattform zurückgegeben.
         
         Args:
             owner_wallet: Wallet-Adresse des Owners
             platform: 'telegram' oder 'discord'
+            group_id: Optional - spezifische Group ID
             
         Returns:
             Config-Dict oder None
@@ -357,10 +366,20 @@ class GateService:
             conn = self._get_db_connection()
             cursor = conn.cursor()
             
-            cursor.execute("""
-                SELECT * FROM owner_gate_configs 
-                WHERE owner_wallet = ? AND platform = ? AND is_active = 1
-            """, (owner_wallet.lower(), platform.lower()))
+            if group_id:
+                # Specific gate by group_id
+                cursor.execute("""
+                    SELECT * FROM owner_gate_configs 
+                    WHERE owner_wallet = ? AND platform = ? AND group_id = ? AND is_active = 1
+                """, (owner_wallet.lower(), platform.lower(), group_id))
+            else:
+                # First active gate for platform (backward compatibility)
+                cursor.execute("""
+                    SELECT * FROM owner_gate_configs 
+                    WHERE owner_wallet = ? AND platform = ? AND is_active = 1
+                    ORDER BY created_at ASC
+                    LIMIT 1
+                """, (owner_wallet.lower(), platform.lower()))
             
             result = cursor.fetchone()
             conn.close()
@@ -371,6 +390,47 @@ class GateService:
             logger.error(f"Error getting gate config: {e}")
             return None
     
+    async def get_all_gates_for_owner(
+        self, 
+        owner_wallet: str, 
+        platform: Optional[str] = None
+    ) -> list:
+        """
+        Holt ALLE Gate-Konfigurationen für einen Owner.
+        
+        Args:
+            owner_wallet: Wallet-Adresse des Owners
+            platform: Optional - filter by platform
+            
+        Returns:
+            Liste von Config-Dicts
+        """
+        try:
+            conn = self._get_db_connection()
+            cursor = conn.cursor()
+            
+            if platform:
+                cursor.execute("""
+                    SELECT * FROM owner_gate_configs 
+                    WHERE owner_wallet = ? AND platform = ? AND is_active = 1
+                    ORDER BY group_name
+                """, (owner_wallet.lower(), platform.lower()))
+            else:
+                cursor.execute("""
+                    SELECT * FROM owner_gate_configs 
+                    WHERE owner_wallet = ? AND is_active = 1
+                    ORDER BY platform, group_name
+                """, (owner_wallet.lower(),))
+            
+            results = cursor.fetchall()
+            conn.close()
+            
+            return [dict(row) for row in results]
+            
+        except Exception as e:
+            logger.error(f"Error getting all gates: {e}")
+            return []
+    
     async def save_gate_config(
         self,
         owner_wallet: str,
@@ -379,11 +439,25 @@ class GateService:
         group_id: str,
         channel_id: str = "",
         group_name: str = "",
-        static_invite_link: str = ""
+        static_invite_link: str = "",
+        min_score: int = 50
     ) -> Dict[str, Any]:
         """
         Speichert Gate-Konfiguration in der Datenbank.
         Bot-Token wird verschlüsselt gespeichert!
+        
+        MULTI-GATE SUPPORT: UNIQUE(owner_wallet, platform, group_id)
+        Ein Owner kann mehrere Gates pro Plattform haben!
+        
+        Args:
+            owner_wallet: Wallet-Adresse des Owners
+            platform: 'telegram' oder 'discord'
+            bot_token: Bot-Token (wird verschlüsselt)
+            group_id: Telegram Group ID oder Discord Guild ID
+            channel_id: Discord Channel ID (optional)
+            group_name: Name der Gruppe (optional)
+            static_invite_link: Fallback-Link (empfohlen)
+            min_score: Minimum Resonance Score (50-200, default 50)
         
         Returns:
             {"success": bool, "error": str or None}
@@ -394,6 +468,10 @@ class GateService:
                 validation = gate_encryption.verify_token_format(bot_token, platform)
                 if not validation["valid"]:
                     return {"success": False, "error": validation["error"]}
+            
+            # Validate min_score
+            if not isinstance(min_score, int) or min_score < 50 or min_score > 200:
+                min_score = 50
             
             # Encrypt token
             encrypted_token = None
@@ -409,19 +487,27 @@ class GateService:
             
             now = datetime.now(timezone.utc).isoformat()
             
+            # MULTI-GATE: UNIQUE constraint ist jetzt (owner_wallet, platform, group_id)
+            # WICHTIG: COALESCE um existierenden bot_token zu behalten wenn neuer leer ist
             cursor.execute("""
                 INSERT INTO owner_gate_configs 
                 (owner_wallet, platform, bot_token_encrypted, group_id, channel_id, 
-                 group_name, static_invite_link, created_at, updated_at, is_active)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
-                ON CONFLICT(owner_wallet, platform) DO UPDATE SET
-                    bot_token_encrypted = excluded.bot_token_encrypted,
-                    group_id = excluded.group_id,
-                    channel_id = excluded.channel_id,
-                    group_name = excluded.group_name,
-                    static_invite_link = excluded.static_invite_link,
+                 group_name, static_invite_link, min_score, created_at, updated_at, is_active)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+                ON CONFLICT(owner_wallet, platform, group_id) DO UPDATE SET
+                    bot_token_encrypted = COALESCE(excluded.bot_token_encrypted, owner_gate_configs.bot_token_encrypted),
+                    channel_id = COALESCE(excluded.channel_id, owner_gate_configs.channel_id),
+                    group_name = COALESCE(excluded.group_name, owner_gate_configs.group_name),
+                    static_invite_link = COALESCE(excluded.static_invite_link, owner_gate_configs.static_invite_link),
+                    min_score = COALESCE(excluded.min_score, owner_gate_configs.min_score),
                     updated_at = excluded.updated_at,
-                    bot_verified = 0
+                    is_active = 1,
+                    bot_verified = CASE 
+                        WHEN excluded.bot_token_encrypted IS NOT NULL 
+                             AND excluded.bot_token_encrypted != owner_gate_configs.bot_token_encrypted 
+                        THEN 0 
+                        ELSE owner_gate_configs.bot_verified 
+                    END
             """, (
                 owner_wallet.lower(), 
                 platform.lower(), 
@@ -430,6 +516,7 @@ class GateService:
                 channel_id,
                 group_name,
                 static_invite_link,
+                min_score,
                 now,
                 now
             ))
@@ -437,12 +524,12 @@ class GateService:
             conn.commit()
             conn.close()
             
-            # Clear cache for this owner
-            cache_key = f"{owner_wallet.lower()}:{platform.lower()}"
+            # Clear cache for this owner+group
+            cache_key = f"{owner_wallet.lower()}:{platform.lower()}:{group_id}"
             if cache_key in self._bot_cache:
                 del self._bot_cache[cache_key]
             
-            logger.info(f"✓ Gate config saved for {owner_wallet[:10]}... ({platform})")
+            logger.info(f"✓ Gate config saved for {owner_wallet[:10]}... ({platform}, group={group_id[:15]}, min_score={min_score})")
             
             return {"success": True, "error": None}
             
@@ -453,26 +540,34 @@ class GateService:
     async def get_bot_instance(
         self, 
         owner_wallet: str, 
-        platform: str
+        platform: str,
+        group_id: Optional[str] = None
     ) -> Optional[Any]:
         """
         Erstellt oder holt gecachte Bot-Instanz für einen Owner.
         
+        MULTI-GATE SUPPORT: group_id identifiziert das spezifische Gate.
+        
         Args:
             owner_wallet: Wallet-Adresse des Owners
             platform: 'telegram' oder 'discord'
+            group_id: Optional - spezifische Group ID
             
         Returns:
             DynamicTelegramBot, DynamicDiscordBot, oder None
         """
-        cache_key = f"{owner_wallet.lower()}:{platform.lower()}"
+        # Cache key includes group_id for multi-gate support
+        if group_id:
+            cache_key = f"{owner_wallet.lower()}:{platform.lower()}:{group_id}"
+        else:
+            cache_key = f"{owner_wallet.lower()}:{platform.lower()}"
         
         # Check cache first
         if cache_key in self._bot_cache:
             return self._bot_cache[cache_key]
         
         # Get config from DB
-        config = await self.get_gate_config(owner_wallet, platform)
+        config = await self.get_gate_config(owner_wallet, platform, group_id)
         
         if not config:
             return None
@@ -504,19 +599,26 @@ class GateService:
         else:
             return None
         
-        # Cache the instance
+        # Cache the instance (with group_id in key)
         self._bot_cache[cache_key] = bot
         
         return bot
     
-    async def verify_bot(self, owner_wallet: str, platform: str) -> Dict[str, Any]:
+    async def verify_bot(
+        self, 
+        owner_wallet: str, 
+        platform: str,
+        group_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Verifiziert dass der Bot korrekt konfiguriert ist.
+        
+        MULTI-GATE SUPPORT: group_id identifiziert das spezifische Gate.
         
         Returns:
             {"success": bool, "bot_username": str, "can_invite": bool, "error": str}
         """
-        bot = await self.get_bot_instance(owner_wallet, platform)
+        bot = await self.get_bot_instance(owner_wallet, platform, group_id)
         
         if not bot:
             return {
@@ -532,19 +634,36 @@ class GateService:
             try:
                 conn = self._get_db_connection()
                 cursor = conn.cursor()
-                cursor.execute("""
-                    UPDATE owner_gate_configs 
-                    SET bot_verified = 1, 
-                        bot_username = ?,
-                        verified_at = ?,
-                        health_status = 'healthy'
-                    WHERE owner_wallet = ? AND platform = ?
-                """, (
-                    result.get("bot_username"),
-                    datetime.now(timezone.utc).isoformat(),
-                    owner_wallet.lower(),
-                    platform.lower()
-                ))
+                
+                if group_id:
+                    cursor.execute("""
+                        UPDATE owner_gate_configs 
+                        SET bot_verified = 1, 
+                            bot_username = ?,
+                            verified_at = ?,
+                            health_status = 'healthy'
+                        WHERE owner_wallet = ? AND platform = ? AND group_id = ?
+                    """, (
+                        result.get("bot_username"),
+                        datetime.now(timezone.utc).isoformat(),
+                        owner_wallet.lower(),
+                        platform.lower(),
+                        group_id
+                    ))
+                else:
+                    cursor.execute("""
+                        UPDATE owner_gate_configs 
+                        SET bot_verified = 1, 
+                            bot_username = ?,
+                            verified_at = ?,
+                            health_status = 'healthy'
+                        WHERE owner_wallet = ? AND platform = ?
+                    """, (
+                        result.get("bot_username"),
+                        datetime.now(timezone.utc).isoformat(),
+                        owner_wallet.lower(),
+                        platform.lower()
+                    ))
                 conn.commit()
                 conn.close()
             except Exception as e:
@@ -568,15 +687,19 @@ class GateService:
         owner_wallet: str,
         platform: str,
         user_address: str,
+        group_id: Optional[str] = None,
         expire_seconds: int = 300
     ) -> Tuple[bool, str, str]:
         """
         Erstellt einen Einmal-Link für das Gate eines Owners.
         
+        MULTI-GATE SUPPORT: group_id identifiziert das spezifische Gate.
+        
         Args:
             owner_wallet: Wallet des Gate-Owners
             platform: 'telegram' oder 'discord'
             user_address: Wallet des Users der beitreten will
+            group_id: Optional - spezifische Group ID
             expire_seconds: Gültigkeit des Links
             
         Returns:
@@ -584,7 +707,7 @@ class GateService:
             method: 'bot_one_time' | 'static_fallback' | 'default_bot'
         """
         # 1. Try owner's configured bot
-        bot = await self.get_bot_instance(owner_wallet, platform)
+        bot = await self.get_bot_instance(owner_wallet, platform, group_id)
         
         if bot and bot.is_configured:
             name = f"AEra-{user_address[:8]}"
@@ -599,10 +722,10 @@ class GateService:
             else:
                 logger.warning(f"Owner bot failed: {result.get('error')}")
         
-        # 2. Try static fallback link from owner's config
-        config = await self.get_gate_config(owner_wallet, platform)
+        # 2. Try static fallback link from owner's config (with group_id for multi-gate)
+        config = await self.get_gate_config(owner_wallet, platform, group_id)
         if config and config.get("static_invite_link"):
-            logger.info(f"Using static fallback link for {owner_wallet[:10]}...")
+            logger.info(f"Using static fallback link for {owner_wallet[:10]}... (group={group_id or 'default'})")
             return True, config["static_invite_link"], "static_fallback"
         
         # 3. Try default bot (our hardcoded bot from .env)
@@ -639,9 +762,16 @@ class GateService:
         # 4. No method available
         return False, "", "no_config"
     
-    async def get_gate_status(self, owner_wallet: str, platform: str) -> Dict[str, Any]:
+    async def get_gate_status(
+        self, 
+        owner_wallet: str, 
+        platform: str,
+        group_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Gibt den Status eines Gates zurück.
+        
+        MULTI-GATE SUPPORT: group_id identifiziert das spezifische Gate.
         
         Returns:
             {
@@ -649,10 +779,11 @@ class GateService:
                 "bot_verified": bool,
                 "has_static_fallback": bool,
                 "security_level": "high" | "medium" | "low",
-                "bot_username": str or None
+                "bot_username": str or None,
+                "min_score": int
             }
         """
-        config = await self.get_gate_config(owner_wallet, platform)
+        config = await self.get_gate_config(owner_wallet, platform, group_id)
         
         if not config:
             return {
@@ -660,7 +791,8 @@ class GateService:
                 "bot_verified": False,
                 "has_static_fallback": False,
                 "security_level": "none",
-                "bot_username": None
+                "bot_username": None,
+                "min_score": 50
             }
         
         has_bot = bool(config.get("bot_token_encrypted"))
@@ -682,6 +814,8 @@ class GateService:
             "security_level": security_level,
             "bot_username": config.get("bot_username"),
             "group_name": config.get("group_name"),
+            "group_id": config.get("group_id"),
+            "min_score": config.get("min_score", 50),
             "created_at": config.get("created_at")
         }
 

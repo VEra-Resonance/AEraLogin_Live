@@ -725,6 +725,7 @@ def init_db():
     
     # ===== DYNAMIC GATE CONFIGURATION =====
     # Allows each owner to configure their own Bot for secure one-time links
+    # MULTI-GATE SUPPORT: One owner can have multiple gates per platform!
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS owner_gate_configs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -733,7 +734,7 @@ def init_db():
         
         -- Bot Credentials (ENCRYPTED with GATE_ENCRYPTION_KEY!)
         bot_token_encrypted TEXT,
-        group_id TEXT,
+        group_id TEXT NOT NULL,
         channel_id TEXT,
         
         -- Verification Status
@@ -752,11 +753,21 @@ def init_db():
         updated_at TEXT,
         is_active BOOLEAN DEFAULT 1,
         
+        -- Access Control: Minimum Resonance Score required (50-200)
+        min_score INTEGER DEFAULT 50,
+        
         -- Security: Track who can manage this gate
-        UNIQUE(owner_wallet, platform),
+        -- MULTI-GATE: Changed from UNIQUE(owner_wallet, platform) to allow multiple groups per platform
+        UNIQUE(owner_wallet, platform, group_id),
         FOREIGN KEY(owner_wallet) REFERENCES users(address)
     )
     """)
+    
+    # Migration: Add min_score column if not exists (for existing databases)
+    try:
+        cursor.execute("ALTER TABLE owner_gate_configs ADD COLUMN min_score INTEGER DEFAULT 50")
+    except:
+        pass  # Column already exists
     
     # Migration: If old owner_telegram_groups exists, we keep it for backward compatibility
     # New gates should use owner_gate_configs instead
@@ -1551,6 +1562,76 @@ async def telegram_invite(req: Request):
         link_method = "static"  # Track how link was created
         
         # =====================================================================
+        # ON-CHAIN RESONANCE SCORE CHECK: Read directly from Smart Contract!
+        # Contract: 0x9A814DBF7E2352CE9eA6293b4b731B2a24800102 (Base Mainnet)
+        # This is the REAL, tamper-proof score stored on the blockchain.
+        # =====================================================================
+        onchain_resonance_score = 0  # Default for users without on-chain score
+        required_min_score = 50  # Default requirement
+        
+        # Read RESONANCE SCORE directly from blockchain (most accurate!)
+        try:
+            onchain_resonance_score = await web3_service.get_blockchain_score(address)
+            log_activity("INFO", f"{platform.upper()}_GATE", 
+                        f"📊 On-Chain Resonance Score: {onchain_resonance_score}", 
+                        address=address[:10])
+        except Exception as score_err:
+            log_activity("WARNING", f"{platform.upper()}_GATE", f"Could not read on-chain score: {score_err}")
+            # Fallback: Calculate from DB if blockchain read fails
+            try:
+                from resonance_calculator import calculate_resonance_score
+                conn_score = get_db_connection()
+                own_score, follower_bonus, follower_count, onchain_resonance_score = calculate_resonance_score(address, conn_score)
+                conn_score.close()
+                log_activity("INFO", f"{platform.upper()}_GATE", 
+                            f"📊 Fallback DB Resonance: {onchain_resonance_score}", 
+                            address=address[:10])
+            except Exception as calc_err:
+                log_activity("WARNING", f"{platform.upper()}_GATE", f"Could not calculate fallback: {calc_err}")
+        
+        # Check gate's min_score requirement (if owner-specific gate)
+        if owner_wallet and GATE_SERVICE_AVAILABLE:
+            try:
+                gate_service = get_gate_service()
+                if gate_service:
+                    gate_config = await gate_service.get_gate_config(owner_wallet, platform)
+                    if gate_config:
+                        required_min_score = gate_config.get("min_score", 50) or 50
+                        group_name = gate_config.get("group_name", "This community")
+                        
+                        # 🚫 BLOCK ACCESS if ON-CHAIN RESONANCE score is below required
+                        if onchain_resonance_score < required_min_score:
+                            score_diff = required_min_score - onchain_resonance_score
+                            
+                            log_activity("WARNING", f"{platform.upper()}_GATE", 
+                                        f"❌ Access denied - On-Chain Score too low ({onchain_resonance_score} < {required_min_score})", 
+                                        address=address[:10],
+                                        owner=owner_wallet[:10],
+                                        group=group_name)
+                            
+                            # Clear, user-friendly error message
+                            return {
+                                "success": False,
+                                "error": f"Access denied: {group_name} requires a minimum Resonance Score of {required_min_score}. Your score: {onchain_resonance_score}.",
+                                "error_details": {
+                                    "group_name": group_name,
+                                    "required_score": required_min_score,
+                                    "your_score": onchain_resonance_score,
+                                    "missing_points": score_diff
+                                },
+                                "score_required": required_min_score,
+                                "your_onchain_score": onchain_resonance_score,
+                                "hint": f"You need {score_diff} more points. Increase your score through regular interactions!",
+                                "mint_required": False
+                            }
+                        
+                        log_activity("INFO", f"{platform.upper()}_GATE", 
+                                    f"✓ On-Chain score check passed ({onchain_resonance_score} >= {required_min_score})", 
+                                    address=address[:10])
+            except Exception as gate_err:
+                log_activity("WARNING", f"{platform.upper()}_GATE", f"Gate config check error: {str(gate_err)}")
+        
+        # =====================================================================
         # NEW: Try Dynamic GateService first for owner-specific one-time links
         # =====================================================================
         if owner_wallet and GATE_SERVICE_AVAILABLE:
@@ -1835,6 +1916,18 @@ async def telegram_invite(req: Request):
                 (redirect_token, address, invite_link, platform, 
                  token_created_at.isoformat(), token_expires_at.isoformat())
             )
+            
+            # ✅ SUCCESS: Confirm the follower now that gate access was granted!
+            if owner_wallet:
+                cursor.execute(
+                    """UPDATE followers 
+                       SET follow_confirmed = 1, confirmed_at = ?
+                       WHERE owner_wallet = ? AND follower_address = ? AND source_platform = ?""",
+                    (datetime.now(timezone.utc).isoformat(), owner_wallet, address, platform)
+                )
+                log_activity("INFO", f"{platform.upper()}_GATE", "✓ Follower confirmed after gate access", 
+                            owner=owner_wallet[:10], follower=address[:10])
+            
             conn.commit()
             conn.close()
             log_activity("INFO", f"{platform.upper()}_GATE", "✓ Secure redirect token generated", 
@@ -2213,10 +2306,237 @@ async def get_telegram_gate_stats(owner: str):
 # Ermöglicht Ownern, eigene Bots zu konfigurieren statt hardcoded .env
 # ============================================================================
 
+@app.post("/api/gate/detect-groups")
+async def detect_telegram_groups(req: Request):
+    """
+    🔍 Auto-detect Telegram groups where bot is admin
+    
+    Uses Telegram's getUpdates API to find groups the bot has been added to.
+    The user just needs to:
+    1. Create a bot via @BotFather
+    2. Add the bot to their group as admin
+    3. Send any message in the group
+    4. Call this endpoint → we return the group info!
+    
+    Request:
+        {
+            "bot_token": "123456:ABC..."
+        }
+    
+    Response (success):
+        {
+            "success": true,
+            "groups": [
+                {
+                    "group_id": "-1001234567890",
+                    "group_name": "My Private Group",
+                    "group_type": "supergroup" | "group" | "channel",
+                    "member_count": 42 (if available)
+                }
+            ],
+            "message": "Found 1 group(s)"
+        }
+    
+    Response (no groups):
+        {
+            "success": true,
+            "groups": [],
+            "message": "No groups found. Make sure bot is admin and send a message in the group."
+        }
+    """
+    try:
+        data = await req.json()
+        bot_token = data.get("bot_token", "").strip()
+        
+        if not bot_token:
+            return {"success": False, "error": "bot_token is required"}
+        
+        # Basic token format validation
+        if ":" not in bot_token:
+            return {"success": False, "error": "Invalid bot token format (should be 123456:ABC...)"}
+        
+        import httpx
+        
+        # Step 1: Verify bot token is valid with getMe
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            me_response = await client.get(f"https://api.telegram.org/bot{bot_token}/getMe")
+            me_data = me_response.json()
+            
+            if not me_data.get("ok"):
+                error_msg = me_data.get("description", "Unknown error")
+                log_activity("ERROR", "GATE_DETECT", f"Invalid bot token: {error_msg}")
+                return {"success": False, "error": f"Invalid bot token: {error_msg}"}
+            
+            bot_username = me_data.get("result", {}).get("username", "Unknown")
+            log_activity("INFO", "GATE_DETECT", f"✓ Bot verified: @{bot_username}")
+        
+        # Step 2: Get updates to find groups
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            updates_response = await client.get(
+                f"https://api.telegram.org/bot{bot_token}/getUpdates",
+                params={"limit": 100}  # Get last 100 updates
+            )
+            updates_data = updates_response.json()
+            
+            if not updates_data.get("ok"):
+                return {
+                    "success": False, 
+                    "error": "Failed to get updates. Bot may be using webhook."
+                }
+        
+        # Step 3: Extract unique groups from updates
+        groups_found = {}  # Use dict to dedupe by group_id
+        
+        for update in updates_data.get("result", []):
+            # Check message updates
+            message = update.get("message") or update.get("my_chat_member", {}).get("chat")
+            
+            if message:
+                chat = message.get("chat") if "chat" in message else message
+                chat_id = str(chat.get("id", ""))
+                chat_type = chat.get("type", "")
+                
+                # Only include groups/supergroups/channels (negative IDs)
+                if chat_id.startswith("-") and chat_type in ["group", "supergroup", "channel"]:
+                    if chat_id not in groups_found:
+                        groups_found[chat_id] = {
+                            "group_id": chat_id,
+                            "group_name": chat.get("title", "Unknown Group"),
+                            "group_type": chat_type
+                        }
+            
+            # Also check my_chat_member updates (when bot is added to group)
+            my_chat_member = update.get("my_chat_member")
+            if my_chat_member:
+                chat = my_chat_member.get("chat", {})
+                chat_id = str(chat.get("id", ""))
+                chat_type = chat.get("type", "")
+                
+                if chat_id.startswith("-") and chat_type in ["group", "supergroup", "channel"]:
+                    if chat_id not in groups_found:
+                        groups_found[chat_id] = {
+                            "group_id": chat_id,
+                            "group_name": chat.get("title", "Unknown Group"),
+                            "group_type": chat_type
+                        }
+        
+        # Step 4: Try to get member count for each group
+        groups_list = list(groups_found.values())
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            for group in groups_list:
+                try:
+                    count_response = await client.get(
+                        f"https://api.telegram.org/bot{bot_token}/getChatMemberCount",
+                        params={"chat_id": group["group_id"]}
+                    )
+                    count_data = count_response.json()
+                    if count_data.get("ok"):
+                        group["member_count"] = count_data.get("result", 0)
+                except:
+                    pass  # Member count is optional
+        
+        log_activity("INFO", "GATE_DETECT", f"Found {len(groups_list)} group(s) for @{bot_username}")
+        
+        if groups_list:
+            return {
+                "success": True,
+                "bot_username": f"@{bot_username}",
+                "groups": groups_list,
+                "message": f"Found {len(groups_list)} group(s)"
+            }
+        else:
+            return {
+                "success": True,
+                "bot_username": f"@{bot_username}",
+                "groups": [],
+                "message": "No groups found. Please:\n1. Add bot to your group as admin\n2. Send any message in the group\n3. Click 'Detect Groups' again"
+            }
+        
+    except httpx.TimeoutException:
+        return {"success": False, "error": "Telegram API timeout. Please try again."}
+    except Exception as e:
+        log_activity("ERROR", "GATE_DETECT", f"Detection error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/gate/generate-invite-link")
+async def generate_invite_link(req: Request):
+    """
+    🔗 Auto-generate an invite link for a Telegram group using bot API
+    
+    Uses exportChatInviteLink to create a permanent invite link.
+    Bot must be admin with "Invite Users" permission.
+    
+    Request:
+        {
+            "bot_token": "123456:ABC...",
+            "group_id": "-1001234567890"
+        }
+    
+    Response (success):
+        {
+            "success": true,
+            "invite_link": "https://t.me/+ABC123...",
+            "message": "Invite link generated successfully"
+        }
+    """
+    try:
+        data = await req.json()
+        bot_token = data.get("bot_token", "").strip()
+        group_id = data.get("group_id", "").strip()
+        
+        if not bot_token:
+            return {"success": False, "error": "bot_token is required"}
+        
+        if not group_id:
+            return {"success": False, "error": "group_id is required"}
+        
+        import httpx
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Try to export/create an invite link
+            response = await client.post(
+                f"https://api.telegram.org/bot{bot_token}/exportChatInviteLink",
+                json={"chat_id": group_id}
+            )
+            result = response.json()
+            
+            if result.get("ok"):
+                invite_link = result.get("result")
+                log_activity("INFO", "GATE_INVITE", f"✓ Invite link generated for group {group_id[:15]}")
+                return {
+                    "success": True,
+                    "invite_link": invite_link,
+                    "message": "Invite link generated successfully"
+                }
+            else:
+                error_msg = result.get("description", "Unknown error")
+                
+                # Common error: bot needs admin rights
+                if "not enough rights" in error_msg.lower() or "admin" in error_msg.lower():
+                    return {
+                        "success": False,
+                        "error": "Bot needs admin rights with 'Invite Users' permission",
+                        "hint": "Make sure bot is admin and has 'Invite Users via Link' enabled"
+                    }
+                
+                return {"success": False, "error": error_msg}
+                
+    except httpx.TimeoutException:
+        return {"success": False, "error": "Telegram API timeout. Please try again."}
+    except Exception as e:
+        log_activity("ERROR", "GATE_INVITE", f"Generate invite error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
 @app.post("/api/gate/configure")
 async def configure_gate(req: Request):
     """
     🔐 Configure owner's personal Gate (Telegram/Discord)
+    
+    MULTI-GATE SUPPORT: One owner can configure multiple gates per platform!
+    Each gate is identified by (owner, platform, group_id).
     
     Allows owners to set up their own bot for full security (one-time links).
     Bot token is encrypted before storage!
@@ -2229,14 +2549,16 @@ async def configure_gate(req: Request):
             "group_id": "-1001234567890",
             "channel_id": "123456789", (Discord only, optional)
             "group_name": "My Private Group", (optional)
-            "static_invite_link": "https://t.me/+XXX" (fallback)
+            "static_invite_link": "https://t.me/+XXX" (fallback),
+            "min_score": 50 (optional, 50-200, default 50)
         }
     
     Response:
         {
             "success": true,
             "message": "Gate configured successfully",
-            "security_level": "high" | "low"
+            "security_level": "high" | "low",
+            "gate_id": "telegram:-1001234567890"
         }
     
     Security Levels:
@@ -2255,6 +2577,7 @@ async def configure_gate(req: Request):
         channel_id = data.get("channel_id", "").strip()
         group_name = data.get("group_name", "").strip()
         static_invite_link = data.get("static_invite_link", "").strip()
+        min_score = data.get("min_score", 50)
         
         # Validation
         if not owner or not owner.startswith("0x") or len(owner) != 42:
@@ -2263,15 +2586,27 @@ async def configure_gate(req: Request):
         if platform not in ["telegram", "discord"]:
             return {"success": False, "error": "Platform must be 'telegram' or 'discord'"}
         
-        if not group_id and not static_invite_link:
-            return {"success": False, "error": "Either group_id or static_invite_link required"}
+        if not group_id:
+            return {"success": False, "error": "group_id is required for multi-gate support"}
+        
+        # static_invite_link is optional IF bot_token is provided (bot can generate links)
+        if not static_invite_link and not bot_token:
+            return {"success": False, "error": "Either bot_token OR static_invite_link is required"}
+        
+        # Validate min_score (50-200)
+        try:
+            min_score = int(min_score)
+            if min_score < 50 or min_score > 200:
+                return {"success": False, "error": "min_score must be between 50 and 200"}
+        except (ValueError, TypeError):
+            min_score = 50
         
         # Get GateService
         gate_service = get_gate_service()
         if not gate_service:
             return {"success": False, "error": "Gate Service not initialized"}
         
-        # Save configuration
+        # Save configuration (with min_score)
         result = await gate_service.save_gate_config(
             owner_wallet=owner,
             platform=platform,
@@ -2279,7 +2614,8 @@ async def configure_gate(req: Request):
             group_id=group_id,
             channel_id=channel_id,
             group_name=group_name,
-            static_invite_link=static_invite_link
+            static_invite_link=static_invite_link,
+            min_score=min_score
         )
         
         if not result["success"]:
@@ -2287,17 +2623,22 @@ async def configure_gate(req: Request):
         
         # Determine security level
         security_level = "high" if bot_token else "low"
+        gate_id = f"{platform}:{group_id}"
         
         log_activity("INFO", "GATE_SERVICE", f"✓ Gate configured ({platform})", 
                     owner=owner[:10], 
-                    security=security_level)
+                    security=security_level,
+                    min_score=min_score,
+                    group_id=group_id[:15])
         
         return {
             "success": True,
             "message": f"{platform.title()} gate configured successfully",
             "security_level": security_level,
             "has_bot": bool(bot_token),
-            "has_static_fallback": bool(static_invite_link)
+            "has_static_fallback": bool(static_invite_link),
+            "gate_id": gate_id,
+            "min_score": min_score
         }
         
     except Exception as e:
@@ -2311,12 +2652,20 @@ async def verify_gate_bot(req: Request):
     ✅ Verify that owner's bot has correct permissions
     
     Tests the bot token and checks if bot is admin with invite permissions.
-    Should be called after /api/gate/configure to ensure bot is working.
+    Can be used in two modes:
+    1. After saving: Just pass owner + platform → looks up config in DB
+    2. Before saving: Pass bot_token + group_id directly → tests without saving
     
-    Request:
+    Request (Mode 1 - from DB):
         {
             "owner": "0x...",
             "platform": "telegram" | "discord"
+        }
+    
+    Request (Mode 2 - direct test):
+        {
+            "bot_token": "123456:ABC...",
+            "group_id": "-1001234567890"
         }
     
     Response:
@@ -2328,13 +2677,78 @@ async def verify_gate_bot(req: Request):
             "message": "✅ Bot has invite permissions"
         }
     """
-    if not GATE_SERVICE_AVAILABLE:
-        return {"success": False, "error": "Gate Service not available"}
-    
     try:
         data = await req.json()
+        bot_token = data.get("bot_token", "").strip()
+        group_id = data.get("group_id", "").strip()
         owner = data.get("owner", "").lower()
         platform = data.get("platform", "").lower()
+        
+        # ===========================================
+        # MODE 2: Direct verification (before saving)
+        # ===========================================
+        if bot_token and group_id:
+            log_activity("INFO", "GATE_VERIFY", "Direct bot verification (before save)")
+            
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                # Step 1: Verify token with getMe
+                me_resp = await client.get(f"https://api.telegram.org/bot{bot_token}/getMe")
+                me_data = me_resp.json()
+                
+                if not me_data.get("ok"):
+                    return {
+                        "success": False,
+                        "verified": False,
+                        "error": "Invalid bot token"
+                    }
+                
+                bot_username = me_data["result"].get("username", "Unknown")
+                
+                # Step 2: Check if bot is admin in the group
+                admin_resp = await client.get(
+                    f"https://api.telegram.org/bot{bot_token}/getChatMember",
+                    params={"chat_id": group_id, "user_id": me_data["result"]["id"]}
+                )
+                admin_data = admin_resp.json()
+                
+                if not admin_data.get("ok"):
+                    return {
+                        "success": False,
+                        "verified": False,
+                        "bot_username": f"@{bot_username}",
+                        "error": f"Bot is not in the group or group not found: {admin_data.get('description', 'Unknown error')}"
+                    }
+                
+                member_status = admin_data["result"].get("status", "")
+                can_invite = admin_data["result"].get("can_invite_users", False)
+                
+                if member_status not in ["administrator", "creator"]:
+                    return {
+                        "success": False,
+                        "verified": False,
+                        "bot_username": f"@{bot_username}",
+                        "error": f"Bot must be an admin. Current status: {member_status}"
+                    }
+                
+                # Check invite permission
+                if member_status == "creator":
+                    can_invite = True  # Creator can always invite
+                
+                return {
+                    "success": True,
+                    "verified": True,
+                    "bot_username": f"@{bot_username}",
+                    "can_invite": can_invite,
+                    "status": member_status,
+                    "message": f"✅ Bot @{bot_username} is {member_status}" + 
+                              (f" with invite permission" if can_invite else " (⚠️ no invite permission)")
+                }
+        
+        # ===========================================
+        # MODE 1: Verify from saved config (after saving)
+        # ===========================================
+        if not GATE_SERVICE_AVAILABLE:
+            return {"success": False, "error": "Gate Service not available"}
         
         # Validation
         if not owner or not owner.startswith("0x") or len(owner) != 42:
@@ -2348,12 +2762,13 @@ async def verify_gate_bot(req: Request):
         if not gate_service:
             return {"success": False, "error": "Gate Service not initialized"}
         
-        # Verify bot
-        result = await gate_service.verify_bot(owner, platform)
+        # Verify bot - pass group_id for multi-gate support!
+        result = await gate_service.verify_bot(owner, platform, group_id if group_id else None)
         
         log_activity("INFO", "GATE_SERVICE", f"Bot verification: {result.get('success')}", 
                     owner=owner[:10], 
-                    platform=platform)
+                    platform=platform,
+                    group_id=group_id[:15] if group_id else "auto")
         
         return {
             "success": result.get("success", False),
@@ -2532,8 +2947,8 @@ async def list_owner_gates(owner: str):
     """
     📋 List all gate configurations for an owner
     
-    Returns all configured gates (Telegram, Discord) for the owner.
-    Used in dashboard to show gate overview.
+    MULTI-GATE SUPPORT: Returns ALL configured gates for the owner.
+    One owner can have multiple Telegram AND Discord groups!
     
     Path Parameters:
         owner: Wallet address of the gate owner
@@ -2545,15 +2960,28 @@ async def list_owner_gates(owner: str):
             "gates": [
                 {
                     "platform": "telegram",
-                    "group_name": "My Private Group",
+                    "group_name": "VIP Group",
                     "group_id": "-1001234567890",
                     "security_level": "high",
                     "bot_verified": true,
                     "has_static_link": true,
+                    "min_score": 100,
                     "created_at": "2025-01-05 12:00:00",
-                    "last_used": "2025-01-05 14:30:00"
+                    "last_updated": "2025-01-05 14:30:00"
+                },
+                {
+                    "platform": "telegram",
+                    "group_name": "Premium Group",
+                    "group_id": "-1009876543210",
+                    "security_level": "low",
+                    "bot_verified": false,
+                    "has_static_link": true,
+                    "min_score": 150,
+                    "created_at": "2025-01-06 10:00:00",
+                    "last_updated": "2025-01-06 10:00:00"
                 }
-            ]
+            ],
+            "total": 2
         }
     """
     try:
@@ -2566,11 +2994,11 @@ async def list_owner_gates(owner: str):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Get all gate configs for this owner
+        # Get all gate configs for this owner (MULTI-GATE: multiple per platform!)
         cursor.execute("""
             SELECT platform, group_name, group_id, channel_id,
                    bot_verified, static_invite_link,
-                   created_at, updated_at,
+                   created_at, updated_at, min_score,
                    CASE 
                        WHEN bot_token_encrypted IS NOT NULL AND bot_verified = 1 THEN 'high'
                        WHEN static_invite_link IS NOT NULL THEN 'low'
@@ -2578,7 +3006,7 @@ async def list_owner_gates(owner: str):
                    END as security_level
             FROM owner_gate_configs 
             WHERE owner_wallet = ? AND is_active = 1
-            ORDER BY platform
+            ORDER BY platform, group_name
         """, (owner,))
         
         rows = cursor.fetchall()
@@ -2595,7 +3023,8 @@ async def list_owner_gates(owner: str):
                 "has_static_link": bool(row[5]),
                 "created_at": row[6],
                 "last_updated": row[7],
-                "security_level": row[8]
+                "min_score": row[8] or 50,
+                "security_level": row[9]
             }
             gates.append(gate)
         
@@ -2613,29 +3042,33 @@ async def list_owner_gates(owner: str):
         return {"success": False, "error": str(e)}
 
 
-@app.delete("/api/gate/delete/{owner}/{platform}")
-async def delete_owner_gate(owner: str, platform: str):
+@app.delete("/api/gate/delete/{owner}/{platform}/{group_id:path}")
+async def delete_owner_gate(owner: str, platform: str, group_id: str):
     """
     🗑️ Delete a gate configuration
     
+    MULTI-GATE SUPPORT: Requires group_id to identify the specific gate.
     Removes a specific gate configuration for an owner.
     This action is irreversible - bot token will be deleted.
     
     Path Parameters:
         owner: Wallet address of the gate owner
         platform: 'telegram' or 'discord'
+        group_id: The group/channel ID to delete (e.g., "-1001234567890")
     
     Response:
         {
             "success": true,
             "message": "Gate configuration deleted successfully",
             "owner": "0x...",
-            "platform": "telegram"
+            "platform": "telegram",
+            "group_id": "-1001234567890"
         }
     """
     try:
         owner = owner.lower()
         platform = platform.lower()
+        group_id = group_id.strip()
         
         # Validation
         if not owner or not owner.startswith("0x") or len(owner) != 42:
@@ -2644,19 +3077,22 @@ async def delete_owner_gate(owner: str, platform: str):
         if platform not in ["telegram", "discord"]:
             return {"success": False, "error": "Platform must be 'telegram' or 'discord'"}
         
+        if not group_id:
+            return {"success": False, "error": "group_id is required"}
+        
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Check if gate exists
+        # Check if gate exists (with specific group_id)
         cursor.execute("""
             SELECT id, group_name FROM owner_gate_configs 
-            WHERE owner_wallet = ? AND platform = ? AND is_active = 1
-        """, (owner, platform))
+            WHERE owner_wallet = ? AND platform = ? AND group_id = ? AND is_active = 1
+        """, (owner, platform, group_id))
         
         row = cursor.fetchone()
         if not row:
             conn.close()
-            return {"success": False, "error": f"No active {platform} gate found for this owner"}
+            return {"success": False, "error": f"No active {platform} gate with group_id {group_id} found for this owner"}
         
         gate_id = row[0]
         group_name = row[1] or f"{platform.title()} Group"
@@ -2675,13 +3111,15 @@ async def delete_owner_gate(owner: str, platform: str):
         
         log_activity("INFO", "GATE_SERVICE", f"✓ Gate deleted: {platform}", 
                     owner=owner[:10], 
-                    group=group_name[:20])
+                    group=group_name[:20],
+                    group_id=group_id[:15])
         
         return {
             "success": True,
             "message": f"Gate configuration for {platform.title()} deleted successfully",
             "owner": owner,
             "platform": platform,
+            "group_id": group_id,
             "deleted_group": group_name
         }
         
@@ -3196,13 +3634,14 @@ async def verify(req: Request):
                                         source=referrer_source)
                         else:
                             # Insert: Neuer Follower-Eintrag für diese Plattform
+                            # NOTE: follow_confirmed = 0 initially! Will be set to 1 after successful gate access
                             cursor.execute(
                                 """INSERT INTO followers 
-                                   (owner_wallet, follower_address, follower_score, follower_display_name, verified_at, source_platform, verified)
-                                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                                   (owner_wallet, follower_address, follower_score, follower_display_name, verified_at, source_platform, verified, follow_confirmed)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, 0)""",
                                 (owner_wallet, address, new_score, display_name or None, current_iso, referrer_source, 1)
                             )
-                            log_activity("INFO", "FOLLOWER", "✓ New follower registered (multi-platform)", 
+                            log_activity("INFO", "FOLLOWER", "✓ New follower registered (pending gate access)", 
                                         owner=owner_wallet[:10], 
                                         follower=address[:10], 
                                         source=referrer_source)
@@ -3273,13 +3712,14 @@ async def verify(req: Request):
                                 source=referrer_source)
                 else:
                     try:
+                        # NOTE: follow_confirmed = 0 initially! Will be set to 1 after successful gate access
                         cursor.execute(
                             """INSERT INTO followers 
-                               (owner_wallet, follower_address, follower_score, follower_display_name, verified_at, source_platform, verified)
-                               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                               (owner_wallet, follower_address, follower_score, follower_display_name, verified_at, source_platform, verified, follow_confirmed)
+                               VALUES (?, ?, ?, ?, ?, ?, ?, 0)""",
                             (owner_wallet, address, initial_score, display_name or None, current_iso, referrer_source, 1)
                         )
-                        log_activity("INFO", "FOLLOWER", "✓ Follower registered", 
+                        log_activity("INFO", "FOLLOWER", "✓ Follower registered (pending gate access)", 
                                     owner=owner_wallet[:10], 
                                     follower=address[:10], 
                                     source=referrer_source)

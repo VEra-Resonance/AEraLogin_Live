@@ -1425,7 +1425,8 @@ Issued At: ${issuedAt}`;
                 
                 document.getElementById('scoreValue').innerHTML = 
                     `<span class="score-badge">${data.resonance_score}/100</span>`;
-                document.getElementById('statusValue').textContent = '✅ Access Granted';
+                // ⏳ Don't show "Access Granted" yet - wait for score check!
+                document.getElementById('statusValue').textContent = '⏳ Checking access...';
                 document.getElementById('loginCountValue').textContent = data.login_count;
                 
                 if (data.token) {
@@ -1465,6 +1466,9 @@ Issued At: ${issuedAt}`;
                     // ========================================
                     
                     if (inviteData.success) {
+                        
+                        // ✅ SUCCESS: Update status to "Access Granted"
+                        document.getElementById('statusValue').innerHTML = '<span style="color: #00ff88;">✅ Access Granted</span>';
                         
                         // 🤖 INTENT-BRIDGE: Android + In-App Browser (MetaMask, Trust Wallet, etc.)
                         if (inviteData.method === "intent_bridge") {
@@ -1549,13 +1553,35 @@ Issued At: ${issuedAt}`;
                         }
                     }
                     
-                    // Error handling
-                    log(`⚠️ Could not get ${platformName} invite: ` + (inviteData.error || 'Unknown error'));
-                    showStatus(`✅ NFT Verified! Score: ${data.resonance_score}/100`, 'success');
-                    verifyBtn.textContent = '✓ Verified';
-                    verifyBtn.disabled = true;
-                    verifyBtn.style.opacity = '0.6';
-                    verifyBtn.style.cursor = 'not-allowed';
+                    // ========================================
+                    // ERROR HANDLING: Score too low or other errors
+                    // ========================================
+                    const errorMsg = inviteData.error || 'Unknown error';
+                    log(`⚠️ Could not get ${platformName} invite: ` + errorMsg);
+                    
+                    // Check if it's a SCORE error (access denied due to low score)
+                    if (errorMsg.includes('Access denied') || errorMsg.includes('Score') || inviteData.score_required) {
+                        // 🚫 ACCESS DENIED - Update UI to reflect this!
+                        document.getElementById('statusValue').innerHTML = '<span style="color: #f0a040;">⚠️ Score Required</span>';
+                        
+                        const requiredScore = inviteData.score_required || inviteData.error_details?.required_score || '?';
+                        const userScore = inviteData.your_onchain_score || inviteData.error_details?.your_score || data.resonance_score;
+                        const missingPoints = inviteData.error_details?.missing_points || (requiredScore - userScore);
+                        const groupName = inviteData.error_details?.group_name || 'This community';
+                        
+                        showStatus(`⚠️ ${groupName} requires a minimum score of ${requiredScore}. Your score: ${userScore}. You need ${missingPoints} more points.`, 'warning');
+                        verifyBtn.textContent = '⚠️ Score too low';
+                        verifyBtn.disabled = true;
+                        verifyBtn.style.opacity = '0.7';
+                        verifyBtn.style.cursor = 'not-allowed';
+                    } else {
+                        // Other errors (NFT verified but invite failed for other reason)
+                        showStatus(`✅ NFT Verified! Score: ${data.resonance_score}/100`, 'success');
+                        verifyBtn.textContent = '✓ Verified';
+                        verifyBtn.disabled = true;
+                        verifyBtn.style.opacity = '0.6';
+                        verifyBtn.style.cursor = 'not-allowed';
+                    }
                 } catch (inviteError) {
                     log(`⚠️ ${platformName} invite error: ` + inviteError.message);
                     showStatus(`✅ NFT Verified! Score: ${data.resonance_score}/100`, 'success');

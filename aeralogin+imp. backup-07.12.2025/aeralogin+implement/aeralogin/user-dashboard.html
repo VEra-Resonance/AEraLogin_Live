@@ -1518,7 +1518,9 @@ Licensed under the Apache License, Version 2.0
                             </div>
                             <div style="padding-left: 34px;">
                                 <input type="password" id="botTokenInput" placeholder="123456789:AABBccDDeeFF..." style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light); margin-bottom: 8px; font-family: monospace;">
-                                <button onclick="toggleBotTokenVisibility()" style="background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: var(--light); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">👁️ Show/Hide</button>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <button onclick="toggleBotTokenVisibility()" style="background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: var(--light); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">👁️ Show/Hide</button>
+                                </div>
                                 <p style="font-size: 0.75rem; color: #f59e0b; margin: 8px 0 0 0;">🔒 Your token is encrypted before storage!</p>
                             </div>
                         </div>
@@ -1530,6 +1532,33 @@ Licensed under the Apache License, Version 2.0
                                 <span style="font-weight: 600;">Add Bot to your Group as Admin</span>
                             </div>
                             <div style="padding-left: 34px;">
+                                <!-- Instructions for Detect Groups -->
+                                <div style="margin-bottom: 12px; padding: 10px; background: rgba(0, 136, 204, 0.1); border: 1px dashed rgba(0, 136, 204, 0.4); border-radius: 6px;">
+                                    <p style="font-size: 0.85rem; margin: 0 0 8px 0; color: #60a5fa; font-weight: 600;">📋 Before detecting your group:</p>
+                                    <ol style="margin: 0; padding-left: 20px; font-size: 0.8rem; line-height: 1.8; opacity: 0.9;">
+                                        <li>Open your Telegram group</li>
+                                        <li>Add your bot as <strong>Administrator</strong> (with "Invite Users" permission)</li>
+                                        <li>Send any message in the group (e.g. "hello") — <em>this is required!</em></li>
+                                        <li>Click the <strong>🔍 Detect Groups</strong> button below</li>
+                                    </ol>
+                                </div>
+                                
+                                <!-- Detect Groups Button -->
+                                <div style="margin-bottom: 12px;">
+                                    <button onclick="detectTelegramGroups()" id="detectGroupsBtn" style="background: linear-gradient(135deg, #0088cc, #006699); border: none; color: white; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                                        🔍 Detect Groups
+                                    </button>
+                                </div>
+                                
+                                <!-- Detected Groups Dropdown (hidden initially) -->
+                                <div id="detectedGroupsContainer" style="display: none; margin-bottom: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px;">
+                                    <label style="display: block; font-size: 11px; margin-bottom: 5px; color: #10b981; font-weight: 600;">✅ Groups Found - Select one:</label>
+                                    <select id="detectedGroupsSelect" onchange="selectDetectedGroup()" style="width: 100%; padding: 10px; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.1); color: var(--light); cursor: pointer;">
+                                        <option value="">-- Select a group --</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Manual Group ID Input -->
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                     <div>
                                         <label style="display: block; font-size: 11px; margin-bottom: 5px; color: rgba(240, 244, 255, 0.7);">Group/Server ID:</label>
@@ -1540,19 +1569,50 @@ Licensed under the Apache License, Version 2.0
                                         <input type="text" id="botChannelId" placeholder="1234567890" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light); font-family: monospace;">
                                     </div>
                                 </div>
-                                <p style="font-size: 0.75rem; opacity: 0.7; margin: 8px 0 0 0;" id="groupIdHelp">💡 Add your bot to the group, then use @getmyid_bot to get the Group ID</p>
+                                <p style="font-size: 0.75rem; opacity: 0.7; margin: 8px 0 0 0;" id="groupIdHelp">💡 Or add <a href="https://t.me/getmyid_bot" target="_blank" style="color: var(--secondary);">@getmyid_bot</a> to your group to get the ID manually</p>
                             </div>
                         </div>
                         
-                        <!-- Step 4: Fallback Link (Optional) -->
+                        <!-- Step 4: Fallback Static Link (Optional with Bot Token) -->
                         <div class="setup-step" style="margin-bottom: 16px; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 6px;">
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                                 <span style="background: rgba(255, 255, 255, 0.2); color: var(--light); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;">4</span>
-                                <span style="font-weight: 600;">Fallback Static Link <span style="opacity: 0.6; font-weight: normal;">(optional)</span></span>
+                                <span style="font-weight: 600;">Fallback Static Link <span id="fallbackRequired" style="opacity: 0.6; font-weight: normal;">(optional with Bot Token)</span></span>
                             </div>
                             <div style="padding-left: 34px;">
-                                <input type="text" id="botFallbackLink" placeholder="https://t.me/+ABC123... (backup if bot fails)" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
-                                <p style="font-size: 0.75rem; opacity: 0.7; margin: 8px 0 0 0;">Used as backup if bot is temporarily unavailable</p>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <input type="text" id="botFallbackLink" placeholder="https://t.me/+ABC123... (optional if Bot Token set)" style="flex: 1; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                                    <button onclick="generateInviteLink()" id="generateLinkBtn" style="padding: 10px 12px; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 6px; color: white; font-size: 12px; cursor: pointer; white-space: nowrap;">🔗 Auto-Generate</button>
+                                </div>
+                                <p style="font-size: 0.75rem; opacity: 0.7; margin: 8px 0 0 0;" id="fallbackLinkHelp">💡 Click "Auto-Generate" to let your bot create an invite link automatically</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 5: Minimum Resonance Score -->
+                        <div class="setup-step" style="margin-bottom: 16px; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 6px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <span style="background: linear-gradient(135deg, #a855f7, #6366f1); color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;">5</span>
+                                <span style="font-weight: 600;">Minimum Resonance Score</span>
+                            </div>
+                            <div style="padding-left: 34px;">
+                                <div style="display: flex; align-items: center; gap: 15px;">
+                                    <input type="range" id="minScoreSlider" min="50" max="200" value="50" 
+                                           style="flex: 1; height: 8px; cursor: pointer; accent-color: var(--secondary);"
+                                           oninput="updateScoreDisplay(this.value)">
+                                    <div style="min-width: 80px; text-align: center;">
+                                        <span id="minScoreValue" style="font-size: 1.5rem; font-weight: bold; color: var(--secondary);">50</span>
+                                        <span style="font-size: 0.7rem; display: block; opacity: 0.7;">points</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.7rem; opacity: 0.6; margin-top: 4px;">
+                                    <span>50 (Open)</span>
+                                    <span>100</span>
+                                    <span>150</span>
+                                    <span>200 (Exclusive)</span>
+                                </div>
+                                <p style="font-size: 0.75rem; color: #a855f7; margin: 8px 0 0 0;" id="minScoreHint">
+                                    🔓 Open access - Users with any score can join
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -1597,16 +1657,16 @@ Licensed under the Apache License, Version 2.0
                 <!-- Delete Confirmation Modal -->
                 <div id="deleteGateModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 10000; justify-content: center; align-items: center;">
                     <div style="background: var(--dark-gradient); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%;">
-                        <h3 style="margin: 0 0 12px 0; color: #ef4444;">⚠️ Gate löschen?</h3>
+                        <h3 style="margin: 0 0 12px 0; color: #ef4444;">⚠️ Delete Gate?</h3>
                         <p style="font-size: 14px; opacity: 0.8; margin-bottom: 8px;">
-                            Möchtest du das Gate <strong id="deleteGateName"></strong> wirklich löschen?
+                            Are you sure you want to delete the gate <strong id="deleteGateName"></strong>?
                         </p>
                         <p style="font-size: 12px; color: #f59e0b; margin-bottom: 20px;">
-                            Diese Aktion kann nicht rückgängig gemacht werden. Der Bot-Token wird gelöscht.
+                            This action cannot be undone. The bot token will be permanently deleted.
                         </p>
                         <div style="display: flex; gap: 12px;">
-                            <button onclick="closeDeleteModal()" style="flex: 1; padding: 12px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; color: var(--light); cursor: pointer;">Abbrechen</button>
-                            <button onclick="confirmDeleteGate()" style="flex: 1; padding: 12px; background: #ef4444; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 600;">🗑️ Löschen</button>
+                            <button onclick="closeDeleteModal()" style="flex: 1; padding: 12px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; color: var(--light); cursor: pointer;">Cancel</button>
+                            <button onclick="confirmDeleteGate()" style="flex: 1; padding: 12px; background: #ef4444; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 600;">🗑️ Delete</button>
                         </div>
                     </div>
                 </div>
@@ -2528,6 +2588,39 @@ Licensed under the Apache License, Version 2.0
             btn.textContent = '✓ Copied!';
             setTimeout(() => btn.textContent = originalText, 2000);
         }
+        
+        // ========================================
+        // MINIMUM SCORE SLIDER FUNCTIONS
+        // ========================================
+        function updateScoreDisplay(value) {
+            const scoreValue = document.getElementById('minScoreValue');
+            const scoreHint = document.getElementById('minScoreHint');
+            
+            scoreValue.textContent = value;
+            
+            // Update color based on score
+            if (value <= 50) {
+                scoreValue.style.color = '#10b981';  // Green - open
+                scoreHint.innerHTML = '🔓 <strong>Open access</strong> - Users with any score can join';
+                scoreHint.style.color = '#10b981';
+            } else if (value <= 75) {
+                scoreValue.style.color = '#22c55e';  // Light green
+                scoreHint.innerHTML = '📊 <strong>Basic threshold</strong> - New verified users can join';
+                scoreHint.style.color = '#22c55e';
+            } else if (value <= 100) {
+                scoreValue.style.color = '#f59e0b';  // Yellow
+                scoreHint.innerHTML = '⭐ <strong>Regular members</strong> - Some engagement required';
+                scoreHint.style.color = '#f59e0b';
+            } else if (value <= 150) {
+                scoreValue.style.color = '#a855f7';  // Purple
+                scoreHint.innerHTML = '💎 <strong>Active community</strong> - Significant engagement needed';
+                scoreHint.style.color = '#a855f7';
+            } else {
+                scoreValue.style.color = '#ffd700';  // Gold
+                scoreHint.innerHTML = '👑 <strong>VIP exclusive</strong> - Only top contributors can join';
+                scoreHint.style.color = '#ffd700';
+            }
+        }
 
         // ========================================
         // ADVANCED GATE SERVICE FUNCTIONS
@@ -2562,11 +2655,174 @@ Licensed under the Apache License, Version 2.0
             input.type = input.type === 'password' ? 'text' : 'password';
         }
         
+        // =====================================================
+        // AUTO-DETECT TELEGRAM GROUPS
+        // =====================================================
+        async function detectTelegramGroups() {
+            const platform = document.getElementById('botPlatformSelect').value;
+            if (platform !== 'telegram') {
+                showToast('Auto-detect is only available for Telegram', 'warning');
+                return;
+            }
+            
+            const botToken = document.getElementById('botTokenInput').value.trim();
+            if (!botToken) {
+                showToast('Please enter your Bot Token first', 'warning');
+                return;
+            }
+            
+            const btn = document.getElementById('detectGroupsBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Detecting...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/gate/detect-groups`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bot_token: botToken })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const container = document.getElementById('detectedGroupsContainer');
+                    const select = document.getElementById('detectedGroupsSelect');
+                    
+                    if (data.groups && data.groups.length > 0) {
+                        // Populate dropdown
+                        select.innerHTML = '<option value="">-- Select a group --</option>';
+                        data.groups.forEach(group => {
+                            const memberInfo = group.member_count ? ` (${group.member_count} members)` : '';
+                            const option = document.createElement('option');
+                            option.value = JSON.stringify(group);
+                            option.textContent = `${group.group_name}${memberInfo} [${group.group_type}]`;
+                            select.appendChild(option);
+                        });
+                        
+                        container.style.display = 'block';
+                        showToast(`✓ Found ${data.groups.length} group(s)! Select one below.`, 'success');
+                    } else {
+                        container.style.display = 'none';
+                        showToast(data.message || 'No groups found. Add bot to group and send a message first.', 'warning');
+                    }
+                } else {
+                    showToast(data.error || 'Detection failed', 'error');
+                }
+            } catch (error) {
+                console.error('Detect groups error:', error);
+                showToast('Failed to detect groups: ' + error.message, 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+        
+        function selectDetectedGroup() {
+            const select = document.getElementById('detectedGroupsSelect');
+            const selectedValue = select.value;
+            
+            if (!selectedValue) return;
+            
+            try {
+                const group = JSON.parse(selectedValue);
+                
+                // Auto-fill the Group ID field
+                document.getElementById('botGroupId').value = group.group_id;
+                
+                // Auto-fill the Group Name field if it exists and is empty
+                const groupNameInput = document.getElementById('botGroupName');
+                if (groupNameInput && !groupNameInput.value) {
+                    groupNameInput.value = group.group_name || '';
+                }
+                
+                showToast(`✓ Selected: ${group.group_name}`, 'success');
+                
+                // Highlight the Group ID field briefly
+                const groupIdInput = document.getElementById('botGroupId');
+                groupIdInput.style.borderColor = '#22c55e';
+                groupIdInput.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.3)';
+                setTimeout(() => {
+                    groupIdInput.style.borderColor = '';
+                    groupIdInput.style.boxShadow = '';
+                }, 2000);
+                
+            } catch (e) {
+                console.error('Error parsing group:', e);
+            }
+        }
+        
+        // Auto-generate invite link using bot's exportChatInviteLink
+        async function generateInviteLink() {
+            const botToken = document.getElementById('botTokenInput').value.trim();
+            const groupId = document.getElementById('botGroupId').value.trim();
+            const btn = document.getElementById('generateLinkBtn');
+            
+            if (!botToken) {
+                showToast('❌ Please enter Bot Token first', 'error');
+                return;
+            }
+            
+            if (!groupId) {
+                showToast('❌ Please enter or select Group ID first', 'error');
+                return;
+            }
+            
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Generating...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/gate/generate-invite-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        bot_token: botToken,
+                        group_id: groupId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.invite_link) {
+                    // Auto-fill the fallback link field
+                    document.getElementById('botFallbackLink').value = data.invite_link;
+                    showToast('✅ Invite link generated!', 'success');
+                    
+                    // Highlight the field
+                    const linkInput = document.getElementById('botFallbackLink');
+                    linkInput.style.borderColor = '#22c55e';
+                    linkInput.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.3)';
+                    setTimeout(() => {
+                        linkInput.style.borderColor = '';
+                        linkInput.style.boxShadow = '';
+                    }, 2000);
+                } else {
+                    showToast(`❌ ${data.error || 'Failed to generate link'}`, 'error');
+                    // Show helpful hint if permission error
+                    if (data.error && data.error.includes('administrator')) {
+                        document.getElementById('fallbackLinkHelp').innerHTML = 
+                            '⚠️ Bot needs admin rights with "Invite Users" permission. You can still paste a link manually.';
+                    }
+                }
+            } catch (e) {
+                console.error('Generate link error:', e);
+                showToast('❌ Network error', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+        
         function updateBotInstructions() {
             const platform = document.getElementById('botPlatformSelect').value;
             const instructionsDiv = document.getElementById('createBotInstructions');
             const channelField = document.getElementById('channelIdField');
             const groupIdHelp = document.getElementById('groupIdHelp');
+            const detectBtn = document.getElementById('detectGroupsBtn');
+            
+            // Hide detected groups when switching platforms
+            document.getElementById('detectedGroupsContainer').style.display = 'none';
             
             if (platform === 'telegram') {
                 instructionsDiv.innerHTML = `
@@ -2578,7 +2834,8 @@ Licensed under the Apache License, Version 2.0
                     </ol>
                 `;
                 channelField.style.display = 'none';
-                groupIdHelp.textContent = '💡 Add your bot to the group, then use @getmyid_bot to get the Group ID';
+                detectBtn.style.display = 'flex';
+                groupIdHelp.innerHTML = '💡 Or add <a href="https://t.me/getmyid_bot" target="_blank" style="color: var(--secondary);">@getmyid_bot</a> to your group to get the ID manually';
             } else {
                 instructionsDiv.innerHTML = `
                     <p style="margin: 0 0 8px 0;"><strong>Discord:</strong></p>
@@ -2590,9 +2847,13 @@ Licensed under the Apache License, Version 2.0
                     </ol>
                 `;
                 channelField.style.display = 'block';
+                detectBtn.style.display = 'none';
                 groupIdHelp.textContent = '💡 Right-click your server → Copy Server ID (enable Developer Mode in Settings)';
             }
         }
+        
+        // Store last saved gate info for verification after clearing form
+        let lastSavedGate = null;
         
         async function saveBotConfiguration() {
             const platform = document.getElementById('botPlatformSelect').value;
@@ -2601,6 +2862,7 @@ Licensed under the Apache License, Version 2.0
             const channelId = document.getElementById('botChannelId')?.value?.trim() || '';
             const groupName = document.getElementById('botGroupName').value.trim();
             const fallbackLink = document.getElementById('botFallbackLink').value.trim();
+            const minScore = parseInt(document.getElementById('minScoreSlider')?.value || '50');
             const statusDiv = document.getElementById('botConfigStatus');
             
             if (!connectedWallet) {
@@ -2618,6 +2880,12 @@ Licensed under the Apache License, Version 2.0
                 return;
             }
             
+            // Fallback link is optional if bot token is provided (bot can generate links on-demand)
+            if (!fallbackLink && !botToken) {
+                showBotStatus('error', '❌ Either Bot Token or Static invite link is required');
+                return;
+            }
+            
             showBotStatus('loading', '⏳ Saving configuration...');
             
             try {
@@ -2631,20 +2899,37 @@ Licensed under the Apache License, Version 2.0
                         group_id: groupId,
                         channel_id: channelId,
                         group_name: groupName || `My ${platform} Community`,
-                        static_invite_link: fallbackLink
+                        static_invite_link: fallbackLink,
+                        min_score: minScore
                     })
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    showBotStatus('success', `✅ ${platform.charAt(0).toUpperCase() + platform.slice(1)} bot configured! Security Level: ${data.security_level.toUpperCase()}`);
+                    const minScoreText = minScore > 50 ? ` | Min Score: ${minScore}` : '';
+                    showBotStatus('success', `✅ ${platform.charAt(0).toUpperCase() + platform.slice(1)} gate configured! Security: ${data.security_level.toUpperCase()}${minScoreText}`);
                     
-                    // Refresh gate status
+                    // Store last saved gate for verification (before clearing form)
+                    lastSavedGate = {
+                        platform: platform,
+                        group_id: groupId,
+                        bot_token: botToken  // Keep temporarily for immediate verify
+                    };
+                    
+                    // Refresh gate list AND status
                     await loadGateStatus();
+                    await loadConfiguredGates();
                     
-                    // Clear the token input for security
+                    // Clear sensitive inputs for security
                     document.getElementById('botTokenInput').value = '';
+                    
+                    // Reset form for next gate
+                    document.getElementById('botGroupId').value = '';
+                    document.getElementById('botGroupName').value = '';
+                    document.getElementById('botFallbackLink').value = '';
+                    document.getElementById('minScoreSlider').value = '50';
+                    updateScoreDisplay(50);
                 } else {
                     showBotStatus('error', '❌ ' + (data.error || 'Failed to save configuration'));
                 }
@@ -2657,11 +2942,37 @@ Licensed under the Apache License, Version 2.0
         
         async function verifyBotSetup() {
             const platform = document.getElementById('botPlatformSelect').value;
+            const botToken = document.getElementById('botTokenInput').value.trim();
+            const groupId = document.getElementById('botGroupId').value.trim();
             const statusDiv = document.getElementById('botConfigStatus');
             
             if (!connectedWallet) {
                 alert('Please connect your wallet first');
                 return;
+            }
+            
+            // If bot_token and group_id are filled, do direct verification (before saving)
+            // Otherwise check if we just saved a gate and can use that info
+            // Finally fall back to owner+platform lookup
+            let requestBody;
+            
+            if (botToken && groupId) {
+                // Mode 2: Direct verification with token + group_id
+                requestBody = { bot_token: botToken, group_id: groupId };
+            } else if (lastSavedGate && lastSavedGate.bot_token && lastSavedGate.group_id) {
+                // Just saved a gate - use that info for immediate verification
+                requestBody = { bot_token: lastSavedGate.bot_token, group_id: lastSavedGate.group_id };
+                // Clear the stored token after use (for security)
+                setTimeout(() => { if (lastSavedGate) lastSavedGate.bot_token = null; }, 100);
+            } else {
+                // Mode 1: Lookup from saved config (needs group_id for multi-gate)
+                // Try to get group_id from lastSavedGate or fail gracefully
+                if (lastSavedGate && lastSavedGate.group_id) {
+                    requestBody = { owner: connectedWallet, platform: platform, group_id: lastSavedGate.group_id };
+                } else {
+                    // No group_id - this will likely fail for multi-gate setups
+                    requestBody = { owner: connectedWallet, platform: platform };
+                }
             }
             
             showBotStatus('loading', '⏳ Verifying bot permissions...');
@@ -2670,10 +2981,7 @@ Licensed under the Apache License, Version 2.0
                 const response = await fetch(`${API_BASE}/api/gate/verify-bot`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        owner: connectedWallet,
-                        platform: platform
-                    })
+                    body: JSON.stringify(requestBody)
                 });
                 
                 const data = await response.json();
@@ -2789,7 +3097,21 @@ Licensed under the Apache License, Version 2.0
                         const platformName = gate.platform.charAt(0).toUpperCase() + gate.platform.slice(1);
                         const securityBadge = getSecurityBadge(gate.security_level);
                         const statusDot = gate.bot_verified ? '🟢' : (gate.has_static_link ? '🟡' : '🔴');
-                        const createdDate = gate.created_at ? new Date(gate.created_at).toLocaleDateString('de-DE') : 'N/A';
+                        
+                        // Show last_updated if available, otherwise created_at
+                        const displayDate = gate.last_updated || gate.created_at;
+                        const dateLabel = gate.last_updated ? 'Updated' : 'Created';
+                        const formattedDate = displayDate ? new Date(displayDate).toLocaleDateString('en-US') : 'N/A';
+                        
+                        // Min score badge
+                        const minScore = gate.min_score || 50;
+                        const minScoreBadge = minScore > 50 
+                            ? `<span style="color: #a855f7; font-size: 0.75rem;">⭐ ${minScore}+ pts</span>` 
+                            : '<span style="color: #10b981; font-size: 0.75rem;">🔓 Open</span>';
+                        
+                        // Escape group_id for HTML attribute
+                        const escapedGroupId = (gate.group_id || '').replace(/"/g, '&quot;');
+                        const escapedGroupName = (gate.group_name || 'Unnamed Group').replace(/'/g, "\\'").replace(/"/g, '&quot;');
                         
                         html += `
                             <div class="gate-card" style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; margin-bottom: 10px;">
@@ -2798,16 +3120,19 @@ Licensed under the Apache License, Version 2.0
                                     <div>
                                         <div style="font-weight: 600; margin-bottom: 4px;">${gate.group_name || 'Unnamed Group'}</div>
                                         <div style="font-size: 0.8rem; opacity: 0.7;">
-                                            ${statusDot} ${platformName} • ${securityBadge} • Erstellt: ${createdDate}
+                                            ${statusDot} ${platformName} • ${securityBadge} • ${minScoreBadge}
                                         </div>
-                                        ${gate.group_id ? `<div style="font-size: 0.7rem; opacity: 0.5; font-family: monospace; margin-top: 2px;">ID: ${gate.group_id}</div>` : ''}
+                                        <div style="font-size: 0.7rem; opacity: 0.5; margin-top: 2px;">
+                                            ${dateLabel}: ${formattedDate}
+                                            ${gate.group_id ? ` • <span style="font-family: monospace;">ID: ${gate.group_id}</span>` : ''}
+                                        </div>
                                     </div>
                                 </div>
-                                <button onclick="openDeleteModal('${gate.platform}', '${(gate.group_name || 'Unnamed Group').replace(/'/g, "\\'")}')" 
+                                <button onclick="openDeleteModal('${gate.platform}', '${escapedGroupName}', '${escapedGroupId}')" 
                                         style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px; transition: all 0.2s;"
                                         onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'"
                                         onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'">
-                                    🗑️ Löschen
+                                    🗑️ Delete
                                 </button>
                             </div>
                         `;
@@ -2818,8 +3143,8 @@ Licensed under the Apache License, Version 2.0
                     listContainer.innerHTML = `
                         <div style="text-align: center; padding: 30px; color: rgba(240, 244, 255, 0.5); border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 8px;">
                             <div style="font-size: 2rem; margin-bottom: 8px;">🚫</div>
-                            <p style="margin: 0 0 4px 0;">Keine Gates konfiguriert</p>
-                            <p style="margin: 0; font-size: 0.8rem;">Erstelle oben dein erstes Gate!</p>
+                            <p style="margin: 0 0 4px 0;">No gates configured</p>
+                            <p style="margin: 0; font-size: 0.8rem;">Create your first gate above!</p>
                         </div>
                     `;
                 }
@@ -2828,7 +3153,7 @@ Licensed under the Apache License, Version 2.0
                 console.error('Error loading gates:', error);
                 listContainer.innerHTML = `
                     <div style="text-align: center; padding: 20px; color: #ef4444;">
-                        <p style="margin: 0;">❌ Fehler beim Laden der Gates</p>
+                        <p style="margin: 0;">❌ Error loading gates</p>
                     </div>
                 `;
             }
@@ -2844,8 +3169,8 @@ Licensed under the Apache License, Version 2.0
             }
         }
         
-        function openDeleteModal(platform, groupName) {
-            pendingDeleteGate = { platform, groupName };
+        function openDeleteModal(platform, groupName, groupId) {
+            pendingDeleteGate = { platform, groupName, groupId };
             document.getElementById('deleteGateName').innerHTML = `<span style="color: var(--secondary);">${groupName}</span> (${platform})`;
             document.getElementById('deleteGateModal').style.display = 'flex';
         }
@@ -2861,10 +3186,12 @@ Licensed under the Apache License, Version 2.0
                 return;
             }
             
-            const { platform, groupName } = pendingDeleteGate;
+            const { platform, groupName, groupId } = pendingDeleteGate;
             
             try {
-                const response = await fetch(`${API_BASE}/api/gate/delete/${connectedWallet}/${platform}`, {
+                // MULTI-GATE: Include group_id in delete URL
+                const deleteUrl = `${API_BASE}/api/gate/delete/${connectedWallet}/${platform}/${encodeURIComponent(groupId)}`;
+                const response = await fetch(deleteUrl, {
                     method: 'DELETE'
                 });
                 
@@ -2872,20 +3199,20 @@ Licensed under the Apache License, Version 2.0
                 
                 if (data.success) {
                     // Show success notification
-                    showNotification('success', `✅ Gate "${groupName}" erfolgreich gelöscht!`);
+                    showNotification('success', `✅ Gate "${groupName}" deleted successfully!`);
                     
                     // Close modal and refresh
                     closeDeleteModal();
                     await loadConfiguredGates();
                     await loadGateStatus();
                 } else {
-                    showNotification('error', `❌ Fehler: ${data.error || 'Löschen fehlgeschlagen'}`);
+                    showNotification('error', `❌ Error: ${data.error || 'Delete failed'}`);
                     closeDeleteModal();
                 }
                 
             } catch (error) {
                 console.error('Delete gate error:', error);
-                showNotification('error', '❌ Netzwerkfehler beim Löschen');
+                showNotification('error', '❌ Network error while deleting');
                 closeDeleteModal();
             }
         }
