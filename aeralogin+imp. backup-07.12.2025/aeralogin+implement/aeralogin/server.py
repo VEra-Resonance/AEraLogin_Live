@@ -57,6 +57,15 @@ except ImportError:
     discord_bot = None
     logger.warning("⚠️ Discord Bot Service not available")
 
+# ===== IMPORT DYNAMIC GATE SERVICE =====
+try:
+    from gate_service import init_gate_service, get_gate_service, GateService
+    GATE_SERVICE_AVAILABLE = True
+    logger.info("✓ Dynamic Gate Service imported")
+except ImportError:
+    GATE_SERVICE_AVAILABLE = False
+    logger.warning("⚠️ Dynamic Gate Service not available - using legacy mode")
+
 # Config
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", 8840))
@@ -714,6 +723,44 @@ def init_db():
     )
     """)
     
+    # ===== DYNAMIC GATE CONFIGURATION =====
+    # Allows each owner to configure their own Bot for secure one-time links
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS owner_gate_configs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        owner_wallet TEXT NOT NULL,
+        platform TEXT NOT NULL,
+        
+        -- Bot Credentials (ENCRYPTED with GATE_ENCRYPTION_KEY!)
+        bot_token_encrypted TEXT,
+        group_id TEXT,
+        channel_id TEXT,
+        
+        -- Verification Status
+        bot_username TEXT,
+        bot_verified BOOLEAN DEFAULT 0,
+        verified_at TEXT,
+        last_health_check TEXT,
+        health_status TEXT,
+        
+        -- Fallback (for owners without bot)
+        static_invite_link TEXT,
+        
+        -- Metadata
+        group_name TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT,
+        is_active BOOLEAN DEFAULT 1,
+        
+        -- Security: Track who can manage this gate
+        UNIQUE(owner_wallet, platform),
+        FOREIGN KEY(owner_wallet) REFERENCES users(address)
+    )
+    """)
+    
+    # Migration: If old owner_telegram_groups exists, we keep it for backward compatibility
+    # New gates should use owner_gate_configs instead
+    
     conn.commit()
     conn.close()
     print(f"✓ Datenbank initialisiert: {DB_PATH}")
@@ -837,6 +884,20 @@ async def startup_event():
     logger.info(f"   🌐 Öffentliche URL: {PUBLIC_URL}")
     logger.info(f"   📍 Host: {HOST}:{PORT}")
     logger.info(f"   🔐 CORS Origins: {CORS_ORIGINS}")
+    
+    # Initialize Dynamic Gate Service
+    if GATE_SERVICE_AVAILABLE:
+        try:
+            db_path = os.path.join(os.path.dirname(__file__), "aera.db")
+            init_gate_service(db_path)
+            logger.info("   🚪 Dynamic Gate Service initialisiert")
+        except Exception as e:
+            logger.warning(f"   ⚠️ Gate Service init failed: {e}")
+    
+    # Start Gate Health Check Task
+    if GATE_SERVICE_AVAILABLE:
+        asyncio.create_task(gate_health_check_loop())
+        logger.info("   🔍 Gate Health Check Task gestartet")
     
     # Starte Blockchain Sync Queue Processor
     from blockchain_sync import start_sync_queue_processor, add_to_sync_queue, should_sync_score
@@ -1487,9 +1548,35 @@ async def telegram_invite(req: Request):
         # Get invite link (owner-specific or default)
         owner_wallet = (data.get("owner_wallet") or "").lower() if isinstance(data, dict) else ""
         invite_link = None
+        link_method = "static"  # Track how link was created
         
-        # Try to get owner-specific link first
-        if owner_wallet:
+        # =====================================================================
+        # NEW: Try Dynamic GateService first for owner-specific one-time links
+        # =====================================================================
+        if owner_wallet and GATE_SERVICE_AVAILABLE:
+            try:
+                gate_service = get_gate_service()
+                if gate_service:
+                    success, gate_link, method = await gate_service.create_one_time_invite(
+                        owner_wallet=owner_wallet,
+                        platform=platform,
+                        user_address=address,
+                        expire_seconds=300
+                    )
+                    
+                    if success:
+                        invite_link = gate_link
+                        link_method = method
+                        log_activity("INFO", f"{platform.upper()}_GATE", f"✓ GateService link created ({method})", 
+                                    owner=owner_wallet[:10],
+                                    address=address[:10])
+            except Exception as gate_err:
+                log_activity("WARNING", f"{platform.upper()}_GATE", f"GateService error: {str(gate_err)}")
+        
+        # =====================================================================
+        # LEGACY: Fall back to old owner_telegram_groups table (static links)
+        # =====================================================================
+        if not invite_link and owner_wallet:
             try:
                 conn_temp = get_db_connection()
                 cursor_temp = conn_temp.cursor()
@@ -1503,7 +1590,8 @@ async def telegram_invite(req: Request):
                 
                 if result:
                     invite_link = result['telegram_invite_link']
-                    log_activity("INFO", f"{platform.upper()}_GATE", "✓ Using owner-specific link", 
+                    link_method = "legacy_static"
+                    log_activity("INFO", f"{platform.upper()}_GATE", "✓ Using legacy owner link (static)", 
                                 owner=owner_wallet[:10])
             except Exception as e:
                 log_activity("WARNING", f"{platform.upper()}_GATE", f"Could not fetch owner link: {str(e)}")
@@ -2116,6 +2204,455 @@ async def get_telegram_gate_stats(owner: str):
             "error": str(e),
             "invite_count": 0
         }
+
+
+# ============================================================================
+# ===== DYNAMIC GATE SERVICE API =====
+# ============================================================================
+# Neue API-Endpoints für dynamische Bot-Konfiguration
+# Ermöglicht Ownern, eigene Bots zu konfigurieren statt hardcoded .env
+# ============================================================================
+
+@app.post("/api/gate/configure")
+async def configure_gate(req: Request):
+    """
+    🔐 Configure owner's personal Gate (Telegram/Discord)
+    
+    Allows owners to set up their own bot for full security (one-time links).
+    Bot token is encrypted before storage!
+    
+    Request:
+        {
+            "owner": "0x...",
+            "platform": "telegram" | "discord",
+            "bot_token": "123456:ABC...", (optional - for one-time links)
+            "group_id": "-1001234567890",
+            "channel_id": "123456789", (Discord only, optional)
+            "group_name": "My Private Group", (optional)
+            "static_invite_link": "https://t.me/+XXX" (fallback)
+        }
+    
+    Response:
+        {
+            "success": true,
+            "message": "Gate configured successfully",
+            "security_level": "high" | "low"
+        }
+    
+    Security Levels:
+        - HIGH: Bot token configured → true one-time links (member_limit=1)
+        - LOW: Only static link → can be shared, no expiry
+    """
+    if not GATE_SERVICE_AVAILABLE:
+        return {"success": False, "error": "Gate Service not available"}
+    
+    try:
+        data = await req.json()
+        owner = data.get("owner", "").lower()
+        platform = data.get("platform", "").lower()
+        bot_token = data.get("bot_token", "").strip()
+        group_id = data.get("group_id", "").strip()
+        channel_id = data.get("channel_id", "").strip()
+        group_name = data.get("group_name", "").strip()
+        static_invite_link = data.get("static_invite_link", "").strip()
+        
+        # Validation
+        if not owner or not owner.startswith("0x") or len(owner) != 42:
+            return {"success": False, "error": "Invalid owner address"}
+        
+        if platform not in ["telegram", "discord"]:
+            return {"success": False, "error": "Platform must be 'telegram' or 'discord'"}
+        
+        if not group_id and not static_invite_link:
+            return {"success": False, "error": "Either group_id or static_invite_link required"}
+        
+        # Get GateService
+        gate_service = get_gate_service()
+        if not gate_service:
+            return {"success": False, "error": "Gate Service not initialized"}
+        
+        # Save configuration
+        result = await gate_service.save_gate_config(
+            owner_wallet=owner,
+            platform=platform,
+            bot_token=bot_token,
+            group_id=group_id,
+            channel_id=channel_id,
+            group_name=group_name,
+            static_invite_link=static_invite_link
+        )
+        
+        if not result["success"]:
+            return {"success": False, "error": result["error"]}
+        
+        # Determine security level
+        security_level = "high" if bot_token else "low"
+        
+        log_activity("INFO", "GATE_SERVICE", f"✓ Gate configured ({platform})", 
+                    owner=owner[:10], 
+                    security=security_level)
+        
+        return {
+            "success": True,
+            "message": f"{platform.title()} gate configured successfully",
+            "security_level": security_level,
+            "has_bot": bool(bot_token),
+            "has_static_fallback": bool(static_invite_link)
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "GATE_SERVICE", f"Configure error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/gate/verify-bot")
+async def verify_gate_bot(req: Request):
+    """
+    ✅ Verify that owner's bot has correct permissions
+    
+    Tests the bot token and checks if bot is admin with invite permissions.
+    Should be called after /api/gate/configure to ensure bot is working.
+    
+    Request:
+        {
+            "owner": "0x...",
+            "platform": "telegram" | "discord"
+        }
+    
+    Response:
+        {
+            "success": true,
+            "verified": true,
+            "bot_username": "@MyBotUsername",
+            "can_invite": true,
+            "message": "✅ Bot has invite permissions"
+        }
+    """
+    if not GATE_SERVICE_AVAILABLE:
+        return {"success": False, "error": "Gate Service not available"}
+    
+    try:
+        data = await req.json()
+        owner = data.get("owner", "").lower()
+        platform = data.get("platform", "").lower()
+        
+        # Validation
+        if not owner or not owner.startswith("0x") or len(owner) != 42:
+            return {"success": False, "error": "Invalid owner address"}
+        
+        if platform not in ["telegram", "discord"]:
+            return {"success": False, "error": "Platform must be 'telegram' or 'discord'"}
+        
+        # Get GateService
+        gate_service = get_gate_service()
+        if not gate_service:
+            return {"success": False, "error": "Gate Service not initialized"}
+        
+        # Verify bot
+        result = await gate_service.verify_bot(owner, platform)
+        
+        log_activity("INFO", "GATE_SERVICE", f"Bot verification: {result.get('success')}", 
+                    owner=owner[:10], 
+                    platform=platform)
+        
+        return {
+            "success": result.get("success", False),
+            "verified": result.get("success", False),
+            "bot_username": result.get("bot_username"),
+            "can_invite": result.get("can_invite", False),
+            "message": result.get("message") or result.get("error"),
+            "error": result.get("error") if not result.get("success") else None
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "GATE_SERVICE", f"Verify error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/gate/status/{owner}")
+async def get_gate_status(owner: str, platform: str = "telegram"):
+    """
+    📊 Get owner's gate configuration status
+    
+    Returns current configuration and security level.
+    
+    Path Parameters:
+        owner: Wallet address of the gate owner
+        
+    Query Parameters:
+        platform: 'telegram' or 'discord' (default: telegram)
+    
+    Response:
+        {
+            "success": true,
+            "owner": "0x...",
+            "platform": "telegram",
+            "configured": true,
+            "bot_verified": true,
+            "bot_username": "@MyBot",
+            "has_static_fallback": true,
+            "security_level": "high",
+            "group_name": "My Private Group"
+        }
+    
+    Security Levels:
+        - "high": Bot configured and verified → one-time links
+        - "low": Only static link → shareable, no expiry
+        - "none": Not configured
+    """
+    if not GATE_SERVICE_AVAILABLE:
+        return {"success": False, "error": "Gate Service not available"}
+    
+    try:
+        owner = owner.lower()
+        platform = platform.lower()
+        
+        # Validation
+        if not owner or not owner.startswith("0x") or len(owner) != 42:
+            return {"success": False, "error": "Invalid owner address"}
+        
+        if platform not in ["telegram", "discord"]:
+            return {"success": False, "error": "Platform must be 'telegram' or 'discord'"}
+        
+        # Get GateService
+        gate_service = get_gate_service()
+        if not gate_service:
+            return {"success": False, "error": "Gate Service not initialized"}
+        
+        # Get status
+        status = await gate_service.get_gate_status(owner, platform)
+        
+        return {
+            "success": True,
+            "owner": owner,
+            "platform": platform,
+            **status
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "GATE_SERVICE", f"Status error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/gate/create-invite")
+async def create_gate_invite(req: Request):
+    """
+    🔗 Create a one-time invite link using dynamic Gate Service
+    
+    This is the NEW unified endpoint that uses the GateService layer.
+    Automatically falls back to static links if no bot is configured.
+    
+    Request:
+        {
+            "owner": "0x...",
+            "platform": "telegram" | "discord",
+            "user_address": "0x...",
+            "expire_seconds": 300 (optional, default 5 min)
+        }
+    
+    Response:
+        {
+            "success": true,
+            "invite_link": "https://t.me/+...",
+            "method": "bot_one_time" | "static_fallback" | "default_bot",
+            "is_one_time": true,
+            "expires_in": 300
+        }
+    
+    Methods:
+        - bot_one_time: Owner's bot created a true one-time link (BEST)
+        - static_fallback: Using owner's static link (less secure)
+        - default_bot: Using AEra's default bot (fallback)
+        - no_config: No gate configured for this owner
+    """
+    if not GATE_SERVICE_AVAILABLE:
+        return {"success": False, "error": "Gate Service not available"}
+    
+    try:
+        data = await req.json()
+        owner = data.get("owner", "").lower()
+        platform = data.get("platform", "telegram").lower()
+        user_address = data.get("user_address", "").lower()
+        expire_seconds = data.get("expire_seconds", 300)
+        
+        # Validation
+        if not owner or not owner.startswith("0x") or len(owner) != 42:
+            return {"success": False, "error": "Invalid owner address"}
+        
+        if not user_address or not user_address.startswith("0x") or len(user_address) != 42:
+            return {"success": False, "error": "Invalid user address"}
+        
+        if platform not in ["telegram", "discord"]:
+            return {"success": False, "error": "Platform must be 'telegram' or 'discord'"}
+        
+        # Get GateService
+        gate_service = get_gate_service()
+        if not gate_service:
+            return {"success": False, "error": "Gate Service not initialized"}
+        
+        # Create invite
+        success, invite_link, method = await gate_service.create_one_time_invite(
+            owner_wallet=owner,
+            platform=platform,
+            user_address=user_address,
+            expire_seconds=expire_seconds
+        )
+        
+        if not success:
+            return {
+                "success": False,
+                "error": "Could not create invite link",
+                "method": method
+            }
+        
+        # Determine if truly one-time
+        is_one_time = method in ["bot_one_time", "default_bot"]
+        
+        log_activity("INFO", "GATE_SERVICE", f"✓ Invite created ({method})", 
+                    owner=owner[:10], 
+                    user=user_address[:10],
+                    platform=platform)
+        
+        return {
+            "success": True,
+            "invite_link": invite_link,
+            "method": method,
+            "is_one_time": is_one_time,
+            "expires_in": expire_seconds if is_one_time else None,
+            "security_note": "This link expires after one use" if is_one_time else "This is a static link"
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "GATE_SERVICE", f"Create invite error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+# ============================================================================
+# ===== GATE HEALTH CHECK SYSTEM =====
+# ============================================================================
+
+async def gate_health_check_loop():
+    """
+    Background task that periodically checks health of configured gates.
+    Runs every 30 minutes to verify bot tokens are still valid.
+    """
+    while True:
+        try:
+            # Wait 30 minutes between checks (first check after 5 min delay)
+            await asyncio.sleep(300)  # 5 min initial delay
+            
+            if not GATE_SERVICE_AVAILABLE:
+                continue
+            
+            gate_service = get_gate_service()
+            if not gate_service:
+                continue
+            
+            logger.info("🔍 Running Gate Health Check...")
+            
+            # Get all active gate configs
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT owner_wallet, platform, bot_verified, last_health_check
+                FROM owner_gate_configs 
+                WHERE is_active = 1 AND bot_token_encrypted IS NOT NULL
+            """)
+            gates = cursor.fetchall()
+            conn.close()
+            
+            checked = 0
+            healthy = 0
+            
+            for gate in gates:
+                owner = gate['owner_wallet']
+                platform = gate['platform']
+                
+                try:
+                    result = await gate_service.verify_bot(owner, platform)
+                    
+                    # Update health status
+                    conn = get_db_connection()
+                    cursor = conn.cursor()
+                    
+                    if result.get("success"):
+                        cursor.execute("""
+                            UPDATE owner_gate_configs 
+                            SET last_health_check = ?, health_status = 'healthy'
+                            WHERE owner_wallet = ? AND platform = ?
+                        """, (datetime.now(timezone.utc).isoformat(), owner, platform))
+                        healthy += 1
+                    else:
+                        cursor.execute("""
+                            UPDATE owner_gate_configs 
+                            SET last_health_check = ?, health_status = ?
+                            WHERE owner_wallet = ? AND platform = ?
+                        """, (datetime.now(timezone.utc).isoformat(), f"error: {result.get('error', 'unknown')[:100]}", owner, platform))
+                    
+                    conn.commit()
+                    conn.close()
+                    checked += 1
+                    
+                except Exception as e:
+                    logger.warning(f"Health check failed for {owner[:10]}...: {e}")
+                
+                # Small delay between checks to avoid rate limits
+                await asyncio.sleep(1)
+            
+            logger.info(f"✅ Gate Health Check complete: {healthy}/{checked} gates healthy")
+            
+            # Wait 30 minutes before next check
+            await asyncio.sleep(1500)  # 25 more minutes (total 30 min cycle)
+            
+        except Exception as e:
+            logger.error(f"Gate Health Check error: {e}")
+            await asyncio.sleep(300)  # Wait 5 min on error
+
+
+@app.get("/api/gate/health")
+async def get_all_gates_health():
+    """
+    🔍 Get health status of all configured gates (admin endpoint)
+    
+    Returns summary of all gate configurations and their health status.
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT owner_wallet, platform, bot_username, bot_verified, 
+                   last_health_check, health_status, group_name, created_at
+            FROM owner_gate_configs 
+            WHERE is_active = 1
+            ORDER BY last_health_check DESC
+        """)
+        
+        gates = []
+        for row in cursor.fetchall():
+            gates.append({
+                "owner": row['owner_wallet'][:10] + "...",
+                "platform": row['platform'],
+                "bot_username": row['bot_username'],
+                "verified": bool(row['bot_verified']),
+                "last_check": row['last_health_check'],
+                "health": row['health_status'] or "not_checked",
+                "group_name": row['group_name']
+            })
+        
+        conn.close()
+        
+        healthy_count = sum(1 for g in gates if g['health'] == 'healthy')
+        
+        return {
+            "success": True,
+            "total_gates": len(gates),
+            "healthy_gates": healthy_count,
+            "gates": gates
+        }
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 @app.post("/api/check-follower-status")

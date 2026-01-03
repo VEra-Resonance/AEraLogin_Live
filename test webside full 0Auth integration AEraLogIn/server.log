@@ -2492,3 +2492,11 @@ nohup: ignoring input
 127.0.0.1 - - [01/Jan/2026 19:39:28] "GET /example-oauth/api/verify HTTP/1.1" 200 -
 127.0.0.1 - - [03/Jan/2026 00:55:43] "GET /example-oauth/ HTTP/1.1" 200 -
 127.0.0.1 - - [03/Jan/2026 01:13:12] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 09:08:19] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 09:08:19] "GET /example-oauth/static/aera-client.js HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 09:08:19] "GET /example-oauth/style.css?v=20251225_0815 HTTP/1.1" 200 -
+[VERIFY] ===== START VERIFY =====
+[VERIFY] Token in session: False
+[VERIFY] No token in session
+127.0.0.1 - - [03/Jan/2026 09:08:19] "GET /example-oauth/api/verify HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 09:08:19] "GET /example-oauth/favicon.png?v=20251225c HTTP/1.1" 200 -

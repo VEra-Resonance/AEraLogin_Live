@@ -1062,6 +1062,35 @@ Licensed under the Apache License, Version 2.0
                 padding: 8px 6px;
             }
         }
+        
+        /* Security Mode Cards */
+        .security-mode-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .security-mode-card.selected {
+            border-color: var(--secondary) !important;
+            background: rgba(102, 126, 234, 0.1) !important;
+        }
+        
+        /* Setup Steps */
+        .setup-step code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+        
+        .setup-step a {
+            color: var(--secondary);
+            text-decoration: none;
+        }
+        
+        .setup-step a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -1358,62 +1387,189 @@ Licensed under the Apache License, Version 2.0
         <!-- ===== NFT-GATED GROUP LINK SECTION ===== -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3 class="section-title" style="margin-bottom: 0;">🔐 Your NFT-Gated Group Link</h3>
+                <h3 class="section-title" style="margin-bottom: 0;">🔐 Your NFT-Gated Community Gate</h3>
                 <button class="collapse-btn collapsed" onclick="toggleCollapse('nftGatedContent')">▼</button>
             </div>
-            <p style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 1rem;">Create platform-specific NFT-gated links for your private communities</p>
+            <p style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 1rem;">Configure your private community gate with secure one-time invite links</p>
             
-            <div id="nftGatedContent" class="collapsible-content collapsed">
-            <div style="margin-bottom: 20px; padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;">
-                <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--secondary);">🔧 Configure Your Private Group</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <!-- Security Status Badge -->
+            <div id="gateSecurityStatus" style="margin-bottom: 1rem; padding: 12px; border-radius: 8px; display: none;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span id="securityIcon" style="font-size: 1.5rem;"></span>
                     <div>
-                        <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Select Platform:</label>
-                        <select id="gateplatformSelect" onchange="showPlatformWarning()" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
-                            <optgroup label="⭐ Recommended for NFT-Gating">
-                                <option value="telegram">✈️ Telegram (Best for communities)</option>
-                                <option value="discord">💬 Discord (Ideal for Web3)</option>
-                                <option value="signal">🔒 Signal (Privacy-focused)</option>
-                            </optgroup>
-                            <optgroup label="✅ Also Supported">
-                                <option value="slack">💬 Slack (Professional)</option>
-                                <option value="farcaster">🎭 Farcaster (Web3-native)</option>
-                                <option value="vk">🐻 VK</option>
-                            </optgroup>
-                            <optgroup label="⚠️ Limited Support">
-                                <option value="whatsapp">💚 WhatsApp (Max 1024 members)</option>
-                            </optgroup>
-                        </select>
-                        <div id="platformWarning" style="display: none; margin-top: 8px; padding: 8px; background: rgba(255, 165, 0, 0.1); border-left: 3px solid #FFA500; border-radius: 4px; font-size: 11px; color: #FFA500;"></div>
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Group Name (optional):</label>
-                        <input type="text" id="privateGroupName" placeholder="My Private Group" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Group Invite Link:</label>
-                        <input type="text" id="privateGroupInviteLink" placeholder="https://..." style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                        <div id="securityLevel" style="font-weight: 600;"></div>
+                        <div id="securityDescription" style="font-size: 0.85rem; opacity: 0.8;"></div>
                     </div>
                 </div>
-                <button class="cta-button cta-secondary-small" onclick="savePrivateGroup()" style="width: 100%;">💾 Save Group Configuration</button>
-                <div id="privateGroupConfigStatus" style="margin-top: 8px; font-size: 12px; display: none;"></div>
             </div>
             
-            <!-- Generate & Share Link -->
-            <div style="margin-bottom: 15px;">
-                <button class="cta-button cta-secondary-small" onclick="generateGateLink()" style="width: 100%;">🔐 Generate NFT-Gated Link</button>
-            </div>
-            <div class="link-display" id="gateLinkDisplay" style="display: none;">
-                <input type="text" id="generatedGateLink" readonly style="flex: 1; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
-                <button class="cta-button cta-success-small" onclick="copyGateLink()">Copy</button>
-            </div>
-            <div id="gateStats" style="margin-top: 16px; padding: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; display: none;">
-                <p style="font-size: 13px; color: rgba(240, 244, 255, 0.7); margin: 0;">
-                    <strong style="color: var(--secondary);">Access Statistics:</strong> 
-                    <span id="gateInviteCount">0</span> users joined via your link
-                    <span id="gateGroupInfo" style="display: block; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.15);"></span>
-                </p>
-            </div>
+            <div id="nftGatedContent" class="collapsible-content collapsed">
+                
+                <!-- Security Mode Selection -->
+                <div style="margin-bottom: 20px; padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                    <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--secondary);">�️ Choose Security Mode</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div id="modeBasic" class="security-mode-card" onclick="selectSecurityMode('basic')" style="padding: 16px; border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                            <div style="font-size: 1.5rem; margin-bottom: 8px;">🔗</div>
+                            <div style="font-weight: 600; margin-bottom: 4px;">Basic (Static Link)</div>
+                            <div style="font-size: 0.8rem; opacity: 0.7;">Use a static invite link. Easy to set up, but links can be shared.</div>
+                            <div style="margin-top: 8px; font-size: 0.75rem; color: #f59e0b;">⚠️ Less Secure</div>
+                        </div>
+                        <div id="modeAdvanced" class="security-mode-card" onclick="selectSecurityMode('advanced')" style="padding: 16px; border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                            <div style="font-size: 1.5rem; margin-bottom: 8px;">🤖</div>
+                            <div style="font-weight: 600; margin-bottom: 4px;">Advanced (Your Bot)</div>
+                            <div style="font-size: 0.8rem; opacity: 0.7;">Use your own bot for true one-time links. Maximum security!</div>
+                            <div style="margin-top: 8px; font-size: 0.75rem; color: #10b981;">✅ Recommended</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Basic Mode: Static Link Configuration -->
+                <div id="basicModeConfig" style="display: none; margin-bottom: 20px; padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                    <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--secondary);">🔧 Configure Static Group Link</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Select Platform:</label>
+                            <select id="gateplatformSelect" onchange="showPlatformWarning()" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                                <optgroup label="⭐ Recommended for NFT-Gating">
+                                    <option value="telegram">✈️ Telegram (Best for communities)</option>
+                                    <option value="discord">💬 Discord (Ideal for Web3)</option>
+                                    <option value="signal">🔒 Signal (Privacy-focused)</option>
+                                </optgroup>
+                                <optgroup label="✅ Also Supported">
+                                    <option value="slack">💬 Slack (Professional)</option>
+                                    <option value="farcaster">🎭 Farcaster (Web3-native)</option>
+                                    <option value="vk">🐻 VK</option>
+                                </optgroup>
+                                <optgroup label="⚠️ Limited Support">
+                                    <option value="whatsapp">💚 WhatsApp (Max 1024 members)</option>
+                                </optgroup>
+                            </select>
+                            <div id="platformWarning" style="display: none; margin-top: 8px; padding: 8px; background: rgba(255, 165, 0, 0.1); border-left: 3px solid #FFA500; border-radius: 4px; font-size: 11px; color: #FFA500;"></div>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Group Name (optional):</label>
+                            <input type="text" id="privateGroupName" placeholder="My Private Group" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Group Invite Link:</label>
+                            <input type="text" id="privateGroupInviteLink" placeholder="https://t.me/+ABC123..." style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                        </div>
+                    </div>
+                    <button class="cta-button cta-secondary-small" onclick="savePrivateGroup()" style="width: 100%;">💾 Save Static Link Configuration</button>
+                    <div id="privateGroupConfigStatus" style="margin-top: 8px; font-size: 12px; display: none;"></div>
+                </div>
+                
+                <!-- Advanced Mode: Bot Configuration -->
+                <div id="advancedModeConfig" style="display: none; margin-bottom: 20px;">
+                    <!-- Platform Selection for Bot -->
+                    <div style="padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; margin-bottom: 12px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--secondary);">🤖 Configure Your Own Bot</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div>
+                                <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Platform:</label>
+                                <select id="botPlatformSelect" onchange="updateBotInstructions()" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                                    <option value="telegram">✈️ Telegram</option>
+                                    <option value="discord">💬 Discord</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600; color: rgba(240, 244, 255, 0.7);">Group Name:</label>
+                                <input type="text" id="botGroupName" placeholder="My Private Community" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Step-by-Step Bot Setup -->
+                    <div style="padding: 16px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; margin-bottom: 12px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #10b981;">📋 Setup Steps</h4>
+                        
+                        <!-- Step 1: Create Bot -->
+                        <div class="setup-step" style="margin-bottom: 16px; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 6px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <span style="background: var(--secondary); color: #000; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;">1</span>
+                                <span style="font-weight: 600;">Create your Bot</span>
+                            </div>
+                            <div id="createBotInstructions" style="font-size: 0.85rem; opacity: 0.8; padding-left: 34px;">
+                                <p style="margin: 0 0 8px 0;"><strong>Telegram:</strong></p>
+                                <ol style="margin: 0; padding-left: 20px; line-height: 1.6;">
+                                    <li>Open Telegram and search for <a href="https://t.me/BotFather" target="_blank" style="color: var(--secondary);">@BotFather</a></li>
+                                    <li>Send <code>/newbot</code> and follow the prompts</li>
+                                    <li>Copy the API token you receive</li>
+                                </ol>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 2: Enter Token -->
+                        <div class="setup-step" style="margin-bottom: 16px; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 6px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <span style="background: var(--secondary); color: #000; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;">2</span>
+                                <span style="font-weight: 600;">Enter Bot Token</span>
+                            </div>
+                            <div style="padding-left: 34px;">
+                                <input type="password" id="botTokenInput" placeholder="123456789:AABBccDDeeFF..." style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light); margin-bottom: 8px; font-family: monospace;">
+                                <button onclick="toggleBotTokenVisibility()" style="background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: var(--light); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">👁️ Show/Hide</button>
+                                <p style="font-size: 0.75rem; color: #f59e0b; margin: 8px 0 0 0;">🔒 Your token is encrypted before storage!</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 3: Add Bot to Group -->
+                        <div class="setup-step" style="margin-bottom: 16px; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 6px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <span style="background: var(--secondary); color: #000; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;">3</span>
+                                <span style="font-weight: 600;">Add Bot to your Group as Admin</span>
+                            </div>
+                            <div style="padding-left: 34px;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div>
+                                        <label style="display: block; font-size: 11px; margin-bottom: 5px; color: rgba(240, 244, 255, 0.7);">Group/Server ID:</label>
+                                        <input type="text" id="botGroupId" placeholder="-1001234567890" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light); font-family: monospace;">
+                                    </div>
+                                    <div id="channelIdField" style="display: none;">
+                                        <label style="display: block; font-size: 11px; margin-bottom: 5px; color: rgba(240, 244, 255, 0.7);">Channel ID (Discord):</label>
+                                        <input type="text" id="botChannelId" placeholder="1234567890" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light); font-family: monospace;">
+                                    </div>
+                                </div>
+                                <p style="font-size: 0.75rem; opacity: 0.7; margin: 8px 0 0 0;" id="groupIdHelp">💡 Add your bot to the group, then use @getmyid_bot to get the Group ID</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 4: Fallback Link (Optional) -->
+                        <div class="setup-step" style="margin-bottom: 16px; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 6px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <span style="background: rgba(255, 255, 255, 0.2); color: var(--light); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;">4</span>
+                                <span style="font-weight: 600;">Fallback Static Link <span style="opacity: 0.6; font-weight: normal;">(optional)</span></span>
+                            </div>
+                            <div style="padding-left: 34px;">
+                                <input type="text" id="botFallbackLink" placeholder="https://t.me/+ABC123... (backup if bot fails)" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                                <p style="font-size: 0.75rem; opacity: 0.7; margin: 8px 0 0 0;">Used as backup if bot is temporarily unavailable</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Save & Verify Buttons -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <button class="cta-button cta-secondary-small" onclick="saveBotConfiguration()" style="width: 100%;">💾 Save Bot Configuration</button>
+                        <button class="cta-button cta-success-small" onclick="verifyBotSetup()" id="verifyBotBtn" style="width: 100%;">✅ Verify Bot Permissions</button>
+                    </div>
+                    <div id="botConfigStatus" style="margin-top: 12px; font-size: 12px; display: none; padding: 12px; border-radius: 6px;"></div>
+                </div>
+            
+                <!-- Generate & Share Link -->
+                <div style="margin-bottom: 15px;">
+                    <button class="cta-button cta-secondary-small" onclick="generateGateLink()" style="width: 100%;">🔐 Generate NFT-Gated Link</button>
+                </div>
+                <div class="link-display" id="gateLinkDisplay" style="display: none;">
+                    <input type="text" id="generatedGateLink" readonly style="flex: 1; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light);">
+                    <button class="cta-button cta-success-small" onclick="copyGateLink()">Copy</button>
+                </div>
+                <div id="gateStats" style="margin-top: 16px; padding: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; display: none;">
+                    <p style="font-size: 13px; color: rgba(240, 244, 255, 0.7); margin: 0;">
+                        <strong style="color: var(--secondary);">Access Statistics:</strong> 
+                        <span id="gateInviteCount">0</span> users joined via your link
+                        <span id="gateGroupInfo" style="display: block; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.15);"></span>
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -2334,6 +2490,240 @@ Licensed under the Apache License, Version 2.0
         }
 
         // ========================================
+        // ADVANCED GATE SERVICE FUNCTIONS
+        // ========================================
+        let currentSecurityMode = null;
+        
+        function selectSecurityMode(mode) {
+            currentSecurityMode = mode;
+            
+            // Update visual selection
+            document.getElementById('modeBasic').style.border = mode === 'basic' 
+                ? '2px solid #f59e0b' 
+                : '2px solid rgba(255, 255, 255, 0.1)';
+            document.getElementById('modeBasic').style.background = mode === 'basic' 
+                ? 'rgba(245, 158, 11, 0.1)' 
+                : 'transparent';
+                
+            document.getElementById('modeAdvanced').style.border = mode === 'advanced' 
+                ? '2px solid #10b981' 
+                : '2px solid rgba(255, 255, 255, 0.1)';
+            document.getElementById('modeAdvanced').style.background = mode === 'advanced' 
+                ? 'rgba(16, 185, 129, 0.1)' 
+                : 'transparent';
+            
+            // Show/hide configuration panels
+            document.getElementById('basicModeConfig').style.display = mode === 'basic' ? 'block' : 'none';
+            document.getElementById('advancedModeConfig').style.display = mode === 'advanced' ? 'block' : 'none';
+        }
+        
+        function toggleBotTokenVisibility() {
+            const input = document.getElementById('botTokenInput');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+        
+        function updateBotInstructions() {
+            const platform = document.getElementById('botPlatformSelect').value;
+            const instructionsDiv = document.getElementById('createBotInstructions');
+            const channelField = document.getElementById('channelIdField');
+            const groupIdHelp = document.getElementById('groupIdHelp');
+            
+            if (platform === 'telegram') {
+                instructionsDiv.innerHTML = `
+                    <p style="margin: 0 0 8px 0;"><strong>Telegram:</strong></p>
+                    <ol style="margin: 0; padding-left: 20px; line-height: 1.6;">
+                        <li>Open Telegram and search for <a href="https://t.me/BotFather" target="_blank" style="color: var(--secondary);">@BotFather</a></li>
+                        <li>Send <code>/newbot</code> and follow the prompts</li>
+                        <li>Copy the API token you receive</li>
+                    </ol>
+                `;
+                channelField.style.display = 'none';
+                groupIdHelp.textContent = '💡 Add your bot to the group, then use @getmyid_bot to get the Group ID';
+            } else {
+                instructionsDiv.innerHTML = `
+                    <p style="margin: 0 0 8px 0;"><strong>Discord:</strong></p>
+                    <ol style="margin: 0; padding-left: 20px; line-height: 1.6;">
+                        <li>Go to <a href="https://discord.com/developers/applications" target="_blank" style="color: var(--secondary);">Discord Developer Portal</a></li>
+                        <li>Create a New Application → Bot → Reset Token</li>
+                        <li>Enable "SERVER MEMBERS INTENT" and "MESSAGE CONTENT INTENT"</li>
+                        <li>Copy the Bot Token and invite bot to your server with Admin permissions</li>
+                    </ol>
+                `;
+                channelField.style.display = 'block';
+                groupIdHelp.textContent = '💡 Right-click your server → Copy Server ID (enable Developer Mode in Settings)';
+            }
+        }
+        
+        async function saveBotConfiguration() {
+            const platform = document.getElementById('botPlatformSelect').value;
+            const botToken = document.getElementById('botTokenInput').value.trim();
+            const groupId = document.getElementById('botGroupId').value.trim();
+            const channelId = document.getElementById('botChannelId')?.value?.trim() || '';
+            const groupName = document.getElementById('botGroupName').value.trim();
+            const fallbackLink = document.getElementById('botFallbackLink').value.trim();
+            const statusDiv = document.getElementById('botConfigStatus');
+            
+            if (!connectedWallet) {
+                alert('Please connect your wallet first');
+                return;
+            }
+            
+            if (!botToken) {
+                showBotStatus('error', '❌ Bot token is required');
+                return;
+            }
+            
+            if (!groupId) {
+                showBotStatus('error', '❌ Group/Server ID is required');
+                return;
+            }
+            
+            showBotStatus('loading', '⏳ Saving configuration...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/gate/configure`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        owner: connectedWallet,
+                        platform: platform,
+                        bot_token: botToken,
+                        group_id: groupId,
+                        channel_id: channelId,
+                        group_name: groupName || `My ${platform} Community`,
+                        static_invite_link: fallbackLink
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showBotStatus('success', `✅ ${platform.charAt(0).toUpperCase() + platform.slice(1)} bot configured! Security Level: ${data.security_level.toUpperCase()}`);
+                    
+                    // Refresh gate status
+                    await loadGateStatus();
+                    
+                    // Clear the token input for security
+                    document.getElementById('botTokenInput').value = '';
+                } else {
+                    showBotStatus('error', '❌ ' + (data.error || 'Failed to save configuration'));
+                }
+                
+            } catch (error) {
+                console.error('Error saving bot config:', error);
+                showBotStatus('error', '❌ Failed to save: ' + error.message);
+            }
+        }
+        
+        async function verifyBotSetup() {
+            const platform = document.getElementById('botPlatformSelect').value;
+            const statusDiv = document.getElementById('botConfigStatus');
+            
+            if (!connectedWallet) {
+                alert('Please connect your wallet first');
+                return;
+            }
+            
+            showBotStatus('loading', '⏳ Verifying bot permissions...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/gate/verify-bot`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        owner: connectedWallet,
+                        platform: platform
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.verified) {
+                    showBotStatus('success', `✅ Bot verified! Username: ${data.bot_username || 'Unknown'}<br>Can create invite links: ${data.can_invite ? 'Yes ✓' : 'No ✗'}`);
+                    
+                    // Refresh gate status
+                    await loadGateStatus();
+                } else {
+                    showBotStatus('error', '❌ ' + (data.error || data.message || 'Bot verification failed'));
+                }
+                
+            } catch (error) {
+                console.error('Error verifying bot:', error);
+                showBotStatus('error', '❌ Verification failed: ' + error.message);
+            }
+        }
+        
+        function showBotStatus(type, message) {
+            const statusDiv = document.getElementById('botConfigStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = message;
+            
+            if (type === 'success') {
+                statusDiv.style.background = 'rgba(16, 185, 129, 0.1)';
+                statusDiv.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                statusDiv.style.color = '#10b981';
+            } else if (type === 'error') {
+                statusDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+                statusDiv.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                statusDiv.style.color = '#ef4444';
+            } else {
+                statusDiv.style.background = 'rgba(59, 130, 246, 0.1)';
+                statusDiv.style.border = '1px solid rgba(59, 130, 246, 0.3)';
+                statusDiv.style.color = '#3b82f6';
+            }
+        }
+        
+        async function loadGateStatus() {
+            if (!connectedWallet) return;
+            
+            const statusBadge = document.getElementById('gateSecurityStatus');
+            
+            try {
+                // Check Telegram gate status
+                const response = await fetch(`${API_BASE}/api/gate/status/${connectedWallet}?platform=telegram`);
+                const data = await response.json();
+                
+                if (data.success && data.configured) {
+                    statusBadge.style.display = 'block';
+                    
+                    const securityIcon = document.getElementById('securityIcon');
+                    const securityLevel = document.getElementById('securityLevel');
+                    const securityDescription = document.getElementById('securityDescription');
+                    
+                    if (data.security_level === 'high') {
+                        statusBadge.style.background = 'rgba(16, 185, 129, 0.1)';
+                        statusBadge.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                        securityIcon.textContent = '🛡️';
+                        securityLevel.textContent = 'HIGH SECURITY';
+                        securityLevel.style.color = '#10b981';
+                        securityDescription.textContent = `Bot verified: ${data.bot_username || 'Yes'} • One-time links enabled`;
+                        
+                        // Pre-select advanced mode
+                        selectSecurityMode('advanced');
+                    } else if (data.security_level === 'low') {
+                        // Bei Basic Security: Badge ausblenden und nur Modus vorauswählen
+                        statusBadge.style.display = 'none';
+                        
+                        // Pre-select basic mode
+                        selectSecurityMode('basic');
+                    }
+                    
+                    // Pre-fill group name if available
+                    if (data.group_name) {
+                        document.getElementById('botGroupName').value = data.group_name;
+                        document.getElementById('privateGroupName').value = data.group_name;
+                    }
+                } else {
+                    statusBadge.style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('Error loading gate status:', error);
+                statusBadge.style.display = 'none';
+            }
+        }
+
+        // ========================================
         // SDK APP MANAGEMENT FUNCTIONS
         // ========================================
         function getAuthToken() {
@@ -2925,6 +3315,9 @@ Licensed under the Apache License, Version 2.0
             
             // Load SDK apps
             loadMyApps();
+            
+            // Load Gate Security Status
+            await loadGateStatus();
         }
         
         // Show access denied message and redirect
