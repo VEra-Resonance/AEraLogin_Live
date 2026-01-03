@@ -526,6 +526,16 @@ Licensed under the Apache License, Version 2.0
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
 
         /* Error State */
         .error-message {
@@ -1569,6 +1579,36 @@ Licensed under the Apache License, Version 2.0
                         <span id="gateInviteCount">0</span> users joined via your link
                         <span id="gateGroupInfo" style="display: block; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.15);"></span>
                     </p>
+                </div>
+                
+                <!-- ===== CONFIGURED GATES OVERVIEW ===== -->
+                <div id="configuredGatesSection" style="margin-top: 20px; padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="margin: 0; font-size: 14px; color: var(--secondary);">📋 Your Configured Gates</h4>
+                        <button class="cta-button cta-secondary-small" onclick="loadConfiguredGates()" style="padding: 5px 10px; font-size: 11px;">🔄 Refresh</button>
+                    </div>
+                    <div id="configuredGatesList">
+                        <div style="text-align: center; padding: 20px; color: rgba(240, 244, 255, 0.5);">
+                            <p style="margin: 0;">Loading your gates...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Delete Confirmation Modal -->
+                <div id="deleteGateModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 10000; justify-content: center; align-items: center;">
+                    <div style="background: var(--dark-gradient); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%;">
+                        <h3 style="margin: 0 0 12px 0; color: #ef4444;">⚠️ Gate löschen?</h3>
+                        <p style="font-size: 14px; opacity: 0.8; margin-bottom: 8px;">
+                            Möchtest du das Gate <strong id="deleteGateName"></strong> wirklich löschen?
+                        </p>
+                        <p style="font-size: 12px; color: #f59e0b; margin-bottom: 20px;">
+                            Diese Aktion kann nicht rückgängig gemacht werden. Der Bot-Token wird gelöscht.
+                        </p>
+                        <div style="display: flex; gap: 12px;">
+                            <button onclick="closeDeleteModal()" style="flex: 1; padding: 12px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; color: var(--light); cursor: pointer;">Abbrechen</button>
+                            <button onclick="confirmDeleteGate()" style="flex: 1; padding: 12px; background: #ef4444; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 600;">🗑️ Löschen</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2717,10 +2757,172 @@ Licensed under the Apache License, Version 2.0
                     statusBadge.style.display = 'none';
                 }
                 
+                // Load configured gates list
+                await loadConfiguredGates();
+                
             } catch (error) {
                 console.error('Error loading gate status:', error);
                 statusBadge.style.display = 'none';
             }
+        }
+        
+        // ========================================
+        // GATE LIST & DELETE FUNCTIONS
+        // ========================================
+        let pendingDeleteGate = null;
+        
+        async function loadConfiguredGates() {
+            if (!connectedWallet) return;
+            
+            const listContainer = document.getElementById('configuredGatesList');
+            listContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: rgba(240, 244, 255, 0.5);"><p style="margin: 0;">⏳ Loading...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/gate/list/${connectedWallet}`);
+                const data = await response.json();
+                
+                if (data.success && data.gates && data.gates.length > 0) {
+                    let html = '';
+                    
+                    for (const gate of data.gates) {
+                        const platformIcon = gate.platform === 'telegram' ? '✈️' : '💬';
+                        const platformName = gate.platform.charAt(0).toUpperCase() + gate.platform.slice(1);
+                        const securityBadge = getSecurityBadge(gate.security_level);
+                        const statusDot = gate.bot_verified ? '🟢' : (gate.has_static_link ? '🟡' : '🔴');
+                        const createdDate = gate.created_at ? new Date(gate.created_at).toLocaleDateString('de-DE') : 'N/A';
+                        
+                        html += `
+                            <div class="gate-card" style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; margin-bottom: 10px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span style="font-size: 1.8rem;">${platformIcon}</span>
+                                    <div>
+                                        <div style="font-weight: 600; margin-bottom: 4px;">${gate.group_name || 'Unnamed Group'}</div>
+                                        <div style="font-size: 0.8rem; opacity: 0.7;">
+                                            ${statusDot} ${platformName} • ${securityBadge} • Erstellt: ${createdDate}
+                                        </div>
+                                        ${gate.group_id ? `<div style="font-size: 0.7rem; opacity: 0.5; font-family: monospace; margin-top: 2px;">ID: ${gate.group_id}</div>` : ''}
+                                    </div>
+                                </div>
+                                <button onclick="openDeleteModal('${gate.platform}', '${(gate.group_name || 'Unnamed Group').replace(/'/g, "\\'")}')" 
+                                        style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                                        onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'"
+                                        onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'">
+                                    🗑️ Löschen
+                                </button>
+                            </div>
+                        `;
+                    }
+                    
+                    listContainer.innerHTML = html;
+                } else {
+                    listContainer.innerHTML = `
+                        <div style="text-align: center; padding: 30px; color: rgba(240, 244, 255, 0.5); border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                            <div style="font-size: 2rem; margin-bottom: 8px;">🚫</div>
+                            <p style="margin: 0 0 4px 0;">Keine Gates konfiguriert</p>
+                            <p style="margin: 0; font-size: 0.8rem;">Erstelle oben dein erstes Gate!</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error loading gates:', error);
+                listContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #ef4444;">
+                        <p style="margin: 0;">❌ Fehler beim Laden der Gates</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function getSecurityBadge(level) {
+            if (level === 'high') {
+                return '<span style="color: #10b981; font-size: 0.75rem;">🛡️ HIGH</span>';
+            } else if (level === 'low') {
+                return '<span style="color: #f59e0b; font-size: 0.75rem;">⚠️ BASIC</span>';
+            } else {
+                return '<span style="color: #ef4444; font-size: 0.75rem;">❌ NONE</span>';
+            }
+        }
+        
+        function openDeleteModal(platform, groupName) {
+            pendingDeleteGate = { platform, groupName };
+            document.getElementById('deleteGateName').innerHTML = `<span style="color: var(--secondary);">${groupName}</span> (${platform})`;
+            document.getElementById('deleteGateModal').style.display = 'flex';
+        }
+        
+        function closeDeleteModal() {
+            pendingDeleteGate = null;
+            document.getElementById('deleteGateModal').style.display = 'none';
+        }
+        
+        async function confirmDeleteGate() {
+            if (!pendingDeleteGate || !connectedWallet) {
+                closeDeleteModal();
+                return;
+            }
+            
+            const { platform, groupName } = pendingDeleteGate;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/gate/delete/${connectedWallet}/${platform}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show success notification
+                    showNotification('success', `✅ Gate "${groupName}" erfolgreich gelöscht!`);
+                    
+                    // Close modal and refresh
+                    closeDeleteModal();
+                    await loadConfiguredGates();
+                    await loadGateStatus();
+                } else {
+                    showNotification('error', `❌ Fehler: ${data.error || 'Löschen fehlgeschlagen'}`);
+                    closeDeleteModal();
+                }
+                
+            } catch (error) {
+                console.error('Delete gate error:', error);
+                showNotification('error', '❌ Netzwerkfehler beim Löschen');
+                closeDeleteModal();
+            }
+        }
+        
+        function showNotification(type, message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 16px 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                z-index: 10001;
+                animation: slideIn 0.3s ease;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            `;
+            
+            if (type === 'success') {
+                notification.style.background = 'rgba(16, 185, 129, 0.95)';
+                notification.style.border = '1px solid #10b981';
+                notification.style.color = 'white';
+            } else {
+                notification.style.background = 'rgba(239, 68, 68, 0.95)';
+                notification.style.border = '1px solid #ef4444';
+                notification.style.color = 'white';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
         }
 
         // ========================================

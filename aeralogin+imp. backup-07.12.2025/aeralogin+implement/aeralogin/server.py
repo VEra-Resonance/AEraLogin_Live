@@ -2527,6 +2527,169 @@ async def create_gate_invite(req: Request):
         return {"success": False, "error": str(e)}
 
 
+@app.get("/api/gate/list/{owner}")
+async def list_owner_gates(owner: str):
+    """
+    📋 List all gate configurations for an owner
+    
+    Returns all configured gates (Telegram, Discord) for the owner.
+    Used in dashboard to show gate overview.
+    
+    Path Parameters:
+        owner: Wallet address of the gate owner
+    
+    Response:
+        {
+            "success": true,
+            "owner": "0x...",
+            "gates": [
+                {
+                    "platform": "telegram",
+                    "group_name": "My Private Group",
+                    "group_id": "-1001234567890",
+                    "security_level": "high",
+                    "bot_verified": true,
+                    "has_static_link": true,
+                    "created_at": "2025-01-05 12:00:00",
+                    "last_used": "2025-01-05 14:30:00"
+                }
+            ]
+        }
+    """
+    try:
+        owner = owner.lower()
+        
+        # Validation
+        if not owner or not owner.startswith("0x") or len(owner) != 42:
+            return {"success": False, "error": "Invalid owner address"}
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get all gate configs for this owner
+        cursor.execute("""
+            SELECT platform, group_name, group_id, channel_id,
+                   bot_verified, static_invite_link,
+                   created_at, updated_at,
+                   CASE 
+                       WHEN bot_token_encrypted IS NOT NULL AND bot_verified = 1 THEN 'high'
+                       WHEN static_invite_link IS NOT NULL THEN 'low'
+                       ELSE 'none'
+                   END as security_level
+            FROM owner_gate_configs 
+            WHERE owner_wallet = ? AND is_active = 1
+            ORDER BY platform
+        """, (owner,))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        gates = []
+        for row in rows:
+            gate = {
+                "platform": row[0],
+                "group_name": row[1] or f"Unnamed {row[0].title()} Group",
+                "group_id": row[2],
+                "channel_id": row[3],
+                "bot_verified": bool(row[4]),
+                "has_static_link": bool(row[5]),
+                "created_at": row[6],
+                "last_updated": row[7],
+                "security_level": row[8]
+            }
+            gates.append(gate)
+        
+        log_activity("INFO", "GATE_SERVICE", f"Listed {len(gates)} gates for owner", owner=owner[:10])
+        
+        return {
+            "success": True,
+            "owner": owner,
+            "gates": gates,
+            "total": len(gates)
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "GATE_SERVICE", f"List gates error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@app.delete("/api/gate/delete/{owner}/{platform}")
+async def delete_owner_gate(owner: str, platform: str):
+    """
+    🗑️ Delete a gate configuration
+    
+    Removes a specific gate configuration for an owner.
+    This action is irreversible - bot token will be deleted.
+    
+    Path Parameters:
+        owner: Wallet address of the gate owner
+        platform: 'telegram' or 'discord'
+    
+    Response:
+        {
+            "success": true,
+            "message": "Gate configuration deleted successfully",
+            "owner": "0x...",
+            "platform": "telegram"
+        }
+    """
+    try:
+        owner = owner.lower()
+        platform = platform.lower()
+        
+        # Validation
+        if not owner or not owner.startswith("0x") or len(owner) != 42:
+            return {"success": False, "error": "Invalid owner address"}
+        
+        if platform not in ["telegram", "discord"]:
+            return {"success": False, "error": "Platform must be 'telegram' or 'discord'"}
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if gate exists
+        cursor.execute("""
+            SELECT id, group_name FROM owner_gate_configs 
+            WHERE owner_wallet = ? AND platform = ? AND is_active = 1
+        """, (owner, platform))
+        
+        row = cursor.fetchone()
+        if not row:
+            conn.close()
+            return {"success": False, "error": f"No active {platform} gate found for this owner"}
+        
+        gate_id = row[0]
+        group_name = row[1] or f"{platform.title()} Group"
+        
+        # Soft delete - mark as inactive and clear sensitive data
+        cursor.execute("""
+            UPDATE owner_gate_configs 
+            SET is_active = 0, 
+                bot_token_encrypted = NULL,
+                updated_at = datetime('now')
+            WHERE id = ?
+        """, (gate_id,))
+        
+        conn.commit()
+        conn.close()
+        
+        log_activity("INFO", "GATE_SERVICE", f"✓ Gate deleted: {platform}", 
+                    owner=owner[:10], 
+                    group=group_name[:20])
+        
+        return {
+            "success": True,
+            "message": f"Gate configuration for {platform.title()} deleted successfully",
+            "owner": owner,
+            "platform": platform,
+            "deleted_group": group_name
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "GATE_SERVICE", f"Delete gate error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
 # ============================================================================
 # ===== GATE HEALTH CHECK SYSTEM =====
 # ============================================================================
