@@ -763,7 +763,39 @@ Platform: Telegram Gate
     
     <script>
         const API_BASE = window.location.origin;
-        const PLATFORM = "telegram";
+        
+        // Read platform and group from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const PLATFORM = urlParams.get('platform') || 'telegram';
+        const GROUP_ID = urlParams.get('group') || null;  // For multi-gate support
+        
+        // Dynamic styling based on platform
+        const PLATFORM_CONFIG = {
+            telegram: {
+                name: 'Telegram',
+                color: '#0088cc',
+                gradient: 'linear-gradient(135deg, #0088cc, #00aae7)',
+                emoji: '✈️',
+                icon: '✈️'
+            },
+            discord: {
+                name: 'Discord',
+                color: '#5865F2',
+                gradient: 'linear-gradient(135deg, #5865F2, #7289DA)',
+                emoji: '💬',
+                icon: '🎮'
+            }
+        };
+        
+        const platformConfig = PLATFORM_CONFIG[PLATFORM] || PLATFORM_CONFIG.telegram;
+        
+        // Apply dynamic platform styling
+        document.documentElement.style.setProperty('--platform-color', platformConfig.color);
+        document.documentElement.style.setProperty('--platform-gradient', platformConfig.gradient);
+        
+        // Update page title and text
+        document.title = `Join ${platformConfig.name} Community - AEra Gate`;
+        
         const SESSION_TIMEOUT_MINUTES = 2;  // 2 Minuten Session-Timeout
         const SESSION_TIMEOUT_MS = SESSION_TIMEOUT_MINUTES * 60 * 1000;  // In Millisekunden
         
@@ -1454,6 +1486,7 @@ Issued At: ${issuedAt}`;
                             address: currentAddress,
                             owner_wallet: ownerParam || null,
                             platform: platform,
+                            group_id: GROUP_ID,  // For multi-gate support (identifies specific group)
                             user_agent: navigator.userAgent  // NEW: Send User-Agent for device detection
                         }),
                         signal: AbortSignal.timeout(10000)
@@ -1689,13 +1722,12 @@ Issued At: ${issuedAt}`;
                 detailsDiv = document.getElementById('details');
                 debugInfo = document.getElementById('debugInfo');
                 
-                // 🎯 PLATFORM DETECTION: Adapt UI based on source parameter
-                const urlParams = new URLSearchParams(window.location.search);
-                const sourceParam = urlParams.get('source');
-                const isDiscord = sourceParam === 'discord';
-                const platformName = isDiscord ? 'Discord' : 'Telegram';
-                const platformIcon = isDiscord ? '💜' : '✈️';
-                const platformColor = isDiscord ? 'linear-gradient(135deg, #5865F2, #7289DA)' : 'linear-gradient(135deg, #0088cc, #00aae7)';
+                // 🎯 PLATFORM DETECTION: Use 'platform' parameter (fallback to 'source' for compatibility)
+                // PLATFORM is already defined at top of script from URL params
+                const isDiscord = PLATFORM === 'discord';
+                const platformName = platformConfig.name;
+                const platformIcon = platformConfig.emoji;
+                const platformColor = platformConfig.gradient;
                 
                 // Update page title
                 document.title = `Join AEra ${platformName} Community | NFT-Gated Access`;
@@ -1720,7 +1752,7 @@ Issued At: ${issuedAt}`;
                 
                 log(`=== AEraLogIn - ${platformName} Gate ===`);
                 log('API: ' + API_BASE);
-                log(`Platform: ${platformName}`);
+                log(`Platform: ${PLATFORM}`);
                 
                 // 📱 NEW: Detect and show mobile device info
                 detectAndShowMobileInfo();

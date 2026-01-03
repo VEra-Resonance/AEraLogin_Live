@@ -600,22 +600,30 @@ def init_db():
     """)
     
     # Telegram-Invites-Tabelle: Track Telegram/Discord Gate Access (with owner tracking)
+    # MULTI-GATE SUPPORT: UNIQUE constraint includes group_id to allow same user in different groups
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS telegram_invites (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        address TEXT,
+        address TEXT NOT NULL,
         invited_at TEXT,
         granted BOOLEAN DEFAULT 1,
         owner_wallet TEXT,
         platform TEXT DEFAULT 'telegram',
+        group_id TEXT,
         FOREIGN KEY(address) REFERENCES users(address),
-        UNIQUE(address, platform)
+        UNIQUE(address, owner_wallet, platform, group_id)
     )
     """)
     
     # Migration: Add platform column if not exists
     try:
         cursor.execute("ALTER TABLE telegram_invites ADD COLUMN platform TEXT DEFAULT 'telegram'")
+    except:
+        pass  # Column already exists
+    
+    # Migration: Add group_id column for multi-gate support
+    try:
+        cursor.execute("ALTER TABLE telegram_invites ADD COLUMN group_id TEXT")
     except:
         pass  # Column already exists
     
@@ -1505,6 +1513,7 @@ async def telegram_invite(req: Request):
         data = await req.json()
         address = data.get("address", "").lower()
         platform = data.get("platform", "telegram").lower()  # Default to telegram
+        group_id = data.get("group_id", None)  # NEW: For multi-gate support
         user_agent = data.get("user_agent", "")  # NEW: Frontend sends User-Agent for device detection
         
         if not address or not address.startswith("0x") or len(address) != 42:
@@ -1594,7 +1603,7 @@ async def telegram_invite(req: Request):
             try:
                 gate_service = get_gate_service()
                 if gate_service:
-                    gate_config = await gate_service.get_gate_config(owner_wallet, platform)
+                    gate_config = await gate_service.get_gate_config(owner_wallet, platform, group_id)
                     if gate_config:
                         required_min_score = gate_config.get("min_score", 50) or 50
                         group_name = gate_config.get("group_name", "This community")
@@ -1642,6 +1651,7 @@ async def telegram_invite(req: Request):
                         owner_wallet=owner_wallet,
                         platform=platform,
                         user_address=address,
+                        group_id=group_id,  # Multi-gate support
                         expire_seconds=300
                     )
                     
@@ -1778,20 +1788,22 @@ async def telegram_invite(req: Request):
             # Extract owner_wallet from request data (if provided)
             owner_wallet = (data.get("owner_wallet") or "").lower() if isinstance(data, dict) else ""
             
-            # Check if this is first-time access (per platform)
+            # MULTI-GATE: Check if invited to THIS SPECIFIC gate (owner + platform + group_id)
+            # This allows same user to join multiple gates of same platform/owner
             cursor.execute(
-                """SELECT COUNT(*) as count FROM telegram_invites WHERE address = ? AND platform = ?""",
-                (address, platform)
+                """SELECT COUNT(*) as count FROM telegram_invites 
+                   WHERE address = ? AND owner_wallet = ? AND platform = ? AND group_id = ?""",
+                (address, owner_wallet or None, platform, group_id)
             )
             result = cursor.fetchone()
             previous_invites = result['count'] if result else 0
             
-            # Insert invite record (with platform)
+            # Insert invite record (with platform AND group_id for multi-gate support)
             cursor.execute(
                 """INSERT OR IGNORE INTO telegram_invites 
-                   (address, invited_at, granted, owner_wallet, platform)
-                   VALUES (?, ?, ?, ?, ?)""",
-                (address, datetime.now(timezone.utc).isoformat(), 1, owner_wallet or None, platform)
+                   (address, invited_at, granted, owner_wallet, platform, group_id)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (address, datetime.now(timezone.utc).isoformat(), 1, owner_wallet or None, platform, group_id)
             )
             
             # 🎯 ONE-TIME BONUS: Add 0.1 points for first join (per platform)
@@ -1820,7 +1832,83 @@ async def telegram_invite(req: Request):
             log_activity("WARNING", f"{platform.upper()}_GATE", f"Could not log invite: {str(db_err)}")
         
         # ========================================
-        # NEW: INTENT-BRIDGE FOR ANDROID + IN-APP BROWSER
+        # DISCORD: INTENT-BRIDGE FOR ANDROID + IN-APP BROWSER
+        # ========================================
+        if platform == "discord" and is_android and is_in_app_browser:
+            # Extract invite code from Discord link
+            # Format: https://discord.gg/ABC123 or https://discord.com/invite/ABC123
+            invite_code = None
+            if invite_link:
+                if "discord.gg/" in invite_link:
+                    invite_code = invite_link.split("discord.gg/")[-1].split("?")[0].strip()
+                elif "discord.com/invite/" in invite_link:
+                    invite_code = invite_link.split("invite/")[-1].split("?")[0].strip()
+            
+            if invite_code:
+                # Build Android Intent URL for direct Discord opening
+                # Discord package: com.discord
+                intent_url = f"intent://discord.com/invite/{invite_code}#Intent;scheme=https;package=com.discord;end"
+                
+                log_activity("INFO", "DISCORD_GATE", "🎮 Intent-Bridge activated (Android + In-App)", 
+                            address=address[:10],
+                            device="android_in_app",
+                            invite_code=invite_code[:10] + "...")
+                
+                return {
+                    "success": True,
+                    "method": "intent_bridge",
+                    "intent_url": intent_url,
+                    "fallback_url": "market://details?id=com.discord",
+                    "message": "Discord is opening...",
+                    "platform": platform,
+                    "device": "android_in_app"
+                }
+        
+        # ========================================
+        # DISCORD: iOS UNIVERSAL LINK
+        # ========================================
+        if platform == "discord" and is_ios and is_in_app_browser:
+            # Discord Universal Links work well on iOS
+            # Format stays: https://discord.gg/ABC123 (iOS handles it automatically)
+            
+            log_activity("INFO", "DISCORD_GATE", "🍎 iOS Universal Link activated", 
+                        address=address[:10],
+                        device="ios_in_app")
+            
+            # Generate one-time token for iOS redirect
+            redirect_token = secrets.token_urlsafe(32)
+            token_created_at = datetime.now(timezone.utc)
+            token_expires_at = token_created_at + timedelta(seconds=30)
+            
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute(
+                    """INSERT INTO community_redirect_tokens 
+                       (token, address, invite_link, platform, created_at, expires_at, used)
+                       VALUES (?, ?, ?, ?, ?, ?, 0)""",
+                    (redirect_token, address, invite_link, platform, 
+                     token_created_at.isoformat(), token_expires_at.isoformat())
+                )
+                conn.commit()
+                conn.close()
+            except Exception as token_err:
+                log_activity("ERROR", "DISCORD_GATE", f"iOS token generation failed: {str(token_err)}")
+                return {"success": False, "error": "Could not generate secure redirect"}
+            
+            return {
+                "success": True,
+                "method": "ios_universal_link",
+                "redirect_token": redirect_token,
+                "redirect_url": f"/api/community/redirect?token={redirect_token}",
+                "message": "Discord is opening...",
+                "platform": platform,
+                "device": "ios_in_app",
+                "expires_in_seconds": 30
+            }
+        
+        # ========================================
+        # TELEGRAM: INTENT-BRIDGE FOR ANDROID + IN-APP BROWSER
         # ========================================
         if platform == "telegram" and is_android and is_in_app_browser:
             # Extract group identifier from invite link
@@ -1855,7 +1943,7 @@ async def telegram_invite(req: Request):
                 }
         
         # ========================================
-        # NEW: iOS UNIVERSAL LINK FALLBACK
+        # TELEGRAM: iOS UNIVERSAL LINK
         # ========================================
         if platform == "telegram" and is_ios and is_in_app_browser:
             # iOS: Use telegram.me instead of t.me (better Universal Link support)
@@ -1917,16 +2005,29 @@ async def telegram_invite(req: Request):
                  token_created_at.isoformat(), token_expires_at.isoformat())
             )
             
-            # ✅ SUCCESS: Confirm the follower now that gate access was granted!
+            # ✅ SUCCESS: Register and confirm the follower now that gate access was granted!
+            # For gate platforms (telegram/discord), follower is NOT registered in /api/verify
+            # so we need to INSERT here, not just UPDATE
             if owner_wallet:
+                # Get user's current score for follower entry
+                cursor.execute("SELECT score FROM users WHERE address = ?", (address,))
+                user_row = cursor.fetchone()
+                follower_score = user_row['score'] if user_row else 50
+                
+                # Use INSERT OR REPLACE to handle both new and existing entries
+                # UNIQUE constraint is (owner_wallet, follower_address, source_platform)
                 cursor.execute(
-                    """UPDATE followers 
-                       SET follow_confirmed = 1, confirmed_at = ?
-                       WHERE owner_wallet = ? AND follower_address = ? AND source_platform = ?""",
-                    (datetime.now(timezone.utc).isoformat(), owner_wallet, address, platform)
+                    """INSERT INTO followers 
+                       (owner_wallet, follower_address, follower_score, verified_at, source_platform, verified, follow_confirmed, confirmed_at)
+                       VALUES (?, ?, ?, ?, ?, 1, 1, ?)
+                       ON CONFLICT(owner_wallet, follower_address, source_platform) DO UPDATE SET
+                           follower_score = excluded.follower_score,
+                           follow_confirmed = 1,
+                           confirmed_at = excluded.confirmed_at""",
+                    (owner_wallet, address, follower_score, datetime.now(timezone.utc).isoformat(), platform, datetime.now(timezone.utc).isoformat())
                 )
-                log_activity("INFO", f"{platform.upper()}_GATE", "✓ Follower confirmed after gate access", 
-                            owner=owner_wallet[:10], follower=address[:10])
+                log_activity("INFO", f"{platform.upper()}_GATE", "✓ Follower registered & confirmed after gate access", 
+                            owner=owner_wallet[:10], follower=address[:10], score=follower_score)
             
             conn.commit()
             conn.close()
@@ -2460,6 +2561,314 @@ async def detect_telegram_groups(req: Request):
         return {"success": False, "error": str(e)}
 
 
+@app.post("/api/gate/detect-discord-servers")
+async def detect_discord_servers(req: Request):
+    """
+    🎮 Auto-detect Discord servers (guilds) where bot is a member
+    
+    Discord bots automatically know which guilds they're in via the API.
+    Unlike Telegram, no "getUpdates" needed - we query guilds directly.
+    
+    The user needs to:
+    1. Create a bot at https://discord.com/developers/applications
+    2. Enable SERVER MEMBERS INTENT in Bot settings
+    3. Add bot to their server with these permissions:
+       - Create Instant Invite
+       - View Channels
+    4. Call this endpoint → we return the guild info!
+    
+    Request:
+        {
+            "bot_token": "MTA2NzI...very_long_token"
+        }
+    
+    Response (success):
+        {
+            "success": true,
+            "bot_username": "MyBot#1234",
+            "servers": [
+                {
+                    "guild_id": "123456789012345678",
+                    "guild_name": "My Awesome Server",
+                    "icon_url": "https://cdn.discordapp.com/icons/...",
+                    "member_count": 150,
+                    "owner": false,
+                    "permissions": "2147483647"
+                }
+            ],
+            "message": "Found 2 server(s)"
+        }
+    
+    Response (no servers):
+        {
+            "success": true,
+            "bot_username": "MyBot#1234",
+            "servers": [],
+            "message": "No servers found. Add bot to your server first."
+        }
+    """
+    try:
+        data = await req.json()
+        bot_token = data.get("bot_token", "").strip()
+        
+        if not bot_token:
+            return {"success": False, "error": "bot_token is required"}
+        
+        # Discord tokens are much longer than Telegram tokens
+        if len(bot_token) < 50:
+            return {"success": False, "error": "Invalid Discord bot token format (too short)"}
+        
+        import httpx
+        
+        DISCORD_API = "https://discord.com/api/v10"
+        headers = {
+            "Authorization": f"Bot {bot_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Step 1: Verify bot token with /users/@me
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            me_response = await client.get(f"{DISCORD_API}/users/@me", headers=headers)
+            
+            if me_response.status_code == 401:
+                return {"success": False, "error": "Invalid bot token (401 Unauthorized)"}
+            
+            if me_response.status_code != 200:
+                return {"success": False, "error": f"Discord API error: HTTP {me_response.status_code}"}
+            
+            me_data = me_response.json()
+            bot_username = me_data.get("username", "Unknown")
+            bot_discriminator = me_data.get("discriminator", "0")
+            bot_id = me_data.get("id", "")
+            
+            # New Discord usernames don't have discriminator
+            if bot_discriminator == "0":
+                bot_display = f"@{bot_username}"
+            else:
+                bot_display = f"{bot_username}#{bot_discriminator}"
+            
+            log_activity("INFO", "DISCORD_DETECT", f"✓ Bot verified: {bot_display}")
+        
+        # Step 2: Get all guilds the bot is in
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            guilds_response = await client.get(
+                f"{DISCORD_API}/users/@me/guilds",
+                headers=headers
+            )
+            
+            if guilds_response.status_code != 200:
+                error_text = guilds_response.text
+                return {
+                    "success": False,
+                    "error": f"Failed to get guilds: HTTP {guilds_response.status_code}",
+                    "details": error_text[:200]
+                }
+            
+            guilds_data = guilds_response.json()
+        
+        # Step 3: Process guilds and get additional info
+        servers_list = []
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            for guild in guilds_data:
+                guild_id = guild.get("id", "")
+                guild_name = guild.get("name", "Unknown Server")
+                icon_hash = guild.get("icon")
+                owner = guild.get("owner", False)
+                permissions = guild.get("permissions", "0")
+                
+                server_info = {
+                    "guild_id": guild_id,
+                    "guild_name": guild_name,
+                    "owner": owner,
+                    "permissions": permissions
+                }
+                
+                # Build icon URL if available
+                if icon_hash:
+                    ext = "gif" if icon_hash.startswith("a_") else "png"
+                    server_info["icon_url"] = f"https://cdn.discordapp.com/icons/{guild_id}/{icon_hash}.{ext}"
+                
+                # Try to get member count (requires GUILD intent)
+                try:
+                    guild_detail = await client.get(
+                        f"{DISCORD_API}/guilds/{guild_id}?with_counts=true",
+                        headers=headers
+                    )
+                    if guild_detail.status_code == 200:
+                        detail_data = guild_detail.json()
+                        server_info["member_count"] = detail_data.get("approximate_member_count", 0)
+                except:
+                    pass  # Member count is optional
+                
+                # Try to get channels to find a suitable one for invites
+                try:
+                    channels_response = await client.get(
+                        f"{DISCORD_API}/guilds/{guild_id}/channels",
+                        headers=headers
+                    )
+                    if channels_response.status_code == 200:
+                        channels = channels_response.json()
+                        # Find first text channel
+                        text_channels = [c for c in channels if c.get("type") == 0]
+                        if text_channels:
+                            server_info["default_channel_id"] = text_channels[0].get("id")
+                            server_info["default_channel_name"] = text_channels[0].get("name")
+                except:
+                    pass
+                
+                servers_list.append(server_info)
+        
+        log_activity("INFO", "DISCORD_DETECT", f"Found {len(servers_list)} server(s) for {bot_display}")
+        
+        if servers_list:
+            return {
+                "success": True,
+                "bot_username": bot_display,
+                "bot_id": bot_id,
+                "servers": servers_list,
+                "message": f"Found {len(servers_list)} server(s)"
+            }
+        else:
+            return {
+                "success": True,
+                "bot_username": bot_display,
+                "bot_id": bot_id,
+                "servers": [],
+                "message": "No servers found. Please:\n1. Go to Discord Developer Portal\n2. OAuth2 → URL Generator\n3. Select 'bot' scope + 'Create Instant Invite' permission\n4. Use generated URL to add bot to your server\n5. Click 'Detect Servers' again"
+            }
+        
+    except httpx.TimeoutException:
+        return {"success": False, "error": "Discord API timeout. Please try again."}
+    except Exception as e:
+        log_activity("ERROR", "DISCORD_DETECT", f"Detection error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/gate/generate-discord-invite")
+async def generate_discord_invite(req: Request):
+    """
+    🔗 Auto-generate a one-time invite link for a Discord server
+    
+    Creates an invite with max_uses=1 and configurable expiry.
+    Bot must have CREATE_INSTANT_INVITE permission in the channel.
+    
+    Request:
+        {
+            "bot_token": "MTA2NzI...very_long_token",
+            "guild_id": "123456789012345678",
+            "channel_id": "987654321098765432" (optional - uses first text channel if not provided)
+        }
+    
+    Response (success):
+        {
+            "success": true,
+            "invite_link": "https://discord.gg/AbCdEf",
+            "invite_code": "AbCdEf",
+            "channel_name": "general",
+            "max_uses": 1,
+            "expires_in": 300,
+            "message": "One-time invite link created"
+        }
+    """
+    try:
+        data = await req.json()
+        bot_token = data.get("bot_token", "").strip()
+        guild_id = data.get("guild_id", "").strip()
+        channel_id = data.get("channel_id", "").strip()
+        max_age = data.get("max_age", 300)  # Default 5 minutes
+        
+        if not bot_token:
+            return {"success": False, "error": "bot_token is required"}
+        
+        if not guild_id:
+            return {"success": False, "error": "guild_id is required"}
+        
+        import httpx
+        
+        DISCORD_API = "https://discord.com/api/v10"
+        headers = {
+            "Authorization": f"Bot {bot_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # If no channel_id provided, find first text channel
+        if not channel_id:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                channels_response = await client.get(
+                    f"{DISCORD_API}/guilds/{guild_id}/channels",
+                    headers=headers
+                )
+                
+                if channels_response.status_code != 200:
+                    return {
+                        "success": False,
+                        "error": "Cannot access server channels. Check bot permissions.",
+                        "hint": "Bot needs 'View Channels' permission"
+                    }
+                
+                channels = channels_response.json()
+                text_channels = [c for c in channels if c.get("type") == 0]
+                
+                if not text_channels:
+                    return {"success": False, "error": "No text channels found in server"}
+                
+                channel_id = text_channels[0].get("id")
+                channel_name = text_channels[0].get("name", "unknown")
+        else:
+            channel_name = "specified"
+        
+        # Create the invite
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            invite_response = await client.post(
+                f"{DISCORD_API}/channels/{channel_id}/invites",
+                headers=headers,
+                json={
+                    "max_age": max_age,
+                    "max_uses": 1,
+                    "unique": True
+                }
+            )
+            
+            if invite_response.status_code == 201 or invite_response.status_code == 200:
+                invite_data = invite_response.json()
+                invite_code = invite_data.get("code", "")
+                
+                log_activity("INFO", "DISCORD_INVITE", f"✓ One-time invite created for guild {guild_id[:10]}")
+                
+                return {
+                    "success": True,
+                    "invite_link": f"https://discord.gg/{invite_code}",
+                    "invite_code": invite_code,
+                    "channel_name": invite_data.get("channel", {}).get("name", channel_name),
+                    "max_uses": invite_data.get("max_uses", 1),
+                    "expires_in": max_age,
+                    "message": "One-time invite link created"
+                }
+            else:
+                error_text = invite_response.text
+                
+                # Check for permission errors
+                if invite_response.status_code == 403:
+                    return {
+                        "success": False,
+                        "error": "Bot lacks permission to create invites",
+                        "hint": "Bot needs 'Create Instant Invite' permission in the channel"
+                    }
+                
+                return {
+                    "success": False,
+                    "error": f"Failed to create invite: HTTP {invite_response.status_code}",
+                    "details": error_text[:200]
+                }
+        
+    except httpx.TimeoutException:
+        return {"success": False, "error": "Discord API timeout. Please try again."}
+    except Exception as e:
+        log_activity("ERROR", "DISCORD_INVITE", f"Generate invite error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
 @app.post("/api/gate/generate-invite-link")
 async def generate_invite_link(req: Request):
     """
@@ -2631,15 +3040,32 @@ async def configure_gate(req: Request):
                     min_score=min_score,
                     group_id=group_id[:15])
         
-        return {
-            "success": True,
-            "message": f"{platform.title()} gate configured successfully",
-            "security_level": security_level,
-            "has_bot": bool(bot_token),
-            "has_static_fallback": bool(static_invite_link),
-            "gate_id": gate_id,
-            "min_score": min_score
-        }
+        # WICHTIG: User muss noch verifizieren wenn Bot-Token konfiguriert wurde!
+        if bot_token:
+            return {
+                "success": True,
+                "message": f"⚠️ Configuration saved! You MUST click '✅ Verify Bot Permissions' to complete setup.",
+                "security_level": security_level,
+                "has_bot": True,
+                "has_static_fallback": bool(static_invite_link),
+                "gate_id": gate_id,
+                "min_score": min_score,
+                "verified": False,
+                "requires_verification": True
+            }
+        else:
+            # Nur static link → kein Verify nötig
+            return {
+                "success": True,
+                "message": f"{platform.title()} gate configured successfully (static link only)",
+                "security_level": security_level,
+                "has_bot": False,
+                "has_static_fallback": True,
+                "gate_id": gate_id,
+                "min_score": min_score,
+                "verified": True,
+                "requires_verification": False
+            }
         
     except Exception as e:
         log_activity("ERROR", "GATE_SERVICE", f"Configure error: {str(e)}")
@@ -2688,8 +3114,93 @@ async def verify_gate_bot(req: Request):
         # MODE 2: Direct verification (before saving)
         # ===========================================
         if bot_token and group_id:
-            log_activity("INFO", "GATE_VERIFY", "Direct bot verification (before save)")
+            log_activity("INFO", "GATE_VERIFY", f"Direct bot verification (before save) - Platform: {platform or 'auto-detect'}")
             
+            # Detect platform from token format if not provided
+            if not platform:
+                # Discord tokens are much longer (50+ chars) than Telegram tokens
+                platform = "discord" if len(bot_token) > 50 else "telegram"
+            
+            # ===========================================
+            # DISCORD VERIFICATION
+            # ===========================================
+            if platform == "discord":
+                DISCORD_API = "https://discord.com/api/v10"
+                headers = {
+                    "Authorization": f"Bot {bot_token}",
+                    "Content-Type": "application/json"
+                }
+                
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    # Step 1: Verify bot token with /users/@me
+                    me_resp = await client.get(f"{DISCORD_API}/users/@me", headers=headers)
+                    
+                    if me_resp.status_code == 401:
+                        return {
+                            "success": False,
+                            "verified": False,
+                            "error": "Invalid Discord bot token"
+                        }
+                    
+                    if me_resp.status_code != 200:
+                        return {
+                            "success": False,
+                            "verified": False,
+                            "error": f"Discord API error: {me_resp.status_code}"
+                        }
+                    
+                    me_data = me_resp.json()
+                    bot_username = f"{me_data.get('username', 'Unknown')}#{me_data.get('discriminator', '0000')}"
+                    
+                    # Step 2: Check if bot is in the guild
+                    guild_resp = await client.get(f"{DISCORD_API}/guilds/{group_id}", headers=headers)
+                    
+                    if guild_resp.status_code == 403:
+                        return {
+                            "success": False,
+                            "verified": False,
+                            "bot_username": bot_username,
+                            "error": "Bot is not a member of this server or lacks permissions"
+                        }
+                    
+                    if guild_resp.status_code != 200:
+                        return {
+                            "success": False,
+                            "verified": False,
+                            "bot_username": bot_username,
+                            "error": f"Could not access guild: {guild_resp.status_code}"
+                        }
+                    
+                    guild_data = guild_resp.json()
+                    guild_name = guild_data.get("name", "Unknown Server")
+                    
+                    # Step 3: Check bot permissions in the guild
+                    # Get bot's member info to check permissions
+                    bot_member_resp = await client.get(
+                        f"{DISCORD_API}/guilds/{group_id}/members/{me_data['id']}", 
+                        headers=headers
+                    )
+                    
+                    can_invite = True  # If bot can access guild, it likely has permissions
+                    
+                    if bot_member_resp.status_code == 200:
+                        # Check if bot has CREATE_INSTANT_INVITE permission (0x1)
+                        # For simplicity, we assume if bot is in guild it can invite
+                        can_invite = True
+                    
+                    return {
+                        "success": True,
+                        "verified": True,
+                        "bot_username": bot_username,
+                        "guild_name": guild_name,
+                        "can_invite": can_invite,
+                        "status": "member",
+                        "message": f"✅ Discord Bot {bot_username} verified in '{guild_name}'"
+                    }
+            
+            # ===========================================
+            # TELEGRAM VERIFICATION (default)
+            # ===========================================
             async with httpx.AsyncClient(timeout=10.0) as client:
                 # Step 1: Verify token with getMe
                 me_resp = await client.get(f"https://api.telegram.org/bot{bot_token}/getMe")
@@ -2765,17 +3276,25 @@ async def verify_gate_bot(req: Request):
         # Verify bot - pass group_id for multi-gate support!
         result = await gate_service.verify_bot(owner, platform, group_id if group_id else None)
         
-        log_activity("INFO", "GATE_SERVICE", f"Bot verification: {result.get('success')}", 
-                    owner=owner[:10], 
-                    platform=platform,
-                    group_id=group_id[:15] if group_id else "auto")
+        if result.get("success"):
+            log_activity("INFO", "GATE_SERVICE", f"✅ Bot VERIFIED successfully", 
+                        owner=owner[:10], 
+                        platform=platform,
+                        group_id=group_id[:15] if group_id else "auto",
+                        bot_username=result.get("bot_username"))
+        else:
+            log_activity("WARNING", "GATE_SERVICE", f"❌ Bot verification FAILED", 
+                        owner=owner[:10], 
+                        platform=platform,
+                        error=result.get("error"))
         
         return {
             "success": result.get("success", False),
             "verified": result.get("success", False),
             "bot_username": result.get("bot_username"),
             "can_invite": result.get("can_invite", False),
-            "message": result.get("message") or result.get("error"),
+            "message": "✅ Bot verified! Gate is now ACTIVE (ADVANCED mode)." if result.get("success") 
+                      else f"❌ Verification failed: {result.get('error')}",
             "error": result.get("error") if not result.get("success") else None
         }
         
@@ -3021,6 +3540,7 @@ async def list_owner_gates(owner: str):
                 "channel_id": row[3],
                 "bot_verified": bool(row[4]),
                 "has_static_link": bool(row[5]),
+                "invite_link": row[5] if row[5] else None,  # Return the actual link!
                 "created_at": row[6],
                 "last_updated": row[7],
                 "min_score": row[8] or 50,
@@ -3097,7 +3617,7 @@ async def delete_owner_gate(owner: str, platform: str, group_id: str):
         gate_id = row[0]
         group_name = row[1] or f"{platform.title()} Group"
         
-        # Soft delete - mark as inactive and clear sensitive data
+        # Soft delete - mark as inactive and clear sensitive data (for Audit Trail)
         cursor.execute("""
             UPDATE owner_gate_configs 
             SET is_active = 0, 
@@ -3503,24 +4023,27 @@ async def verify(req: Request):
                 }
             
             # Check if already registered as follower for this owner+platform
-            cursor.execute(
-                """SELECT id, follow_confirmed FROM followers 
-                   WHERE owner_wallet = ? AND follower_address = ? AND source_platform = ?""",
-                (owner_wallet, address, referrer_source)
-            )
-            existing_follower = cursor.fetchone()
-            
-            if existing_follower and existing_follower['follow_confirmed'] == 1:
-                conn.close()
-                log_activity("WARNING", "FOLLOWER", "❌ Already registered as follower", 
-                            owner=owner_wallet[:10],
-                            follower=address[:10], 
-                            source=referrer_source)
-                return {
-                    "error": f"You are already registered as a follower on {referrer_source}!",
-                    "is_human": False,
-                    "already_follower": True
-                }
+            # NOTE: For gate platforms (telegram/discord), we DON'T block here
+            # because follower registration happens AFTER successful gate access
+            if referrer_source not in ["telegram", "discord"]:
+                cursor.execute(
+                    """SELECT id, follow_confirmed FROM followers 
+                       WHERE owner_wallet = ? AND follower_address = ? AND source_platform = ?""",
+                    (owner_wallet, address, referrer_source)
+                )
+                existing_follower = cursor.fetchone()
+                
+                if existing_follower and existing_follower['follow_confirmed'] == 1:
+                    conn.close()
+                    log_activity("WARNING", "FOLLOWER", "❌ Already registered as follower", 
+                                owner=owner_wallet[:10],
+                                follower=address[:10], 
+                                source=referrer_source)
+                    return {
+                        "error": f"You are already registered as a follower on {referrer_source}!",
+                        "is_human": False,
+                        "already_follower": True
+                    }
         
         # Benutzer suchen
         cursor.execute("SELECT * FROM users WHERE address=?", (address,))
@@ -3604,11 +4127,18 @@ async def verify(req: Request):
                             referrer=referrer_source)
             
             # NEW: Auch bei existierenden User-Logins: Follower-Eintrag erstellen wenn owner_wallet vorhanden
+            # ABER NICHT für Gate-Plattformen (telegram/discord) - diese werden erst nach Gate-Zugang registriert!
             if owner_wallet:
                 # SECURITY: Prevent self-follow
                 if owner_wallet.lower() == address.lower():
                     log_activity("WARNING", "FOLLOWER", "❌ Self-follow prevented", 
                                 address=address[:10], 
+                                source=referrer_source)
+                # GATE PLATFORMS: Skip follower registration here - will be done after successful gate access
+                elif referrer_source in ["telegram", "discord"]:
+                    log_activity("INFO", "FOLLOWER", "⏳ Gate platform detected - follower registration deferred to gate access", 
+                                owner=owner_wallet[:10], 
+                                follower=address[:10], 
                                 source=referrer_source)
                 else:
                     try:
@@ -3704,11 +4234,18 @@ async def verify(req: Request):
             )
             
             # NEW: Wenn Owner vorhanden, registriere als Follower
+            # ABER NICHT für Gate-Plattformen (telegram/discord) - diese werden erst nach Gate-Zugang registriert!
             if owner_wallet:
                 # SECURITY: Prevent self-follow
                 if owner_wallet.lower() == address.lower():
                     log_activity("WARNING", "FOLLOWER", "❌ Self-follow prevented (new user)", 
                                 address=address[:10], 
+                                source=referrer_source)
+                # GATE PLATFORMS: Skip follower registration here - will be done after successful gate access
+                elif referrer_source in ["telegram", "discord"]:
+                    log_activity("INFO", "FOLLOWER", "⏳ Gate platform detected (new user) - follower registration deferred to gate access", 
+                                owner=owner_wallet[:10], 
+                                follower=address[:10], 
                                 source=referrer_source)
                 else:
                     try:

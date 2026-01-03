@@ -2442,7 +2442,25 @@ Licensed under the Apache License, Version 2.0
             }
         }
         
-        function copyToClipboard() {
+        function copyToClipboard(text) {
+            // If text is passed directly, copy it
+            if (typeof text === 'string' && text.length > 0) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showNotification('success', '📋 Link copied to clipboard!');
+                }).catch(() => {
+                    // Fallback for older browsers
+                    const tempInput = document.createElement('input');
+                    tempInput.value = text;
+                    document.body.appendChild(tempInput);
+                    tempInput.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempInput);
+                    showNotification('success', '📋 Link copied to clipboard!');
+                });
+                return;
+            }
+            
+            // Fallback: copy from generatedLink input
             const linkInput = document.getElementById('generatedLink');
             linkInput.select();
             document.execCommand('copy');
@@ -2656,14 +2674,10 @@ Licensed under the Apache License, Version 2.0
         }
         
         // =====================================================
-        // AUTO-DETECT TELEGRAM GROUPS
+        // AUTO-DETECT TELEGRAM GROUPS / DISCORD SERVERS
         // =====================================================
         async function detectTelegramGroups() {
             const platform = document.getElementById('botPlatformSelect').value;
-            if (platform !== 'telegram') {
-                showToast('Auto-detect is only available for Telegram', 'warning');
-                return;
-            }
             
             const botToken = document.getElementById('botTokenInput').value.trim();
             if (!botToken) {
@@ -2677,7 +2691,12 @@ Licensed under the Apache License, Version 2.0
             btn.disabled = true;
             
             try {
-                const response = await fetch(`${API_BASE}/api/gate/detect-groups`, {
+                // Use different endpoint for Discord vs Telegram
+                const endpoint = platform === 'discord' 
+                    ? `${API_BASE}/api/gate/detect-discord-servers`
+                    : `${API_BASE}/api/gate/detect-groups`;
+                
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ bot_token: botToken })
@@ -2689,29 +2708,48 @@ Licensed under the Apache License, Version 2.0
                     const container = document.getElementById('detectedGroupsContainer');
                     const select = document.getElementById('detectedGroupsSelect');
                     
-                    if (data.groups && data.groups.length > 0) {
+                    // Handle Discord servers vs Telegram groups
+                    const items = platform === 'discord' ? data.servers : data.groups;
+                    const itemType = platform === 'discord' ? 'server' : 'group';
+                    
+                    if (items && items.length > 0) {
                         // Populate dropdown
-                        select.innerHTML = '<option value="">-- Select a group --</option>';
-                        data.groups.forEach(group => {
-                            const memberInfo = group.member_count ? ` (${group.member_count} members)` : '';
+                        select.innerHTML = `<option value="">-- Select a ${itemType} --</option>`;
+                        items.forEach(item => {
+                            const memberInfo = item.member_count ? ` (${item.member_count} members)` : '';
                             const option = document.createElement('option');
-                            option.value = JSON.stringify(group);
-                            option.textContent = `${group.group_name}${memberInfo} [${group.group_type}]`;
+                            // Store platform info in JSON for selectDetectedGroup()
+                            option.value = JSON.stringify({ ...item, _platform: platform });
+                            
+                            if (platform === 'discord') {
+                                // Discord format: Server Name + channel info
+                                const channelInfo = item.channels && item.channels.length > 0 
+                                    ? ` [${item.channels.length} channels]` 
+                                    : '';
+                                option.textContent = `${item.name}${memberInfo}${channelInfo}`;
+                            } else {
+                                // Telegram format
+                                option.textContent = `${item.group_name}${memberInfo} [${item.group_type}]`;
+                            }
                             select.appendChild(option);
                         });
                         
                         container.style.display = 'block';
-                        showToast(`✓ Found ${data.groups.length} group(s)! Select one below.`, 'success');
+                        showToast(`✓ Found ${items.length} ${itemType}(s)! Select one below.`, 'success');
                     } else {
                         container.style.display = 'none';
-                        showToast(data.message || 'No groups found. Add bot to group and send a message first.', 'warning');
+                        if (platform === 'discord') {
+                            showToast(data.message || 'No servers found. Add bot to your Discord server first.', 'warning');
+                        } else {
+                            showToast(data.message || 'No groups found. Add bot to group and send a message first.', 'warning');
+                        }
                     }
                 } else {
                     showToast(data.error || 'Detection failed', 'error');
                 }
             } catch (error) {
                 console.error('Detect groups error:', error);
-                showToast('Failed to detect groups: ' + error.message, 'error');
+                showToast('Failed to detect: ' + error.message, 'error');
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
@@ -2725,18 +2763,38 @@ Licensed under the Apache License, Version 2.0
             if (!selectedValue) return;
             
             try {
-                const group = JSON.parse(selectedValue);
+                const item = JSON.parse(selectedValue);
+                const platform = item._platform || 'telegram';
                 
-                // Auto-fill the Group ID field
-                document.getElementById('botGroupId').value = group.group_id;
-                
-                // Auto-fill the Group Name field if it exists and is empty
-                const groupNameInput = document.getElementById('botGroupName');
-                if (groupNameInput && !groupNameInput.value) {
-                    groupNameInput.value = group.group_name || '';
+                if (platform === 'discord') {
+                    // Discord: use guild_id and auto-select first channel
+                    document.getElementById('botGroupId').value = item.guild_id;
+                    
+                    // Auto-fill channel ID if available
+                    if (item.channels && item.channels.length > 0) {
+                        const firstChannel = item.channels[0];
+                        document.getElementById('botChannelId').value = firstChannel.id;
+                    }
+                    
+                    // Auto-fill the Group Name field
+                    const groupNameInput = document.getElementById('botGroupName');
+                    if (groupNameInput) {
+                        groupNameInput.value = item.name || '';
+                    }
+                    
+                    showToast(`✓ Selected: ${item.name}`, 'success');
+                } else {
+                    // Telegram: use group_id
+                    document.getElementById('botGroupId').value = item.group_id;
+                    
+                    // Auto-fill the Group Name field if it exists and is empty
+                    const groupNameInput = document.getElementById('botGroupName');
+                    if (groupNameInput && !groupNameInput.value) {
+                        groupNameInput.value = item.group_name || '';
+                    }
+                    
+                    showToast(`✓ Selected: ${item.group_name}`, 'success');
                 }
-                
-                showToast(`✓ Selected: ${group.group_name}`, 'success');
                 
                 // Highlight the Group ID field briefly
                 const groupIdInput = document.getElementById('botGroupId');
@@ -2752,10 +2810,12 @@ Licensed under the Apache License, Version 2.0
             }
         }
         
-        // Auto-generate invite link using bot's exportChatInviteLink
+        // Auto-generate invite link using bot API (Telegram or Discord)
         async function generateInviteLink() {
+            const platform = document.getElementById('botPlatformSelect').value;
             const botToken = document.getElementById('botTokenInput').value.trim();
             const groupId = document.getElementById('botGroupId').value.trim();
+            const channelId = document.getElementById('botChannelId')?.value?.trim() || '';
             const btn = document.getElementById('generateLinkBtn');
             
             if (!botToken) {
@@ -2764,7 +2824,7 @@ Licensed under the Apache License, Version 2.0
             }
             
             if (!groupId) {
-                showToast('❌ Please enter or select Group ID first', 'error');
+                showToast(`❌ Please enter or select ${platform === 'discord' ? 'Server' : 'Group'} ID first`, 'error');
                 return;
             }
             
@@ -2773,13 +2833,28 @@ Licensed under the Apache License, Version 2.0
             btn.disabled = true;
             
             try {
-                const response = await fetch('/api/gate/generate-invite-link', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
+                // Use different endpoint for Discord vs Telegram
+                let endpoint, requestBody;
+                
+                if (platform === 'discord') {
+                    endpoint = '/api/gate/generate-discord-invite';
+                    requestBody = {
+                        bot_token: botToken,
+                        guild_id: groupId,
+                        channel_id: channelId || undefined
+                    };
+                } else {
+                    endpoint = '/api/gate/generate-invite-link';
+                    requestBody = {
                         bot_token: botToken,
                         group_id: groupId
-                    })
+                    };
+                }
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
                 });
                 
                 const data = await response.json();
@@ -2800,9 +2875,9 @@ Licensed under the Apache License, Version 2.0
                 } else {
                     showToast(`❌ ${data.error || 'Failed to generate link'}`, 'error');
                     // Show helpful hint if permission error
-                    if (data.error && data.error.includes('administrator')) {
+                    if (data.error && (data.error.includes('administrator') || data.error.includes('permission'))) {
                         document.getElementById('fallbackLinkHelp').innerHTML = 
-                            '⚠️ Bot needs admin rights with "Invite Users" permission. You can still paste a link manually.';
+                            `⚠️ Bot needs ${platform === 'discord' ? '"Create Instant Invite"' : '"Invite Users"'} permission. You can still paste a link manually.`;
                     }
                 }
             } catch (e) {
@@ -2835,7 +2910,13 @@ Licensed under the Apache License, Version 2.0
                 `;
                 channelField.style.display = 'none';
                 detectBtn.style.display = 'flex';
+                detectBtn.style.background = 'linear-gradient(135deg, #0088cc, #006699)';
+                detectBtn.innerHTML = '🔍 Detect Groups';
                 groupIdHelp.innerHTML = '💡 Or add <a href="https://t.me/getmyid_bot" target="_blank" style="color: var(--secondary);">@getmyid_bot</a> to your group to get the ID manually';
+                
+                // Update fallback link placeholder and help for Telegram
+                document.getElementById('botFallbackLink').placeholder = 'https://t.me/+ABC123... (optional if Bot Token set)';
+                document.getElementById('fallbackLinkHelp').textContent = '💡 Click "Auto-Generate" to let your bot create an invite link automatically';
             } else {
                 instructionsDiv.innerHTML = `
                     <p style="margin: 0 0 8px 0;"><strong>Discord:</strong></p>
@@ -2844,11 +2925,18 @@ Licensed under the Apache License, Version 2.0
                         <li>Create a New Application → Bot → Reset Token</li>
                         <li>Enable "SERVER MEMBERS INTENT" and "MESSAGE CONTENT INTENT"</li>
                         <li>Copy the Bot Token and invite bot to your server with Admin permissions</li>
+                        <li>Click the <strong>🔍 Detect Servers</strong> button below</li>
                     </ol>
                 `;
                 channelField.style.display = 'block';
-                detectBtn.style.display = 'none';
-                groupIdHelp.textContent = '💡 Right-click your server → Copy Server ID (enable Developer Mode in Settings)';
+                detectBtn.style.display = 'flex';
+                detectBtn.style.background = 'linear-gradient(135deg, #5865F2, #4752C4)';
+                detectBtn.innerHTML = '🔍 Detect Servers';
+                groupIdHelp.textContent = '💡 Or right-click your server → Copy Server ID (enable Developer Mode in Settings)';
+                
+                // Update fallback link placeholder and help for Discord
+                document.getElementById('botFallbackLink').placeholder = 'https://discord.gg/ABC123 (optional if Bot Token set)';
+                document.getElementById('fallbackLinkHelp').textContent = '💡 Click "Auto-Generate" to let your bot create a Discord invite link automatically';
             }
         }
         
@@ -3113,27 +3201,57 @@ Licensed under the Apache License, Version 2.0
                         const escapedGroupId = (gate.group_id || '').replace(/"/g, '&quot;');
                         const escapedGroupName = (gate.group_name || 'Unnamed Group').replace(/'/g, "\\'").replace(/"/g, '&quot;');
                         
+                        // Invite Link display (direct community link)
+                        const inviteLinkHtml = gate.invite_link 
+                            ? `<div style="font-size: 0.75rem; margin-top: 6px; padding: 6px 8px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 4px; display: flex; align-items: center; gap: 8px;">
+                                    <span style="color: #10b981;">🔗</span>
+                                    <a href="${gate.invite_link}" target="_blank" style="color: var(--secondary); text-decoration: none; word-break: break-all; flex: 1;">${gate.invite_link}</a>
+                                    <button onclick="copyToClipboard('${gate.invite_link}')" style="background: rgba(255,255,255,0.1); border: none; color: var(--light); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;" title="Copy Link">📋</button>
+                               </div>`
+                            : `<div style="font-size: 0.7rem; margin-top: 4px; color: #f59e0b;">⚠️ No invite link configured</div>`;
+                        
+                        // Gate Access Link (for sharing with users - includes platform AND group!)
+                        const baseUrl = window.location.origin;
+                        // MULTI-GATE: Include group_id to identify specific gate
+                        const gateAccessLink = `${baseUrl}/join-telegram?owner=${connectedWallet}&platform=${gate.platform}&group=${encodeURIComponent(gate.group_id)}`;
+                        const gateAccessLinkHtml = `
+                            <div style="font-size: 0.75rem; margin-top: 6px; padding: 6px 8px; background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 4px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <span style="color: #667eea;">🎫</span>
+                                    <span style="color: rgba(240, 244, 255, 0.7); font-size: 0.7rem;">Share this Gate Access Link for "${gate.group_name || 'this group'}":</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="text" value="${gateAccessLink}" readonly style="flex: 1; padding: 6px 8px; background: rgba(5, 8, 20, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: var(--secondary); font-size: 0.7rem; font-family: monospace;">
+                                    <button onclick="copyToClipboard('${gateAccessLink}')" style="background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.4); color: var(--light); padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; white-space: nowrap;" title="Copy Gate Link">📋 Copy</button>
+                                </div>
+                            </div>
+                        `;
+                        
                         html += `
-                            <div class="gate-card" style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; margin-bottom: 10px;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <span style="font-size: 1.8rem;">${platformIcon}</span>
-                                    <div>
-                                        <div style="font-weight: 600; margin-bottom: 4px;">${gate.group_name || 'Unnamed Group'}</div>
-                                        <div style="font-size: 0.8rem; opacity: 0.7;">
-                                            ${statusDot} ${platformName} • ${securityBadge} • ${minScoreBadge}
-                                        </div>
-                                        <div style="font-size: 0.7rem; opacity: 0.5; margin-top: 2px;">
-                                            ${dateLabel}: ${formattedDate}
-                                            ${gate.group_id ? ` • <span style="font-family: monospace;">ID: ${gate.group_id}</span>` : ''}
+                            <div class="gate-card" style="padding: 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; margin-bottom: 10px;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <span style="font-size: 1.8rem;">${platformIcon}</span>
+                                        <div>
+                                            <div style="font-weight: 600; margin-bottom: 4px;">${gate.group_name || 'Unnamed Group'}</div>
+                                            <div style="font-size: 0.8rem; opacity: 0.7;">
+                                                ${statusDot} ${platformName} • ${securityBadge} • ${minScoreBadge}
+                                            </div>
+                                            <div style="font-size: 0.7rem; opacity: 0.5; margin-top: 2px;">
+                                                ${dateLabel}: ${formattedDate}
+                                                ${gate.group_id ? ` • <span style="font-family: monospace;">ID: ${gate.group_id}</span>` : ''}
+                                            </div>
                                         </div>
                                     </div>
+                                    <button onclick="openDeleteModal('${gate.platform}', '${escapedGroupName}', '${escapedGroupId}')" 
+                                            style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                                            onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'"
+                                            onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'">
+                                        🗑️ Delete
+                                    </button>
                                 </div>
-                                <button onclick="openDeleteModal('${gate.platform}', '${escapedGroupName}', '${escapedGroupId}')" 
-                                        style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px; transition: all 0.2s;"
-                                        onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'"
-                                        onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'">
-                                    🗑️ Delete
-                                </button>
+                                ${inviteLinkHtml}
+                                ${gateAccessLinkHtml}
                             </div>
                         `;
                     }

@@ -489,11 +489,12 @@ class GateService:
             
             # MULTI-GATE: UNIQUE constraint ist jetzt (owner_wallet, platform, group_id)
             # WICHTIG: COALESCE um existierenden bot_token zu behalten wenn neuer leer ist
+            # SECURITY: bot_verified wird immer auf 0 gesetzt wenn neuer Token → User MUSS verify drücken!
             cursor.execute("""
                 INSERT INTO owner_gate_configs 
                 (owner_wallet, platform, bot_token_encrypted, group_id, channel_id, 
-                 group_name, static_invite_link, min_score, created_at, updated_at, is_active)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+                 group_name, static_invite_link, min_score, created_at, updated_at, is_active, bot_verified)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0)
                 ON CONFLICT(owner_wallet, platform, group_id) DO UPDATE SET
                     bot_token_encrypted = COALESCE(excluded.bot_token_encrypted, owner_gate_configs.bot_token_encrypted),
                     channel_id = COALESCE(excluded.channel_id, owner_gate_configs.channel_id),
@@ -507,6 +508,12 @@ class GateService:
                              AND excluded.bot_token_encrypted != owner_gate_configs.bot_token_encrypted 
                         THEN 0 
                         ELSE owner_gate_configs.bot_verified 
+                    END,
+                    verified_at = CASE 
+                        WHEN excluded.bot_token_encrypted IS NOT NULL 
+                             AND excluded.bot_token_encrypted != owner_gate_configs.bot_token_encrypted 
+                        THEN NULL 
+                        ELSE owner_gate_configs.verified_at 
                     END
             """, (
                 owner_wallet.lower(), 
@@ -529,7 +536,11 @@ class GateService:
             if cache_key in self._bot_cache:
                 del self._bot_cache[cache_key]
             
-            logger.info(f"✓ Gate config saved for {owner_wallet[:10]}... ({platform}, group={group_id[:15]}, min_score={min_score})")
+            if bot_token:
+                logger.info(f"⚠️ Gate config SAVED (NOT VERIFIED YET) for {owner_wallet[:10]}... ({platform}, group={group_id[:15]}, min_score={min_score})")
+                logger.info(f"   ⏳ User MUST click '✅ Verify Bot Permissions' to complete setup!")
+            else:
+                logger.info(f"✓ Gate config saved (static link only) for {owner_wallet[:10]}... ({platform}, group={group_id[:15]}, min_score={min_score})")
             
             return {"success": True, "error": None}
             
