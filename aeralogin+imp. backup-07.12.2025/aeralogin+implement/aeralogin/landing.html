@@ -268,19 +268,37 @@
             margin: 0 auto;
         }
 
+        /* Universal Glow Frame Class - for inline-styled elements */
+        .glow-frame {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .glow-frame:hover {
+            transform: translateY(-3px);
+            border-color: rgba(0, 212, 255, 0.6);
+            box-shadow: 0 15px 50px rgba(0, 82, 255, 0.3), 0 0 20px rgba(0, 212, 255, 0.15);
+        }
+
         .stat-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
             padding: 2rem;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
             text-align: center;
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s, border-color 0.3s;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
-            border-color: var(--secondary);
+            border-color: rgba(0, 212, 255, 0.6);
+            box-shadow: 0 15px 50px rgba(0, 82, 255, 0.3), 0 0 20px rgba(0, 212, 255, 0.15);
         }
 
         .stat-number {
@@ -308,6 +326,14 @@
             margin-bottom: 1rem;
         }
 
+        /* Smaller section title for Tech & Contracts */
+        .section-title-sm {
+            text-align: center;
+            font-size: 2.4rem;
+            font-weight: 800;
+            margin-bottom: 0.8rem;
+        }
+
         .section-subtitle {
             text-align: center;
             font-size: 1.2rem;
@@ -318,25 +344,104 @@
             margin-right: auto;
         }
 
+        /* Smaller section subtitle for Tech & Contracts */
+        .section-subtitle-sm {
+            text-align: center;
+            font-size: 1rem;
+            color: rgba(240, 244, 255, 0.7);
+            margin-bottom: 3.2rem;
+            max-width: 560px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
         .feature-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
         }
 
+        /* Smaller feature grid for Smart Contracts */
+        .feature-grid-sm {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.6rem;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
         .feature-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
             padding: 2.5rem;
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
 
         .feature-card:hover {
             transform: translateY(-10px);
-            border-color: var(--secondary);
-            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.2);
+            border-color: rgba(0, 212, 255, 0.6);
+            box-shadow: 0 20px 60px rgba(0, 82, 255, 0.3), 0 0 25px rgba(0, 212, 255, 0.15);
+        }
+
+        /* Smaller feature cards for Smart Contracts */
+        .feature-card-sm {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+        }
+
+        .feature-card-sm:hover {
+            transform: translateY(-8px);
+            border-color: rgba(0, 212, 255, 0.6);
+            box-shadow: 0 16px 48px rgba(0, 82, 255, 0.3), 0 0 20px rgba(0, 212, 255, 0.15);
+        }
+
+        .feature-card-sm .feature-icon {
+            font-size: 2.4rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .feature-card-sm h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.8rem;
+            color: var(--secondary);
+        }
+
+        .feature-card-sm p {
+            color: rgba(240, 244, 255, 0.8);
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        /* OAuth Demo Button mit Hover-Glow-Effekt */
+        .oauth-demo-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--secondary), #0088cc);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .oauth-demo-btn:hover {
+            box-shadow: 0 8px 20px rgba(0, 212, 255, 0.2), 0 0 10px rgba(0, 212, 255, 0.15);
+            background: linear-gradient(135deg, #0099dd, var(--secondary));
         }
 
         .feature-icon {
@@ -356,40 +461,44 @@
             line-height: 1.8;
         }
 
-        /* Tech Stack Section */
+        /* Tech Stack Section - 20% smaller */
         .tech-stack {
-            padding: 6rem 5%;
+            padding: 4.8rem 5%;
         }
 
         .tech-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 2rem;
-            max-width: 1200px;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1.6rem;
+            max-width: 960px;
             margin: 0 auto;
         }
 
         .tech-item {
             text-align: center;
-            padding: 2rem 1rem;
-            background: rgba(255, 255, 255, 0.05);
+            padding: 1.6rem 0.8rem;
+            background: rgba(255, 255, 255, 0.03);
             border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
 
         .tech-item:hover {
             transform: scale(1.05);
-            border-color: var(--accent);
+            border-color: rgba(99, 102, 241, 0.6);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.3), 0 0 16px rgba(99, 102, 241, 0.15);
         }
 
         .tech-logo {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+            font-size: 2.4rem;
+            margin-bottom: 0.8rem;
         }
 
         .tech-name {
             font-weight: 600;
+            font-size: 0.85rem;
             color: var(--light);
         }
 
@@ -771,7 +880,7 @@
                 Decentralized authentication with Soul-Bound NFTs, 
                 dynamic Resonance Scoring, and blockchain-verified social reputation.
             </p>
-            <div style="margin: 2rem auto; padding: 1.5rem; background: rgba(0, 212, 255, 0.1); border-radius: 12px; border: 1px solid var(--secondary); max-width: 750px;">
+            <div class="glow-frame" style="margin: 2rem auto; padding: 1.5rem; max-width: 750px;">
                 <p style="font-size: 1.2rem; font-weight: 700; color: var(--secondary); margin-bottom: 1rem;">
                     🌍 Multi-Platform Ready + Website Integration
                 </p>
@@ -794,12 +903,12 @@
     <!-- AEra Core - Protected User Area -->
     <section style="padding: 3rem 5%;">
         <div style="max-width: 700px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, rgba(0, 82, 255, 0.1), rgba(99, 102, 241, 0.15)); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 16px; padding: 2.5rem; text-align: center; backdrop-filter: blur(10px); box-shadow: 0 10px 40px rgba(99, 102, 241, 0.2);">
+            <div class="glow-frame" style="padding: 2.5rem; text-align: center;">
                 <div style="font-size: 3rem; margin-bottom: 1rem;">
                     <span style="color: #3b82f6; animation: pulse 2s ease-in-out infinite; display: inline-block;">🌀</span>
                 </div>
                 
-                <h3 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 0.75rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                <h3 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 0.75rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
                     AEra Core
                 </h3>
                 
@@ -809,23 +918,23 @@
                 </p>
                 
                 <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-bottom: 1.5rem;">
-                    <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.9rem;">
+                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.9rem; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
                         <span style="color: var(--success);">✓</span> Live Project Updates
                     </div>
-                    <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.9rem;">
+                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.9rem; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
                         <span style="color: var(--success);">✓</span> Your Profile & Stats
                     </div>
-                    <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.9rem;">
+                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.9rem; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
                         <span style="color: var(--success);">✓</span> NFT-Gated Access
                     </div>
-                    <div style="background: rgba(0, 212, 255, 0.15); border: 1px solid var(--secondary); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.9rem;">
+                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 212, 255, 0.4); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.9rem; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
                         <span style="color: var(--secondary);">🔐</span> OAuth 2.0 Integration
                     </div>
                 </div>
                 
                 <!-- OAuth MiniApp Demo Info -->
-                <div style="background: rgba(0, 212, 255, 0.08); border: 1px solid rgba(0, 212, 255, 0.3); border-left: 4px solid var(--secondary); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; text-align: left;">
-                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div class="glow-frame" style="padding: 1.25rem; margin-bottom: 1.5rem; text-align: center;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 0.75rem;">
                         <span style="font-size: 1.5rem;">🚀</span>
                         <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--secondary); margin: 0;">Try Our OAuth MiniApp Demo</h4>
                     </div>
@@ -833,7 +942,7 @@
                         Experience seamless third-party authentication with AEraLogIn OAuth 2.0.<br>
                         <strong>Test it now:</strong> Login with your AEra Identity NFT in our demo application!
                     </p>
-                    <a href="https://aera-miniapp-demo.vercel.app/app" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, var(--secondary), #0088cc); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease; border: none;">
+                    <a href="https://aera-miniapp-demo.vercel.app/app" target="_blank" rel="noopener noreferrer" class="oauth-demo-btn">
                         <span>🔐</span>
                         <span>Open OAuth Demo App</span>
                         <span style="font-size: 1.1rem;">↗</span>
@@ -860,7 +969,7 @@
     <section style="padding: 3rem 5%;">
         <div style="max-width: 700px; margin: 0 auto;">
             <!-- Community Box -->
-            <div style="background: rgba(0, 212, 255, 0.1); border: 1px solid var(--secondary); border-radius: 12px; padding: 2rem; text-align: center; backdrop-filter: blur(10px);">
+            <div class="glow-frame" style="padding: 2rem; text-align: center;">
                 <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔐</div>
                 
                 <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--light);">
@@ -923,59 +1032,59 @@
             </p>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1.5rem; max-width: 1100px; margin: 0 auto;">
-                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                <div class="glow-frame" style="padding: 1.5rem;">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">𝕏</div>
                     <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">X / Twitter</div>
                 </div>
-                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                <div class="glow-frame" style="padding: 1.5rem;">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✈️</div>
                     <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">Telegram</div>
                 </div>
-                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                <div class="glow-frame" style="padding: 1.5rem;">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💬</div>
                     <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">Discord</div>
                 </div>
-                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                <div class="glow-frame" style="padding: 1.5rem;">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎭</div>
                     <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">Farcaster</div>
                 </div>
-                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                <div class="glow-frame" style="padding: 1.5rem;">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💚</div>
                     <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">WhatsApp</div>
                 </div>
-                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                <div class="glow-frame" style="padding: 1.5rem;">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📸</div>
                     <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">Instagram</div>
                 </div>
-                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                <div class="glow-frame" style="padding: 1.5rem;">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎵</div>
                     <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">TikTok</div>
                 </div>
-                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                <div class="glow-frame" style="padding: 1.5rem;">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💼</div>
                     <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">LinkedIn</div>
                 </div>
-                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                <div class="glow-frame" style="padding: 1.5rem;">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📘</div>
                     <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">Facebook</div>
                 </div>
-                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                <div class="glow-frame" style="padding: 1.5rem;">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔴</div>
                     <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">YouTube</div>
                 </div>
-                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                <div class="glow-frame" style="padding: 1.5rem;">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💬</div>
                     <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">Slack</div>
                 </div>
-                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                <div class="glow-frame" style="padding: 1.5rem;">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎮</div>
                     <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">Twitch</div>
                 </div>
-                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                <div class="glow-frame" style="padding: 1.5rem;">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🐻</div>
                     <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">VK</div>
                 </div>
-                <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;">
+                <div class="glow-frame" style="padding: 1.5rem;">
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💬</div>
                     <div style="font-size: 0.9rem; color: rgba(240, 244, 255, 0.8);">WeChat</div>
                 </div>
@@ -1217,8 +1326,8 @@
 
     <!-- Tech Stack Section -->
     <section class="tech-stack" id="tech">
-        <h2 class="section-title">🛠️ Technology Stack</h2>
-        <p class="section-subtitle">
+        <h2 class="section-title-sm">🛠️ Technology Stack</h2>
+        <p class="section-subtitle-sm">
             Built with cutting-edge Web3 technologies on Coinbase's BASE L2
         </p>
         <div class="tech-grid">
@@ -1273,14 +1382,14 @@
         </div>
     </section>
 
-    <!-- Smart Contracts Info -->
-    <section class="features">
-        <h2 class="section-title">📜 Smart Contracts</h2>
-        <p class="section-subtitle">
+    <!-- Smart Contracts Info - 20% smaller -->
+    <section class="features" style="padding: 4.8rem 5%;">
+        <h2 class="section-title-sm">📜 Smart Contracts</h2>
+        <p class="section-subtitle-sm">
             Three specialized contracts on BASE Mainnet
         </p>
-        <div class="feature-grid">
-            <a href="https://basescan.org/address/0xF9ff5DC523927B9632049bd19e17B610E9197d53" target="_blank" class="feature-card" style="text-decoration: none; color: inherit; cursor: pointer;">
+        <div class="feature-grid-sm">
+            <a href="https://basescan.org/address/0xF9ff5DC523927B9632049bd19e17B610E9197d53" target="_blank" class="feature-card-sm">
                 <span class="feature-icon">🎨</span>
                 <h3>AEraIdentityNFT</h3>
                 <p>
@@ -1289,7 +1398,7 @@
                     Only MINTER_ROLE can mint new NFTs. Each user receives exactly 1 NFT.
                 </p>
             </a>
-            <a href="https://basescan.org/address/0x9A814DBF7E2352CE9eA6293b4b731B2a24800102" target="_blank" class="feature-card" style="text-decoration: none; color: inherit; cursor: pointer;">
+            <a href="https://basescan.org/address/0x9A814DBF7E2352CE9eA6293b4b731B2a24800102" target="_blank" class="feature-card-sm">
                 <span class="feature-icon">📊</span>
                 <h3>AEraResonanceScore</h3>
                 <p>
@@ -1298,7 +1407,7 @@
                     can update scores. Public read for maximum transparency.
                 </p>
             </a>
-            <a href="https://basescan.org/address/0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF" target="_blank" class="feature-card" style="text-decoration: none; color: inherit; cursor: pointer;">
+            <a href="https://basescan.org/address/0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF" target="_blank" class="feature-card-sm">
                 <span class="feature-icon">🔗</span>
                 <h3>AEraResonanceRegistry</h3>
                 <p>
