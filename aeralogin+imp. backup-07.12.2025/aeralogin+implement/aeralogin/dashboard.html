@@ -1431,6 +1431,38 @@ Licensed under the Apache License, Version 2.0
             },
             {
                 id: 2,
+                title: "🔧 Gate Follower Registration Fix",
+                badge: "update",
+                timestamp: "Jan 03, 2026",
+                content: "Fixed critical bug where users were blocked with 'Already registered as follower' error when retrying gate access after score increase. Follower registration is now properly deferred for Telegram/Discord gates until after successful gate passage. Also fixed SQL ON CONFLICT clause to match the 3-column UNIQUE constraint (owner_wallet, follower_address, source_platform).",
+                link: null
+            },
+            {
+                id: 3,
+                title: "📊 On-Chain Score Verification",
+                badge: "security",
+                timestamp: "Jan 03, 2026",
+                content: "Gate access now reads Resonance Score directly from the blockchain contract (0x9A814DBF...102) for tamper-proof verification. Gates check on-chain score against minimum requirements (50-200) and provide clear error messages when access is denied. Follower confirmation flow improved: follow_confirmed = 0 initially, set to 1 only after successful gate passage.",
+                link: null
+            },
+            {
+                id: 4,
+                title: "🚀 Dynamic Multi-Tenant Gate Service",
+                badge: "update",
+                timestamp: "Jan 03, 2026",
+                content: "Major infrastructure upgrade: Each community owner can now configure their own Telegram/Discord bot for secure NFT-gated access! Features include: AES-256 encrypted bot token storage, dynamic bot instantiation with caching, automatic health monitoring every 30 minutes, fallback to static links when no bot configured, support for multiple gates per owner/platform. New dashboard section allows owners to choose between Basic Security (static links) or Advanced Security (bot-based one-time links).",
+                link: null
+            },
+            {
+                id: 5,
+                title: "🗑️ Gate Management & Deletion",
+                badge: "update",
+                timestamp: "Jan 03, 2026",
+                content: "Added comprehensive gate overview section in User Dashboard. Owners can now view all configured gates with real-time status (HIGH/LOW security), see invite statistics per gate, and delete gates with confirmation modal. Multi-gate support allows same owner to manage multiple communities on the same platform.",
+                link: null
+            },
+            {
+                id: 7,
                 title: "👛 View NFTs & Tokens in Your Wallet",
                 badge: "update",
                 timestamp: "Jan 02, 2026",
@@ -1438,7 +1470,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 3,
+                id: 7,
                 title: "🖼️ AEra NFTs Now on OpenSea",
                 badge: "integration",
                 timestamp: "Jan 02, 2026",
@@ -1446,7 +1478,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 4,
+                id: 8,
                 title: "📜 AEra Smart Contracts on BASE",
                 badge: "security",
                 timestamp: "Jan 02, 2026",
@@ -1454,7 +1486,7 @@ Licensed under the Apache License, Version 2.0
                 link: "https://basescan.org/address/0xF9ff5DC523927B9632049bd19e17B610E9197d53"
             },
             {
-                id: 5,
+                id: 9,
                 title: "AEra Gate SDK Infrastructure Live",
                 badge: "integration",
                 timestamp: "Dec 20, 2025",
@@ -1462,7 +1494,7 @@ Licensed under the Apache License, Version 2.0
                 link: "/sdk-docs"
             },
             {
-                id: 6,
+                id: 10,
                 title: "Android Intent-Bridge Live",
                 badge: "integration",
                 timestamp: "Dec 19, 2025",
@@ -1470,7 +1502,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 7,
+                id: 11,
                 title: "EIP-1271 Smart Contract Wallet Support",
                 badge: "security",
                 timestamp: "Dec 18, 2025",
@@ -1478,7 +1510,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 8,
+                id: 12,
                 title: "iOS Universal Links Enabled",
                 badge: "update",
                 timestamp: "Dec 17, 2025",
@@ -1486,7 +1518,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 9,
+                id: 13,
                 title: "Multi-Wallet Signature Support",
                 badge: "update",
                 timestamp: "Dec 15, 2025",
@@ -1494,7 +1526,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 10,
+                id: 14,
                 title: "BASE Mainnet Deployment",
                 badge: "integration",
                 timestamp: "Dec 10, 2025",
