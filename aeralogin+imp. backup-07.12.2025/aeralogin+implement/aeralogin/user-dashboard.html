@@ -10,6 +10,7 @@ Licensed under the Apache License, Version 2.0
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="favicon.png?v=20251225c">
     <title>AEra User Dashboard - Protected Access</title>
+    <!-- CACHE BUST: Force reload after profile editor fix - v20250104-001 -->
     <meta name="description" content="AEra User Dashboard - Protected access for verified identity holders">
     <style>
         * {
@@ -1187,9 +1188,22 @@ Licensed under the Apache License, Version 2.0
         <!-- ===== OWNER STATS SECTION ===== -->
         <div class="card" id="ownerStatsSection">
             <div class="section-title" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
-                <span style="font-size: 1.5rem;" id="statsAvatar">👤</span>
-                <div>
+                <span style="font-size: 3rem; cursor: pointer; line-height: 1;" id="statsAvatar" onclick="openProfileEditor()" title="Click to change emoji">👤</span>
+                <div style="flex: 1;">
                     <span id="statsProfileName" style="font-size: 1.25rem;">Builder</span>
+                    <button id="editProfileBtn" onclick="openProfileEditor()" style="
+                        background: transparent;
+                        border: none;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                        opacity: 0.6;
+                        margin-left: 8px;
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.opacity='1'; this.style.background='rgba(255,255,255,0.1)'" 
+                       onmouseout="this.style.opacity='0.6'; this.style.background='transparent'"
+                       title="Edit profile name">✏️</button>
                     <span id="statsProfileAddress" style="font-size: 0.8rem; opacity: 0.6; font-family: 'Courier New', monospace; display: block;">Loading...</span>
                 </div>
             </div>
@@ -1670,6 +1684,7 @@ Licensed under the Apache License, Version 2.0
                         </div>
                     </div>
                 </div>
+                
             </div>
         </div>
 
@@ -3371,6 +3386,270 @@ Licensed under the Apache License, Version 2.0
         }
 
         // ========================================
+        // PROFILE EDITOR FUNCTIONS
+        // ========================================
+        const availableEmojis = [
+            // === 🌀 SPIRALS & SWIRLS (VEra-Resonance Special!) ===
+            '🌀', '💫', '✨', '🔮', '♾️', '☯️', '🪬', '🧿', '⚛️', '🔯', '☸️', '⭕', '🔵', '🟣', '🟤', '⚫',
+            '🌐', '🪩', '💠', '🔷', '🔶', '🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '⚪', '🩵', '🩷', '🩶', '🖤',
+            
+            // === PEOPLE - Light Skin ===
+            '👤', '👨', '👩', '🧑', '👦', '👧', '🧔', '👱', '👸', '🤴', '🦸', '🦹', '🧙', '🧛', '🧜', '🧝',
+            '👮', '👷', '💂', '🕵️', '👩‍⚕️', '👨‍⚕️', '👩‍🎓', '👨‍🎓', '👩‍💻', '👨‍💻', '👩‍🚀', '👨‍🚀', '🧑‍🎤', '👩‍🎤', '👨‍🎤', '🧑‍🔬',
+            
+            // === PEOPLE - Dark Skin ===
+            '🏿', '👩🏿', '🧑🏿', '👦🏿', '👧🏿', '🧔🏿', '👱🏿', '👸🏿', '🤴🏿', '🦸🏿', '🦹🏿', '🧙🏿', '🧛🏿', '🧜🏿', '🧝🏿',
+            '👮🏿', '👷🏿', '💂🏿', '🕵🏿', '👩🏿‍⚕️', '👨🏿‍⚕️', '👩🏿‍🎓', '👨🏿‍🎓', '👩🏿‍💻', '👨🏿‍💻', '👩🏿‍🚀', '👨🏿‍🚀', '🧑🏿‍🎤', '👩🏿‍🎤', '👨🏿‍🎤', '🧑🏿‍🔬',
+            
+            // === PEOPLE - Medium-Dark Skin ===
+            '👨🏾', '👩🏾', '🧑🏾', '👦🏾', '👧🏾', '🧔🏾', '👸🏾', '🤴🏾', '🦸🏾', '🦹🏾', '👮🏾', '👷🏾', '👩🏾‍💻', '👨🏾‍💻', '👩🏾‍🚀', '👨🏾‍🚀',
+            
+            // === PEOPLE - Medium Skin ===
+            '👨🏽', '👩🏽', '🧑🏽', '👦🏽', '👧🏽', '🧔🏽', '👸🏽', '🤴🏽', '🦸🏽', '🦹🏽', '👮🏽', '👷🏽', '👩🏽‍💻', '👨🏽‍💻', '👩🏽‍🚀', '👨🏽‍🚀',
+            
+            // === FACES & EXPRESSIONS ===
+            '😎', '🤓', '🧐', '🤠', '🥸', '😈', '👹', '👺', '🤡', '💀', '☠️', '👻', '👽', '👾', '🤖', '😺',
+            '🙀', '😻', '🐱', '🦊', '🐺', '🐻', '🐼', '🐨', '🦁', '🐯', '🐮', '🐷', '🐸', '🐵', '🙈', '🙉',
+            
+            // === CRYPTO & TECH ===
+            '💎', '🚀', '⚡', '🔥', '💰', '🪙', '📊', '💻', '🖥️', '📱', '⌨️', '🔐', '🔑', '🛡️', '⚙️', '🤖',
+            '📡', '🛰️', '💾', '💿', '🔌', '🔋', '💡', '🔦', '🧲', '⚗️', '🧪', '🔬', '🔭', '📈', '📉', '💹',
+            
+            // === ANIMALS ===
+            '🦊', '🐺', '🦁', '🐯', '🐻', '🐼', '🦄', '🐉', '🦅', '🦋', '🐝', '🐙', '🦈', '🐳', '🦎', '🐢',
+            '🐍', '🦖', '🦕', '🐊', '🦜', '🦚', '🦩', '🦢', '🦭', '🐋', '🐬', '🦑', '🐠', '🐡', '🦞', '🦀',
+            '🐆', '🐅', '🦓', '🦍', '🦧', '🐘', '🦏', '🐪', '🦒', '🐃', '🐂', '🐄', '🐎', '🦌', '🐕', '🐈',
+            
+            // === SPACE & NATURE ===
+            '🌟', '⭐', '✨', '🌙', '☀️', '🌈', '🌊', '🏔️', '🌋', '🌍', '🪐', '☄️', '🌸', '🌺', '🍀', '🌴',
+            '🌵', '🌲', '🌳', '🍂', '🍁', '🌾', '🌻', '🌹', '💐', '🪷', '🌿', '☘️', '🍃', '🌱', '🪴', '🎋',
+            
+            // === SYMBOLS & OBJECTS ===
+            '💜', '💙', '💚', '💛', '🧡', '❤️', '🖤', '🤍', '💫', '🎯', '🏆', '👑', '🎭', '🎨', '🎮', '🎲',
+            '🃏', '🀄', '🎰', '🎱', '🔮', '🧿', '🪬', '📿', '💎', '💍', '🏅', '🥇', '🥈', '🥉', '🎖️', '🏵️',
+            
+            // === FOOD & DRINK ===
+            '🍕', '🍔', '🍟', '🌮', '🍣', '🍰', '🍩', '☕', '🍺', '🥃', '🍷', '🍸', '🥤', '🧋', '🍵', '🫖',
+            '🍫', '🍬', '🍭', '🧁', '🎂', '🥧', '🍪', '🍿', '🥨', '🥯', '🫓', '🥐', '🍳', '🥞', '🧇', '🥓',
+            
+            // === FLAGS - Popular ===
+            '🇺🇸', '🇬🇧', '🇩🇪', '🇫🇷', '🇪🇸', '🇮🇹', '🇵🇹', '🇳🇱', '🇧🇪', '🇦🇹', '🇨🇭', '🇵🇱', '🇨🇿', '🇸🇪', '🇳🇴', '🇩🇰',
+            '🇫🇮', '🇮🇪', '🇬🇷', '🇹🇷', '🇷🇺', '🇺🇦', '🇯🇵', '🇰🇷', '🇨🇳', '🇮🇳', '🇧🇷', '🇲🇽', '🇦🇷', '🇨🇦', '🇦🇺', '🇳🇿',
+            '🇿🇦', '🇳🇬', '🇪🇬', '🇰🇪', '🇬🇭', '🇲🇦', '🇸🇦', '🇦🇪', '🇮🇱', '🇹🇭', '🇻🇳', '🇮🇩', '🇵🇭', '🇲🇾', '🇸🇬', '🇭🇰',
+            
+            // === SPORTS & ACTIVITIES ===
+            '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '�', '🏓', '🏸', '🥊', '🥋', '⛳', '🏹', '🎣', '🤿',
+            '🏄', '🏂', '⛷️', '🧗', '🚴', '🏋️', '🤸', '🤺', '🏇', '⛹️', '🤾', '🏊', '🚣', '🧘', '🛹', '🛼',
+            
+            // === TRANSPORT & TRAVEL ===
+            '✈️', '🚀', '🛸', '🚁', '🛩️', '🚂', '🚃', '🚗', '🏎️', '🏍️', '🛵', '🚲', '🛴', '🚢', '⛵', '🛥️',
+            '🗼', '🗽', '🏰', '🏯', '🕌', '⛩️', '🕋', '⛪', '🏛️', '🗿', '🎡', '🎢', '🎠', '⛲', '🌉', '🏝️',
+            
+            // === FUN & CELEBRATION ===
+            '�🎉', '🎊', '🎈', '🎁', '🎀', '🎗️', '🎟️', '🎫', '🎪', '🎬', '🎤', '🎧', '🎼', '🎵', '🎶', '🎷',
+            '🎸', '🎹', '🪘', '🥁', '🎺', '�', '🪕', '�', '🎄', '🎃', '🎆', '🎇', '�', '✨', '🎋', '🎍'
+        ];
+        
+        let selectedEmoji = '👤';
+        let currentDisplayName = '';
+        
+        console.log('✏️ Profile Editor Functions loaded');
+        
+        function populateEmojiSelector() {
+            console.log('📝 Populating emoji selector...');
+            const container = document.getElementById('emojiSelector');
+            if (!container) {
+                console.error('❌ emojiSelector container not found!');
+                return;
+            }
+            
+            container.innerHTML = availableEmojis.map(emoji => `
+                <button type="button" class="emoji-btn" data-emoji="${emoji}" onclick="selectEmoji('${emoji}')" style="
+                    width: 36px;
+                    height: 36px;
+                    font-size: 1.3rem;
+                    border: 2px solid transparent;
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: all 0.15s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                " onmouseover="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='scale(1.1)'" 
+                   onmouseout="if(!this.classList.contains('selected')) { this.style.background='rgba(255,255,255,0.05)'; this.style.transform='scale(1)'; }">
+                    ${emoji}
+                </button>
+            `).join('');
+            
+            // Mark currently selected emoji
+            highlightSelectedEmoji(selectedEmoji);
+        }
+        
+        function selectEmoji(emoji) {
+            selectedEmoji = emoji;
+            highlightSelectedEmoji(emoji);
+            updatePreview();
+        }
+        
+        function highlightSelectedEmoji(emoji) {
+            // Remove selection from all
+            document.querySelectorAll('#emojiSelector .emoji-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                btn.style.borderColor = 'transparent';
+                btn.style.background = 'rgba(255, 255, 255, 0.05)';
+                btn.style.transform = 'scale(1)';
+            });
+            
+            // Add selection to current
+            const selectedBtn = document.querySelector(`#emojiSelector .emoji-btn[data-emoji="${emoji}"]`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('selected');
+                selectedBtn.style.borderColor = 'var(--secondary)';
+                selectedBtn.style.background = 'rgba(102, 126, 234, 0.2)';
+                selectedBtn.style.transform = 'scale(1.1)';
+            }
+        }
+        
+        function updatePreview() {
+            const nameInput = document.getElementById('displayNameInput');
+            const previewEmoji = document.getElementById('previewEmoji');
+            const previewName = document.getElementById('previewName');
+            
+            if (previewEmoji) previewEmoji.textContent = selectedEmoji;
+            
+            if (previewName && nameInput) {
+                const name = nameInput.value.trim();
+                if (name) {
+                    previewName.textContent = name;
+                } else {
+                    const shortAddr = connectedWallet ? connectedWallet.substring(0, 6) + '...' + connectedWallet.substring(38) : '0x...';
+                    previewName.textContent = `Builder ${shortAddr}`;
+                }
+            }
+        }
+        
+        function openProfileEditor() {
+            console.log('✏️ openProfileEditor() called');
+            console.log('   connectedWallet:', connectedWallet);
+            
+            if (!connectedWallet) {
+                showNotification('error', '❌ Please connect your wallet first');
+                return;
+            }
+            
+            console.log('   Opening profile editor modal...');
+            
+            // Populate emojis
+            populateEmojiSelector();
+            
+            // Get current values from display
+            const currentAvatar = document.getElementById('statsAvatar');
+            const currentName = document.getElementById('statsProfileName');
+            
+            if (currentAvatar) {
+                selectedEmoji = currentAvatar.textContent.trim() || '👤';
+            }
+            
+            if (currentName) {
+                const nameText = currentName.textContent.trim();
+                const shortAddr = connectedWallet.substring(0, 6) + '...' + connectedWallet.substring(38);
+                // If it's the default name, leave input empty
+                if (nameText === `Builder ${shortAddr}` || nameText.startsWith('Builder 0x')) {
+                    currentDisplayName = '';
+                } else {
+                    currentDisplayName = nameText;
+                }
+            }
+            
+            // Set input value
+            const nameInput = document.getElementById('displayNameInput');
+            if (nameInput) nameInput.value = currentDisplayName;
+            
+            // Highlight current emoji
+            highlightSelectedEmoji(selectedEmoji);
+            
+            // Update preview
+            updatePreview();
+            
+            // Add input listener for live preview
+            if (nameInput) {
+                nameInput.oninput = updatePreview;
+            }
+            
+            // Show modal
+            document.getElementById('profileEditorModal').style.display = 'flex';
+        }
+        
+        function closeProfileEditor() {
+            document.getElementById('profileEditorModal').style.display = 'none';
+        }
+        
+        async function saveProfile() {
+            if (!connectedWallet) {
+                showNotification('error', '❌ Wallet not connected');
+                closeProfileEditor();
+                return;
+            }
+            
+            const nameInput = document.getElementById('displayNameInput');
+            const displayName = nameInput ? nameInput.value.trim() : '';
+            
+            // Disable save button
+            const saveBtn = document.getElementById('saveProfileBtn');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '⏳ Saving...';
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/user/update-profile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        address: connectedWallet,
+                        display_name: displayName,
+                        avatar_emoji: selectedEmoji
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update UI immediately
+                    const statsAvatar = document.getElementById('statsAvatar');
+                    const statsProfileName = document.getElementById('statsProfileName');
+                    
+                    if (statsAvatar) statsAvatar.textContent = selectedEmoji;
+                    
+                    if (statsProfileName) {
+                        if (displayName) {
+                            statsProfileName.textContent = displayName;
+                        } else {
+                            const shortAddr = connectedWallet.substring(0, 6) + '...' + connectedWallet.substring(38);
+                            statsProfileName.textContent = `Builder ${shortAddr}`;
+                        }
+                    }
+                    
+                    showNotification('success', '✅ Profile updated successfully!');
+                    closeProfileEditor();
+                } else {
+                    showNotification('error', `❌ Error: ${data.error || 'Update failed'}`);
+                }
+                
+            } catch (error) {
+                console.error('Profile update error:', error);
+                showNotification('error', '❌ Network error while saving');
+            } finally {
+                // Re-enable save button
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '💾 Save Profile';
+                }
+            }
+        }
+
+        // ========================================
         // SDK APP MANAGEMENT FUNCTIONS
         // ========================================
         function getAuthToken() {
@@ -4025,11 +4304,14 @@ Licensed under the Apache License, Version 2.0
                     
                     // Update profile with real data
                     const displayName = data.display_name || `Builder ${shortAddr}`;
+                    const avatarEmoji = data.avatar_emoji || '👤';
+                    
                     if (profileNameEl) profileNameEl.textContent = displayName;
                     if (profileAddressEl) profileAddressEl.textContent = connectedWallet;
                     
-                    // Update Stats Section header with display name
+                    // Update Stats Section header with display name and avatar
                     document.getElementById('statsProfileName').textContent = displayName;
+                    document.getElementById('statsAvatar').textContent = avatarEmoji;
                     
                     // Profile Section elements (may be hidden/commented out)
                     const userStatusEl = document.getElementById('userStatus');
@@ -4141,7 +4423,91 @@ Licensed under the Apache License, Version 2.0
             console.log('🚀 User Dashboard loaded');
             createParticles();
             initDashboard();
+            
+            // ========================================
+            // PROFILE EDITOR - Direct Event Listeners (Fallback)
+            // ========================================
+            // Add click listeners directly to ensure they work
+            const editBtn = document.getElementById('editProfileBtn');
+            const statsAvatar = document.getElementById('statsAvatar');
+            
+            if (editBtn) {
+                console.log('✏️ Adding direct click listener to editProfileBtn');
+                editBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('✏️ Edit button clicked (direct listener)');
+                    openProfileEditor();
+                });
+            } else {
+                console.error('❌ editProfileBtn not found in DOM!');
+            }
+            
+            if (statsAvatar) {
+                console.log('✏️ Adding direct click listener to statsAvatar');
+                statsAvatar.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('✏️ Avatar clicked (direct listener)');
+                    openProfileEditor();
+                });
+            } else {
+                console.error('❌ statsAvatar not found in DOM!');
+            }
         });
     </script>
+
+    <!-- ========================================
+         PROFILE EDITOR MODAL (Global Overlay)
+         ======================================== -->
+    <div id="profileEditorModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 99999; justify-content: center; align-items: flex-start; padding-top: 80px; overflow-y: auto;">
+        <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 1px solid rgba(102, 126, 234, 0.4); border-radius: 16px; padding: 28px; max-width: 520px; width: 95%; box-shadow: 0 25px 80px rgba(0, 0, 0, 0.7); margin-bottom: 40px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0; color: #667eea; font-size: 1.25rem;">✏️ Edit Profile</h3>
+                <button onclick="closeProfileEditor()" style="background: transparent; border: none; color: #f0f4ff; font-size: 1.8rem; cursor: pointer; opacity: 0.7; padding: 0; line-height: 1;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">×</button>
+            </div>
+            
+            <!-- Emoji Selector -->
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.9rem; opacity: 0.8; margin-bottom: 10px; color: #f0f4ff;">Choose your avatar emoji: <span style="opacity: 0.5; font-size: 0.8rem;">(300+ options)</span></label>
+                <div id="emojiSelector" style="display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; padding: 12px; background: rgba(0, 0, 0, 0.3); border-radius: 8px; max-height: 280px; overflow-y: auto;">
+                    <!-- Emojis will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Display Name Input -->
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; font-size: 0.9rem; opacity: 0.8; margin-bottom: 10px; color: #f0f4ff;">Display name:</label>
+                <input type="text" id="displayNameInput" placeholder="Enter your display name..." maxlength="30" style="
+                    width: 100%;
+                    padding: 14px 16px;
+                    background: rgba(0, 0, 0, 0.4);
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    border-radius: 8px;
+                    color: #f0f4ff;
+                    font-size: 1rem;
+                    box-sizing: border-box;
+                    transition: border-color 0.2s ease;
+                " onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='rgba(255, 255, 255, 0.15)'">
+                <small style="display: block; margin-top: 6px; opacity: 0.5; font-size: 0.8rem; color: #f0f4ff;">Max 30 characters. Leave empty for default (Builder + wallet).</small>
+            </div>
+            
+            <!-- Preview -->
+            <div style="margin-bottom: 24px; padding: 16px; background: rgba(102, 126, 234, 0.1); border-radius: 8px; border: 1px solid rgba(102, 126, 234, 0.2);">
+                <div style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.6; margin-bottom: 8px; letter-spacing: 1px; color: #f0f4ff;">Preview</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span id="previewEmoji" style="font-size: 1.5rem;">👤</span>
+                    <span id="previewName" style="font-size: 1.1rem; font-weight: 500; color: #f0f4ff;">Builder</span>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 12px;">
+                <button onclick="closeProfileEditor()" style="flex: 1; padding: 14px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #f0f4ff; cursor: pointer; font-size: 0.95rem; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Cancel</button>
+                <button onclick="saveProfile()" id="saveProfileBtn" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: all 0.2s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102, 126, 234, 0.3)'">💾 Save Profile</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

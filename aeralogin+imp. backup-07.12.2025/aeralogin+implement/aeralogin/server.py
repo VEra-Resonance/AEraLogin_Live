@@ -549,7 +549,8 @@ def init_db():
         last_referrer TEXT,
         owner_wallet TEXT,
         is_verified_follower INTEGER DEFAULT 0,
-        display_name TEXT
+        display_name TEXT,
+        avatar_emoji TEXT DEFAULT '👤'
     )
     """)
     
@@ -645,6 +646,12 @@ def init_db():
     
     try:
         cursor.execute("ALTER TABLE users ADD COLUMN profile_nft_mint_tx_hash TEXT")
+    except:
+        pass  # Column already exists
+    
+    # Migration: Add avatar_emoji column for profile customization
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN avatar_emoji TEXT DEFAULT '👤'")
     except:
         pass  # Column already exists
     
@@ -1309,6 +1316,7 @@ async def get_user_profile(req: Request):
             SELECT 
                 address,
                 display_name,
+                avatar_emoji,
                 score,
                 blockchain_score,
                 created_at,
@@ -1358,6 +1366,7 @@ async def get_user_profile(req: Request):
             "success": True,
             "address": address,
             "display_name": user_row['display_name'] if user_row['display_name'] else None,
+            "avatar_emoji": user_row['avatar_emoji'] if user_row['avatar_emoji'] else '👤',
             "nft_verified": has_nft,
             "token_id": user_row['identity_nft_token_id'],
             "score": float(total_resonance) if total_resonance else 0.0,
@@ -1375,6 +1384,89 @@ async def get_user_profile(req: Request):
     except Exception as e:
         log_activity("ERROR", "USER_PROFILE", f"Error: {str(e)}")
         return {"success": False, "error": str(e)}
+
+
+@app.post("/api/user/update-profile")
+async def update_user_profile(req: Request):
+    """
+    ✏️ Update user profile (display name and avatar emoji)
+    
+    Request:
+        {
+            "address": "0x...",
+            "display_name": "MyUsername" (optional, max 30 chars),
+            "avatar_emoji": "🚀" (optional, single emoji)
+        }
+    
+    Response:
+        {
+            "success": true,
+            "display_name": "MyUsername",
+            "avatar_emoji": "🚀"
+        }
+    """
+    try:
+        data = await req.json()
+        address = data.get("address", "").lower()
+        
+        if not address or not address.startswith("0x") or len(address) != 42:
+            return {"success": False, "error": "Invalid wallet address"}
+        
+        display_name = data.get("display_name", "").strip()
+        avatar_emoji = data.get("avatar_emoji", "").strip()
+        
+        # Validate display_name (max 30 characters)
+        if display_name and len(display_name) > 30:
+            return {"success": False, "error": "Display name must be 30 characters or less"}
+        
+        # Validate avatar_emoji (should be a single emoji or empty)
+        if avatar_emoji and len(avatar_emoji) > 10:  # Allow for emoji modifiers
+            return {"success": False, "error": "Invalid avatar emoji"}
+        
+        # Default emoji if not provided
+        if not avatar_emoji:
+            avatar_emoji = '👤'
+        
+        log_activity("INFO", "USER_PROFILE", f"Profile update requested", 
+                    address=address[:10], 
+                    display_name=display_name[:20] if display_name else "default",
+                    avatar=avatar_emoji)
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if user exists
+        cursor.execute("SELECT address FROM users WHERE LOWER(address) = ?", (address,))
+        user = cursor.fetchone()
+        
+        if not user:
+            conn.close()
+            return {"success": False, "error": "User not found. Please login first."}
+        
+        # Update profile
+        cursor.execute("""
+            UPDATE users 
+            SET display_name = ?, avatar_emoji = ?
+            WHERE LOWER(address) = ?
+        """, (display_name if display_name else None, avatar_emoji, address))
+        
+        conn.commit()
+        conn.close()
+        
+        log_activity("INFO", "USER_PROFILE", f"✓ Profile updated successfully", 
+                    address=address[:10])
+        
+        return {
+            "success": True,
+            "display_name": display_name if display_name else None,
+            "avatar_emoji": avatar_emoji,
+            "message": "Profile updated successfully"
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "USER_PROFILE", f"Update error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
 
 # ===== TELEGRAM-GATE ENDPOINTS =====
 
