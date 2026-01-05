@@ -1079,6 +1079,7 @@ Licensed under the Apache License, Version 2.0
         <nav>
             <a onclick="navigateToCore()">AEra Core</a>
             <a href="/">Home</a>
+            <a href="/admin-panel" id="adminPanelLink" style="display: none; color: #ef4444;">🔐 Admin</a>
         </nav>
         
         <!-- Mobile Menu Toggle -->
@@ -1091,6 +1092,7 @@ Licensed under the Apache License, Version 2.0
     <nav class="mobile-menu" id="mobileMenu">
         <a onclick="navigateToCore(); closeMenu();">AEra Core</a>
         <a href="/">Home</a>
+        <a href="/admin-panel" id="adminPanelLinkMobile" style="display: none; color: #ef4444;">🔐 Admin</a>
     </nav>
     
     <div class="container">
@@ -2261,6 +2263,9 @@ Issued At: ${issuedAt}`;
                 document.getElementById('latestUpdatesSection').style.display = 'block';
                 loadFeed();
                 
+                // 🔐 Check if connected wallet is admin - show Admin Panel link
+                checkAdminAccess(walletAddress);
+                
             } catch (error) {
                 console.error('❌ Error in connectMetaMask:', error);
                 console.error('❌ Error details:', {
@@ -2302,10 +2307,34 @@ Issued At: ${issuedAt}`;
             const placeholder = document.getElementById('preConnectPlaceholder');
             if (placeholder) placeholder.style.display = 'block';
             
+            // 🔐 Hide Admin Panel link
+            const adminLink = document.getElementById('adminPanelLink');
+            const adminLinkMobile = document.getElementById('adminPanelLinkMobile');
+            if (adminLink) adminLink.style.display = 'none';
+            if (adminLinkMobile) adminLinkMobile.style.display = 'none';
+            
             // Clear sessionStorage for AEra Core access
             sessionStorage.removeItem('aeraDashboardWallet');
             sessionStorage.removeItem('aeraDashboardToken');
             console.log('🔓 Session cleared - AEra Core access revoked');
+        }
+        
+        // 🔐 Check if wallet has admin access
+        async function checkAdminAccess(walletAddress) {
+            const ADMIN_WALLETS = [
+                '0x9de3772a1b2e958561d8371ee34364dcd90967ba',
+                '0xc9e1e237b24b892141551b45cdabc224932630c4'
+            ];
+            
+            const isAdmin = ADMIN_WALLETS.includes(walletAddress.toLowerCase());
+            
+            if (isAdmin) {
+                console.log('🔐 Admin wallet detected - showing Admin Panel link');
+                const adminLink = document.getElementById('adminPanelLink');
+                const adminLinkMobile = document.getElementById('adminPanelLinkMobile');
+                if (adminLink) adminLink.style.display = 'inline';
+                if (adminLinkMobile) adminLinkMobile.style.display = 'block';
+            }
         }
         
         //  SECURITY: Do NOT listen to accountsChanged for auto-connection

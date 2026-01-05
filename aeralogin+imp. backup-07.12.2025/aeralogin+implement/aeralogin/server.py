@@ -5590,6 +5590,68 @@ async def set_profile_visibility(request: Request):
         )
 
 
+@app.post("/api/profile-nft/sync-visibility")
+async def sync_profile_visibility(request: Request):
+    """
+    🔄 Sync Profile NFT visibility from on-chain to database
+    
+    Called after a user-paid visibility transaction to update DB.
+    Reads the actual on-chain visibility and updates the database.
+    
+    Request Body:
+        {"address": "0x..."}
+    """
+    try:
+        data = await request.json()
+        address = data.get("address", "").lower()
+        
+        if not address:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "Address required"}
+            )
+        
+        # Get on-chain profile data including visibility
+        profile_data = await web3_service.get_profile_data(address)
+        if not profile_data:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "No Profile NFT found for this address"}
+            )
+        
+        # Get visibility from on-chain data
+        is_public = profile_data.get("is_public", False)
+        visibility_str = "public" if is_public else "private"
+        
+        # Update database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE users 
+            SET profile_nft_visibility=?
+            WHERE address=?
+        """, (visibility_str, address))
+        conn.commit()
+        conn.close()
+        
+        log_activity("INFO", "PROFILE_NFT", f"Synced visibility to {visibility_str} for {address[:10]}...")
+        
+        return {
+            "success": True,
+            "address": address,
+            "visibility": visibility_str,
+            "is_public": is_public,
+            "synced_from": "on-chain"
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "PROFILE_NFT", f"Error syncing visibility: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+
 @app.post("/api/profile-nft/refresh")
 async def refresh_profile_metadata(request: Request):
     """
@@ -8600,6 +8662,439 @@ async def confirm_follower(req: Request):
     except Exception as e:
         logger.error(f"❌ confirm_follower error: {str(e)}")
         return {"error": str(e), "success": False}
+
+
+# ===== SYSTEM ADMIN PANEL =====
+# Admin-only endpoints for comprehensive system statistics
+
+# Admin wallet addresses (case-insensitive comparison)
+ADMIN_WALLETS = [
+    "0x9de3772a1b2e958561d8371ee34364dcd90967ba",  # Admin
+    "0xc9e1e237b24b892141551b45cdabc224932630c4"   # Notfall/Ledger
+]
+
+@app.get("/admin-panel", response_class=HTMLResponse)
+async def admin_panel():
+    """System Admin Panel - Comprehensive stats dashboard (Admin wallets only)"""
+    from fastapi.responses import HTMLResponse as HR
+    with open(os.path.join(os.path.dirname(__file__), "admin-panel.html"), "r") as f:
+        content = f.read()
+    return HR(content=content, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+@app.get("/admin-panel.html", response_class=HTMLResponse)
+async def admin_panel_html():
+    """System Admin Panel with .html extension"""
+    from fastapi.responses import HTMLResponse as HR
+    with open(os.path.join(os.path.dirname(__file__), "admin-panel.html"), "r") as f:
+        content = f.read()
+    return HR(content=content, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+@app.get("/api/admin/stats")
+async def get_admin_stats(req: Request):
+    """
+    Comprehensive admin statistics endpoint.
+    Returns system health, user stats, auth monitoring, gate overview, and funnel data.
+    
+    Query Parameters:
+        wallet: Admin wallet address (required for authentication)
+        period: Time period filter (24h, 7d, 30d, all) - default: 7d
+    
+    Security: Only accessible by admin wallets defined in ADMIN_WALLETS
+    """
+    try:
+        # Verify admin wallet
+        wallet = req.query_params.get("wallet", "").lower()
+        period = req.query_params.get("period", "7d")
+        
+        if not wallet:
+            return {"error": "Wallet address required", "success": False, "code": 401}
+        
+        if wallet not in ADMIN_WALLETS:
+            log_activity("WARN", "ADMIN", "Unauthorized admin access attempt", address=wallet[:10])
+            return {"error": "Unauthorized: Admin access only", "success": False, "code": 403}
+        
+        log_activity("INFO", "ADMIN", "Admin stats requested", address=wallet[:10], period=period)
+        
+        # Calculate time filter
+        now = int(time.time())
+        if period == "24h":
+            time_filter = now - (24 * 60 * 60)
+        elif period == "7d":
+            time_filter = now - (7 * 24 * 60 * 60)
+        elif period == "30d":
+            time_filter = now - (30 * 24 * 60 * 60)
+        else:  # all
+            time_filter = 0
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # ===== SYSTEM STATUS =====
+        system_status = {
+            "backend_online": True,
+            "server_uptime": "Running",  # Could be enhanced with actual uptime tracking
+            "database_status": "Connected",
+            "last_check": datetime.now().isoformat()
+        }
+        
+        # Check bot status (look for recent bot activity in events)
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM events 
+            WHERE event_type LIKE '%bot%' AND timestamp > ?
+        """, (now - 3600,))  # Last hour
+        bot_activity = cursor.fetchone()['count']
+        system_status["bots_active"] = bot_activity > 0
+        
+        # Recent errors (events with error type)
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM events 
+            WHERE event_type LIKE '%error%' AND timestamp > ?
+        """, (time_filter,))
+        error_count = cursor.fetchone()['count']
+        system_status["error_count"] = error_count
+        
+        # ===== USER OVERVIEW =====
+        # Total users
+        cursor.execute("SELECT COUNT(*) as total FROM users")
+        total_users = cursor.fetchone()['total']
+        
+        # Active users in period
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM users 
+            WHERE last_login > ?
+        """, (time_filter,))
+        active_users = cursor.fetchone()['count']
+        
+        # New users in period
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM users 
+            WHERE first_seen > ?
+        """, (time_filter,))
+        new_users = cursor.fetchone()['count']
+        
+        # Online now (last 5 minutes)
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM users 
+            WHERE last_login > ?
+        """, (now - 300,))
+        online_now = cursor.fetchone()['count']
+        
+        # Average score
+        cursor.execute("SELECT AVG(score) as avg_score FROM users")
+        avg_score_row = cursor.fetchone()
+        avg_score = round(avg_score_row['avg_score'], 1) if avg_score_row['avg_score'] else 0
+        
+        # Score distribution
+        cursor.execute("""
+            SELECT 
+                CASE 
+                    WHEN score < 50 THEN '0-49'
+                    WHEN score < 75 THEN '50-74'
+                    WHEN score < 100 THEN '75-99'
+                    WHEN score < 150 THEN '100-149'
+                    ELSE '150+'
+                END as range,
+                COUNT(*) as count
+            FROM users
+            GROUP BY range
+            ORDER BY range
+        """)
+        score_distribution = {row['range']: row['count'] for row in cursor.fetchall()}
+        
+        user_stats = {
+            "total_users": total_users,
+            "active_users": active_users,
+            "new_users": new_users,
+            "online_now": online_now,
+            "average_score": avg_score,
+            "score_distribution": score_distribution
+        }
+        
+        # ===== AUTH MONITORING =====
+        # Total logins
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM events 
+            WHERE event_type = 'login' AND timestamp > ?
+        """, (time_filter,))
+        total_logins = cursor.fetchone()['count']
+        
+        # SIWE verifications (successful logins with signature)
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM events 
+            WHERE event_type IN ('login', 'siwe_verify', 'wallet_verify') AND timestamp > ?
+        """, (time_filter,))
+        siwe_logins = cursor.fetchone()['count']
+        
+        # Failed logins (if tracked)
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM events 
+            WHERE event_type LIKE '%fail%' AND timestamp > ?
+        """, (time_filter,))
+        failed_logins = cursor.fetchone()['count']
+        
+        # OAuth sessions
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM oauth_sessions 
+            WHERE is_active = 1
+        """)
+        active_oauth_sessions = cursor.fetchone()['count']
+        
+        # OAuth clients
+        cursor.execute("SELECT COUNT(*) as count FROM oauth_clients WHERE is_active = 1")
+        active_oauth_clients = cursor.fetchone()['count']
+        
+        # Logins by referrer source
+        cursor.execute("""
+            SELECT referrer, COUNT(*) as count FROM events 
+            WHERE event_type = 'login' AND timestamp > ? AND referrer IS NOT NULL
+            GROUP BY referrer
+            ORDER BY count DESC
+            LIMIT 10
+        """, (time_filter,))
+        logins_by_source = {row['referrer']: row['count'] for row in cursor.fetchall()}
+        
+        auth_stats = {
+            "total_logins": total_logins,
+            "siwe_verifications": siwe_logins,
+            "failed_logins": failed_logins,
+            "active_oauth_sessions": active_oauth_sessions,
+            "active_oauth_clients": active_oauth_clients,
+            "logins_by_source": logins_by_source
+        }
+        
+        # ===== GATE OVERVIEW =====
+        # Total gates
+        cursor.execute("SELECT COUNT(*) as count FROM owner_gate_configs WHERE is_active = 1")
+        total_gates = cursor.fetchone()['count']
+        
+        # Gates by platform
+        cursor.execute("""
+            SELECT platform, COUNT(*) as count FROM owner_gate_configs 
+            WHERE is_active = 1
+            GROUP BY platform
+        """)
+        gates_by_platform = {row['platform']: row['count'] for row in cursor.fetchall()}
+        
+        # Total gate passages (telegram_invites)
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM telegram_invites 
+            WHERE granted = 1
+        """)
+        total_passages = cursor.fetchone()['count']
+        
+        # Recent passages in period
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM telegram_invites 
+            WHERE granted = 1 AND datetime(invited_at) > datetime(?, 'unixepoch')
+        """, (time_filter,))
+        recent_passages = cursor.fetchone()['count']
+        
+        # Top gates by passage count
+        cursor.execute("""
+            SELECT 
+                g.owner_wallet,
+                g.platform,
+                g.group_name,
+                COUNT(i.id) as passage_count
+            FROM owner_gate_configs g
+            LEFT JOIN telegram_invites i ON g.owner_wallet = i.owner_wallet AND g.platform = i.platform
+            WHERE g.is_active = 1
+            GROUP BY g.owner_wallet, g.platform
+            ORDER BY passage_count DESC
+            LIMIT 5
+        """)
+        top_gates = [
+            {
+                "owner": row['owner_wallet'][:10] + "..." if row['owner_wallet'] else "Unknown",
+                "platform": row['platform'],
+                "name": row['group_name'] or "Unnamed Gate",
+                "passages": row['passage_count']
+            }
+            for row in cursor.fetchall()
+        ]
+        
+        gate_stats = {
+            "total_gates": total_gates,
+            "gates_by_platform": gates_by_platform,
+            "total_passages": total_passages,
+            "recent_passages": recent_passages,
+            "top_gates": top_gates
+        }
+        
+        # ===== FUNNEL ANALYSIS =====
+        # Landing page visits (if tracked via events)
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM events 
+            WHERE event_type IN ('page_view', 'landing_visit') AND timestamp > ?
+        """, (time_filter,))
+        landing_visits = cursor.fetchone()['count'] or total_logins * 3  # Estimate if not tracked
+        
+        # Login starts
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM events 
+            WHERE event_type IN ('login_start', 'wallet_connect') AND timestamp > ?
+        """, (time_filter,))
+        login_starts = cursor.fetchone()['count'] or total_logins  # Use actual logins as minimum
+        
+        # Successful logins (dashboard reached)
+        dashboard_reached = total_logins
+        
+        # Gate passage attempts
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM telegram_invites 
+            WHERE datetime(invited_at) > datetime(?, 'unixepoch')
+        """, (time_filter,))
+        gate_attempts = cursor.fetchone()['count']
+        
+        funnel_data = {
+            "landing_visits": landing_visits,
+            "login_starts": login_starts,
+            "logins_completed": dashboard_reached,
+            "gate_passages": gate_attempts,
+            "conversion_rates": {
+                "login_start_rate": round((login_starts / landing_visits * 100), 1) if landing_visits > 0 else 0,
+                "login_complete_rate": round((dashboard_reached / login_starts * 100), 1) if login_starts > 0 else 0,
+                "gate_passage_rate": round((gate_attempts / dashboard_reached * 100), 1) if dashboard_reached > 0 else 0
+            }
+        }
+        
+        # ===== FOLLOWERS OVERVIEW =====
+        cursor.execute("SELECT COUNT(*) as count FROM followers")
+        total_followers = cursor.fetchone()['count']
+        
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM followers 
+            WHERE datetime(verified_at) > datetime(?, 'unixepoch')
+        """, (time_filter,))
+        new_followers = cursor.fetchone()['count']
+        
+        follower_stats = {
+            "total_followers": total_followers,
+            "new_followers": new_followers
+        }
+        
+        # ===== NFT & TOKEN STATS =====
+        # Minted Identity NFTs (active status)
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM users 
+            WHERE identity_status = 'active' AND identity_nft_token_id IS NOT NULL
+        """)
+        minted_nfts = cursor.fetchone()['count']
+        
+        # NFTs currently minting
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM users 
+            WHERE identity_status = 'minting'
+        """)
+        minting_nfts = cursor.fetchone()['count']
+        
+        # Failed NFT mints
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM users 
+            WHERE identity_status = 'failed'
+        """)
+        failed_nfts = cursor.fetchone()['count']
+        
+        # Total Resonance Score Tokens in circulation (sum of all blockchain_scores)
+        cursor.execute("""
+            SELECT COALESCE(SUM(blockchain_score), 0) as total FROM users 
+            WHERE blockchain_score IS NOT NULL AND blockchain_score > 0
+        """)
+        total_tokens_circulation = cursor.fetchone()['total']
+        
+        # Users with tokens on-chain
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM users 
+            WHERE blockchain_score IS NOT NULL AND blockchain_score > 0
+        """)
+        users_with_tokens = cursor.fetchone()['count']
+        
+        # Average tokens per user (on-chain)
+        avg_tokens_per_user = round(total_tokens_circulation / users_with_tokens, 1) if users_with_tokens > 0 else 0
+        
+        # Highest blockchain score
+        cursor.execute("""
+            SELECT MAX(blockchain_score) as max_score FROM users
+        """)
+        highest_score = cursor.fetchone()['max_score'] or 0
+        
+        # ===== PROFILE NFT STATS =====
+        # Total Profile NFTs minted
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM users 
+            WHERE profile_nft_token_id IS NOT NULL
+        """)
+        profile_nfts_minted = cursor.fetchone()['count']
+        
+        # Profile NFTs by visibility
+        cursor.execute("""
+            SELECT profile_nft_visibility, COUNT(*) as count FROM users 
+            WHERE profile_nft_token_id IS NOT NULL
+            GROUP BY profile_nft_visibility
+        """)
+        profile_visibility = {row['profile_nft_visibility']: row['count'] for row in cursor.fetchall()}
+        
+        nft_token_stats = {
+            "minted_nfts": minted_nfts,
+            "minting_nfts": minting_nfts,
+            "failed_nfts": failed_nfts,
+            "total_tokens_circulation": int(total_tokens_circulation),
+            "users_with_tokens": users_with_tokens,
+            "avg_tokens_per_user": avg_tokens_per_user,
+            "highest_score": int(highest_score),
+            "profile_nfts_minted": profile_nfts_minted,
+            "profile_nfts_public": profile_visibility.get('public', 0),
+            "profile_nfts_private": profile_visibility.get('private', 0)
+        }
+        
+        conn.close()
+        
+        return {
+            "success": True,
+            "period": period,
+            "generated_at": datetime.now().isoformat(),
+            "system_status": system_status,
+            "user_stats": user_stats,
+            "auth_stats": auth_stats,
+            "gate_stats": gate_stats,
+            "funnel_data": funnel_data,
+            "follower_stats": follower_stats,
+            "nft_token_stats": nft_token_stats
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Admin stats error: {str(e)}")
+        return {"error": str(e), "success": False}
+
+@app.get("/api/admin/verify")
+async def verify_admin(req: Request):
+    """
+    Verify if a wallet address has admin access.
+    
+    Query Parameters:
+        wallet: Wallet address to verify
+    
+    Returns:
+        {
+            "is_admin": true/false,
+            "wallet": "0x..."
+        }
+    """
+    wallet = req.query_params.get("wallet", "").lower()
+    
+    if not wallet:
+        return {"error": "Wallet address required", "success": False}
+    
+    is_admin = wallet in ADMIN_WALLETS
+    
+    if is_admin:
+        log_activity("INFO", "ADMIN", "Admin verified", address=wallet[:10])
+    
+    return {
+        "success": True,
+        "is_admin": is_admin,
+        "wallet": wallet
+    }
 
 
 # ===== BLOCKCHAIN SYNC DEBUG ENDPOINTS =====

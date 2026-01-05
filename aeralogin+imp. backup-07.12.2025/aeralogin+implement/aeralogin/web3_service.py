@@ -33,7 +33,8 @@ class Web3Service:
         self._last_nonce_time = 0
         
         # Load environment variables (will be loaded by server.py before import)
-        self.rpc_url = os.getenv("BASE_SEPOLIA_RPC_URL", "https://sepolia.base.org")
+        # Prefer BASE_RPC_URL (Mainnet), fallback to BASE_SEPOLIA_RPC_URL
+        self.rpc_url = os.getenv("BASE_RPC_URL") or os.getenv("BASE_SEPOLIA_RPC_URL", "https://mainnet.base.org")
         # Try BACKEND_PRIVATE_KEY first (has funds!), then fallback to others
         self.private_key = os.getenv("BACKEND_PRIVATE_KEY") or os.getenv("PRIVATE_KEY") or os.getenv("ADMIN_PRIVATE_KEY")
         
@@ -57,7 +58,9 @@ class Web3Service:
             self.account = None
         else:
             self.account = Account.from_key(self.private_key)
-            logger.info(f"🌐 Connected to BASE Sepolia: {self.rpc_url}")
+            chain_id = int(os.getenv("BASE_NETWORK_CHAIN_ID", 8453))
+            network_name = "BASE Mainnet" if chain_id == 8453 else "BASE Sepolia"
+            logger.info(f"🌐 Connected to {network_name}: {self.rpc_url}")
             logger.info(f"💳 Backend Wallet: {self.account.address}")
         
         # Load contract ABIs and initialize contracts

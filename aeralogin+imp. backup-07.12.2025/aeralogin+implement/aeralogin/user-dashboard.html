@@ -2319,10 +2319,21 @@ Licensed under the Apache License, Version 2.0
                 
                 console.log('📤 Transaction sent:', txHash);
                 
-                // Wait and reload status
+                // Wait for TX confirmation, then sync visibility to backend DB
                 setTimeout(async () => {
+                    try {
+                        // Sync the on-chain visibility to database
+                        await fetch(`${API_BASE}/api/profile-nft/sync-visibility`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ address: connectedWallet })
+                        });
+                        console.log('✅ Visibility synced to database');
+                    } catch (syncError) {
+                        console.warn('⚠️ Could not sync visibility to DB:', syncError);
+                    }
                     await loadProfileNFTStatus();
-                }, 5000);
+                }, 8000);
                 
             } catch (error) {
                 console.error('❌ Visibility toggle error:', error);
