@@ -875,6 +875,13 @@ Licensed under the Apache License, Version 2.0
             border: 1px solid var(--success);
         }
 
+        .badge-feature {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(99, 102, 241, 0.25));
+            color: #a855f7;
+            border: 1px solid #a855f7;
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
+        }
+
         .badge-security {
             background: rgba(0, 82, 255, 0.2);
             color: var(--primary);
@@ -1431,6 +1438,14 @@ Licensed under the Apache License, Version 2.0
             },
             {
                 id: 2,
+                title: "✨ Profile Editor: Expanded Emoji Collection",
+                badge: "feature",
+                timestamp: "Jan 04, 2026",
+                content: "User Dashboard now includes a comprehensive emoji selector with over 300 emojis. Choose from various categories including symbols, flags from 48 countries, diverse skin tones, crypto icons, animals, and nature themes. The new spiral/circle category features: 🌀💫✨🔮♾️☯️🪬🧿⚛️ and color variants. Personalize your profile avatar to match your style!",
+                link: null
+            },
+            {
+                id: 3,
                 title: "🔧 Gate Follower Registration Fix",
                 badge: "update",
                 timestamp: "Jan 03, 2026",
@@ -1438,7 +1453,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 3,
+                id: 4,
                 title: "📊 On-Chain Score Verification",
                 badge: "security",
                 timestamp: "Jan 03, 2026",
@@ -1446,7 +1461,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 4,
+                id: 5,
                 title: "🚀 Dynamic Multi-Tenant Gate Service",
                 badge: "update",
                 timestamp: "Jan 03, 2026",
@@ -1454,7 +1469,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 5,
+                id: 6,
                 title: "🗑️ Gate Management & Deletion",
                 badge: "update",
                 timestamp: "Jan 03, 2026",
@@ -1470,7 +1485,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 7,
+                id: 8,
                 title: "🖼️ AEra NFTs Now on OpenSea",
                 badge: "integration",
                 timestamp: "Jan 02, 2026",
@@ -1479,14 +1494,22 @@ Licensed under the Apache License, Version 2.0
             },
             {
                 id: 8,
-                title: "📜 AEra Smart Contracts on BASE",
+                title: "�️ AEra NFTs Now on OpenSea",
+                badge: "integration",
+                timestamp: "Jan 02, 2026",
+                content: "Our OpenSea presence has been enhanced! AEra Identity NFTs and Profile NFTs are now fully discoverable on OpenSea. Browse, verify, and showcase your on-chain identity in the world's largest NFT marketplace.<br><br>🆔 <a href='https://opensea.io/collection/aera-identity' target='_blank' style='color: var(--secondary);'>AEra Identity Collection</a> — Your unique on-chain identity<br>👤 <a href='https://opensea.io/collection/aera-profile' target='_blank' style='color: var(--accent);'>AEra Profile Collection</a> — Your social profile NFT",
+                link: null
+            },
+            {
+                id: 9,
+                title: "�📜 AEra Smart Contracts on BASE",
                 badge: "security",
                 timestamp: "Jan 02, 2026",
                 content: "All AEra smart contracts are deployed on BASE Mainnet and fully verified on BaseScan. Explore our on-chain infrastructure:<br><br>🎨 <strong style='color: var(--accent);'>AEraProfileNFT</strong> — <a href='https://basescan.org/address/0x0a630a3dc0c7387e0226d1b285c43b753506b27e' target='_blank' style='color: var(--secondary);'>0x0a63...b27e</a><br><span style='opacity: 0.7; font-size: 0.9em;'>Optional ERC-721 NFT with user profile data</span><br><br>🆔 <strong style='color: var(--accent);'>AEraIdentityNFT</strong> — <a href='https://basescan.org/address/0xF9ff5DC523927B9632049bd19e17B610E9197d53' target='_blank' style='color: var(--secondary);'>0xF9ff...d53</a><br><span style='opacity: 0.7; font-size: 0.9em;'>Soul-Bound ERC-721 Token — non-transferable, 1 NFT per user</span><br><br>📊 <strong style='color: var(--accent);'>AEraResonanceScore</strong> — <a href='https://basescan.org/address/0x9A814DBF7E2352CE9eA6293b4b731B2a24800102' target='_blank' style='color: var(--secondary);'>0x9A81...102</a><br><span style='opacity: 0.7; font-size: 0.9em;'>On-chain score storage — public read, UPDATER_ROLE write</span><br><br>🔗 <strong style='color: var(--accent);'>AEraResonanceRegistry</strong> — <a href='https://basescan.org/address/0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF' target='_blank' style='color: var(--secondary);'>0xAAf3...cdF</a><br><span style='opacity: 0.7; font-size: 0.9em;'>Social interaction log — FOLLOW, SHARE, ENGAGE events</span>",
                 link: "https://basescan.org/address/0xF9ff5DC523927B9632049bd19e17B610E9197d53"
             },
             {
-                id: 9,
+                id: 10,
                 title: "AEra Gate SDK Infrastructure Live",
                 badge: "integration",
                 timestamp: "Dec 20, 2025",
@@ -1494,7 +1517,7 @@ Licensed under the Apache License, Version 2.0
                 link: "/sdk-docs"
             },
             {
-                id: 10,
+                id: 11,
                 title: "Android Intent-Bridge Live",
                 badge: "integration",
                 timestamp: "Dec 19, 2025",
@@ -1502,7 +1525,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 11,
+                id: 12,
                 title: "EIP-1271 Smart Contract Wallet Support",
                 badge: "security",
                 timestamp: "Dec 18, 2025",
@@ -1510,7 +1533,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 12,
+                id: 13,
                 title: "iOS Universal Links Enabled",
                 badge: "update",
                 timestamp: "Dec 17, 2025",
@@ -1518,7 +1541,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 13,
+                id: 14,
                 title: "Multi-Wallet Signature Support",
                 badge: "update",
                 timestamp: "Dec 15, 2025",
@@ -1526,7 +1549,7 @@ Licensed under the Apache License, Version 2.0
                 link: null
             },
             {
-                id: 14,
+                id: 15,
                 title: "BASE Mainnet Deployment",
                 badge: "integration",
                 timestamp: "Dec 10, 2025",
