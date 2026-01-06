@@ -1546,8 +1546,8 @@ Licensed under the Apache License, Version 2.0
                                 <span style="font-weight: 600;">Add Bot to your Group as Admin</span>
                             </div>
                             <div style="padding-left: 34px;">
-                                <!-- Instructions for Detect Groups -->
-                                <div style="margin-bottom: 12px; padding: 10px; background: rgba(0, 136, 204, 0.1); border: 1px dashed rgba(0, 136, 204, 0.4); border-radius: 6px;">
+                                <!-- Instructions for Detect Groups / Servers (dynamically updated) -->
+                                <div id="detectInstructions" style="margin-bottom: 12px; padding: 10px; background: rgba(0, 136, 204, 0.1); border: 1px dashed rgba(0, 136, 204, 0.4); border-radius: 6px;">
                                     <p style="font-size: 0.85rem; margin: 0 0 8px 0; color: #60a5fa; font-weight: 600;">📋 Before detecting your group:</p>
                                     <ol style="margin: 0; padding-left: 20px; font-size: 0.8rem; line-height: 1.8; opacity: 0.9;">
                                         <li>Open your Telegram group</li>
@@ -1574,8 +1574,8 @@ Licensed under the Apache License, Version 2.0
                                 
                                 <!-- Manual Group ID Input -->
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                                    <div>
-                                        <label style="display: block; font-size: 11px; margin-bottom: 5px; color: rgba(240, 244, 255, 0.7);">Group/Server ID:</label>
+                                    <div id="groupIdFieldContainer">
+                                        <label id="groupIdLabel" style="display: block; font-size: 11px; margin-bottom: 5px; color: rgba(240, 244, 255, 0.7);">Group ID:</label>
                                         <input type="text" id="botGroupId" placeholder="-1001234567890" style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 13px; background: rgba(255, 255, 255, 0.05); color: var(--light); font-family: monospace;">
                                     </div>
                                     <div id="channelIdField" style="display: none;">
@@ -2512,7 +2512,12 @@ Licensed under the Apache License, Version 2.0
             
             try {
                 const baseUrl = window.location.origin;
-                const gateLink = `${baseUrl}/join-telegram?owner=${connectedWallet}`;
+                // Determine platform from either bot config or basic mode selection
+                const botPlatform = document.getElementById('botPlatformSelect')?.value;
+                const gatePlatform = document.getElementById('gateplatformSelect')?.value;
+                const platform = botPlatform || gatePlatform || 'telegram';
+                const gateRoute = platform === 'discord' ? 'join-discord' : 'join-telegram';
+                const gateLink = `${baseUrl}/${gateRoute}?owner=${connectedWallet}`;
                 
                 linkInput.value = gateLink;
                 linkDisplay.style.display = 'flex';
@@ -2699,6 +2704,26 @@ Licensed under the Apache License, Version 2.0
             input.type = input.type === 'password' ? 'text' : 'password';
         }
         
+        // Helper function for toast notifications
+        function showToast(message, type = 'info') {
+            // Use existing notification system
+            if (typeof showNotification === 'function') {
+                showNotification(type, message);
+            } else {
+                // Fallback to alert if notification system not available
+                console.log(`[${type.toUpperCase()}] ${message}`);
+                if (type === 'error') {
+                    alert('❌ ' + message);
+                } else if (type === 'warning') {
+                    alert('⚠️ ' + message);
+                } else if (type === 'success') {
+                    alert('✅ ' + message);
+                } else {
+                    alert(message);
+                }
+            }
+        }
+        
         // =====================================================
         // AUTO-DETECT TELEGRAM GROUPS / DISCORD SERVERS
         // =====================================================
@@ -2749,10 +2774,12 @@ Licensed under the Apache License, Version 2.0
                             
                             if (platform === 'discord') {
                                 // Discord format: Server Name + channel info
+                                // Backend returns guild_name, not name!
+                                const serverName = item.guild_name || item.name || 'Unknown Server';
                                 const channelInfo = item.channels && item.channels.length > 0 
                                     ? ` [${item.channels.length} channels]` 
                                     : '';
-                                option.textContent = `${item.name}${memberInfo}${channelInfo}`;
+                                option.textContent = `${serverName}${memberInfo}${channelInfo}`;
                             } else {
                                 // Telegram format
                                 option.textContent = `${item.group_name}${memberInfo} [${item.group_type}]`;
@@ -2794,21 +2821,26 @@ Licensed under the Apache License, Version 2.0
                 
                 if (platform === 'discord') {
                     // Discord: use guild_id and auto-select first channel
+                    // Backend returns guild_id, guild_name, default_channel_id
+                    const serverName = item.guild_name || item.name || 'Discord Server';
+                    
                     document.getElementById('botGroupId').value = item.guild_id;
                     
-                    // Auto-fill channel ID if available
-                    if (item.channels && item.channels.length > 0) {
+                    // Auto-fill channel ID if available (from default_channel_id or channels array)
+                    if (item.default_channel_id) {
+                        document.getElementById('botChannelId').value = item.default_channel_id;
+                    } else if (item.channels && item.channels.length > 0) {
                         const firstChannel = item.channels[0];
                         document.getElementById('botChannelId').value = firstChannel.id;
                     }
                     
-                    // Auto-fill the Group Name field
+                    // Auto-fill the Group Name field with server name
                     const groupNameInput = document.getElementById('botGroupName');
                     if (groupNameInput) {
-                        groupNameInput.value = item.name || '';
+                        groupNameInput.value = serverName;
                     }
                     
-                    showToast(`✓ Selected: ${item.name}`, 'success');
+                    showToast(`✓ Selected: ${serverName}`, 'success');
                 } else {
                     // Telegram: use group_id
                     document.getElementById('botGroupId').value = item.group_id;
@@ -2918,6 +2950,7 @@ Licensed under the Apache License, Version 2.0
         function updateBotInstructions() {
             const platform = document.getElementById('botPlatformSelect').value;
             const instructionsDiv = document.getElementById('createBotInstructions');
+            const detectInstructions = document.getElementById('detectInstructions');
             const channelField = document.getElementById('channelIdField');
             const groupIdHelp = document.getElementById('groupIdHelp');
             const detectBtn = document.getElementById('detectGroupsBtn');
@@ -2934,11 +2967,27 @@ Licensed under the Apache License, Version 2.0
                         <li>Copy the API token you receive</li>
                     </ol>
                 `;
+                // Update Step 3 detect instructions for Telegram
+                detectInstructions.style.background = 'rgba(0, 136, 204, 0.1)';
+                detectInstructions.style.borderColor = 'rgba(0, 136, 204, 0.4)';
+                detectInstructions.innerHTML = `
+                    <p style="font-size: 0.85rem; margin: 0 0 8px 0; color: #60a5fa; font-weight: 600;">📋 Before detecting your group:</p>
+                    <ol style="margin: 0; padding-left: 20px; font-size: 0.8rem; line-height: 1.8; opacity: 0.9;">
+                        <li>Open your Telegram group</li>
+                        <li>Add your bot as <strong>Administrator</strong> (with "Invite Users" permission)</li>
+                        <li>Send any message in the group (e.g. "hello") — <em>this is required!</em></li>
+                        <li>Click the <strong>🔍 Detect Groups</strong> button below</li>
+                    </ol>
+                `;
                 channelField.style.display = 'none';
                 detectBtn.style.display = 'flex';
                 detectBtn.style.background = 'linear-gradient(135deg, #0088cc, #006699)';
                 detectBtn.innerHTML = '🔍 Detect Groups';
                 groupIdHelp.innerHTML = '💡 Or add <a href="https://t.me/getmyid_bot" target="_blank" style="color: var(--secondary);">@getmyid_bot</a> to your group to get the ID manually';
+                
+                // Update Group ID label and placeholder for Telegram
+                document.getElementById('groupIdLabel').textContent = 'Group ID:';
+                document.getElementById('botGroupId').placeholder = '-1001234567890';
                 
                 // Update fallback link placeholder and help for Telegram
                 document.getElementById('botFallbackLink').placeholder = 'https://t.me/+ABC123... (optional if Bot Token set)';
@@ -2954,11 +3003,26 @@ Licensed under the Apache License, Version 2.0
                         <li>Click the <strong>🔍 Detect Servers</strong> button below</li>
                     </ol>
                 `;
+                // Update Step 3 detect instructions for Discord
+                detectInstructions.style.background = 'rgba(88, 101, 242, 0.1)';
+                detectInstructions.style.borderColor = 'rgba(88, 101, 242, 0.4)';
+                detectInstructions.innerHTML = `
+                    <p style="font-size: 0.85rem; margin: 0 0 8px 0; color: #818cf8; font-weight: 600;">📋 Before detecting your server:</p>
+                    <ol style="margin: 0; padding-left: 20px; font-size: 0.8rem; line-height: 1.8; opacity: 0.9;">
+                        <li>Open Discord and invite your bot to your server (with Admin permissions)</li>
+                        <li>Ensure the bot is online in your server</li>
+                        <li>Click the <strong>🔍 Detect Servers</strong> button below</li>
+                    </ol>
+                `;
                 channelField.style.display = 'block';
                 detectBtn.style.display = 'flex';
                 detectBtn.style.background = 'linear-gradient(135deg, #5865F2, #4752C4)';
                 detectBtn.innerHTML = '🔍 Detect Servers';
                 groupIdHelp.textContent = '💡 Or right-click your server → Copy Server ID (enable Developer Mode in Settings)';
+                
+                // Update Server ID label and placeholder for Discord
+                document.getElementById('groupIdLabel').textContent = 'Server ID:';
+                document.getElementById('botGroupId').placeholder = '1234567890123456789';
                 
                 // Update fallback link placeholder and help for Discord
                 document.getElementById('botFallbackLink').placeholder = 'https://discord.gg/ABC123 (optional if Bot Token set)';
@@ -3239,7 +3303,9 @@ Licensed under the Apache License, Version 2.0
                         // Gate Access Link (for sharing with users - includes platform AND group!)
                         const baseUrl = window.location.origin;
                         // MULTI-GATE: Include group_id to identify specific gate
-                        const gateAccessLink = `${baseUrl}/join-telegram?owner=${connectedWallet}&platform=${gate.platform}&group=${encodeURIComponent(gate.group_id)}`;
+                        // Use platform-specific route: /join-telegram or /join-discord
+                        const gateRoute = gate.platform === 'discord' ? 'join-discord' : 'join-telegram';
+                        const gateAccessLink = `${baseUrl}/${gateRoute}?owner=${connectedWallet}&platform=${gate.platform}&group=${encodeURIComponent(gate.group_id)}`;
                         const gateAccessLinkHtml = `
                             <div style="font-size: 0.75rem; margin-top: 6px; padding: 6px 8px; background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 4px;">
                                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">

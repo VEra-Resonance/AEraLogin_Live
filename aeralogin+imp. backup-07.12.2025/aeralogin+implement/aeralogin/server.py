@@ -1097,10 +1097,14 @@ async def join_telegram():
         return f.read()
 
 @app.get("/join-discord", response_class=HTMLResponse)
-async def join_discord():
-    """Discord Gate - Uses same page as Telegram with ?source=discord parameter"""
+async def join_discord(request: Request):
+    """Discord Gate - Uses same page as Telegram, preserves all query parameters"""
     from fastapi.responses import RedirectResponse
-    return RedirectResponse(url="/join-telegram?source=discord", status_code=302)
+    # Preserve all query parameters and add source=discord
+    query_params = dict(request.query_params)
+    query_params['source'] = 'discord'
+    query_string = "&".join(f"{k}={v}" for k, v in query_params.items())
+    return RedirectResponse(url=f"/join-telegram?{query_string}", status_code=302)
 
 @app.get("/security-concept.html", response_class=HTMLResponse)
 async def security_concept():
