@@ -935,6 +935,10 @@ async def startup_event():
     asyncio.create_task(start_nft_confirmation_checker())
     logger.info("   🎨 NFT Mint Confirmation Checker gestartet")
     
+    # Starte OAuth Session Cleanup Job
+    asyncio.create_task(oauth_session_cleanup_loop())
+    logger.info("   🧹 OAuth Session Cleanup Job gestartet")
+    
     # Initial Scan: Füge alle User mit Score ≥10 zur Sync-Queue hinzu (async task)
     async def initial_sync_scan():
         try:
@@ -4020,8 +4024,9 @@ async def verify(req: Request):
                 try:
                     from web3 import Web3
                     
-                    # Connect to BASE mainnet
-                    w3 = Web3(Web3.HTTPProvider('https://mainnet.base.org'))
+                    # Connect to BASE mainnet via Alchemy (faster)
+                    alchemy_url = os.getenv("BASE_ALCHEMY_API_URL") or os.getenv("BASE_RPC_URL", "https://mainnet.base.org")
+                    w3 = Web3(Web3.HTTPProvider(alchemy_url))
                     
                     # EIP-1271 ABI - just the isValidSignature function
                     EIP1271_ABI = [
@@ -5283,7 +5288,9 @@ async def get_address_from_token_id(token_id: int) -> Optional[str]:
             
             IDENTITY_NFT_ADDRESS = os.getenv("IDENTITY_NFT_ADDRESS", "0xF9ff5DC523927B9632049bd19e17B610E9197d53")
             
-            w3 = Web3(Web3.HTTPProvider('https://mainnet.base.org'))
+            # Use Alchemy for faster blockchain queries
+            alchemy_url = os.getenv("BASE_ALCHEMY_API_URL") or os.getenv("BASE_RPC_URL", "https://mainnet.base.org")
+            w3 = Web3(Web3.HTTPProvider(alchemy_url))
             
             # Minimal ABI with ownerOf
             abi = [
@@ -6083,7 +6090,9 @@ async def get_profile_address_from_token_id(token_id: int) -> Optional[str]:
             if not PROFILE_NFT_ADDRESS:
                 return None
             
-            w3 = Web3(Web3.HTTPProvider('https://mainnet.base.org'))
+            # Use Alchemy for faster blockchain queries
+            alchemy_url = os.getenv("BASE_ALCHEMY_API_URL") or os.getenv("BASE_RPC_URL", "https://mainnet.base.org")
+            w3 = Web3(Web3.HTTPProvider(alchemy_url))
             
             abi = [
                 {
@@ -7026,8 +7035,9 @@ async def oauth_complete(req: Request):
                 try:
                     from web3 import Web3
                     
-                    # Connect to BASE mainnet
-                    w3 = Web3(Web3.HTTPProvider('https://mainnet.base.org'))
+                    # Connect to BASE mainnet via Alchemy (faster)
+                    alchemy_url = os.getenv("BASE_ALCHEMY_API_URL") or os.getenv("BASE_RPC_URL", "https://mainnet.base.org")
+                    w3 = Web3(Web3.HTTPProvider(alchemy_url))
                     
                     # EIP-1271 ABI - just the isValidSignature function
                     EIP1271_ABI = [
@@ -7896,6 +7906,60 @@ async def regenerate_client_secret(client_id: str, req: Request):
 # ============================================================================
 
 
+# ============================================================================
+# ===== OAUTH SESSION CLEANUP JOB =====
+# ============================================================================
+
+async def oauth_session_cleanup_loop():
+    """
+    Background task that periodically deactivates expired OAuth sessions.
+    
+    AUDIT COMPLIANCE:
+    - Sessions are NOT deleted - all data is preserved for audit purposes
+    - Only sets is_active = 0 for expired sessions
+    - Runs every hour
+    - Logs all cleanup operations
+    """
+    # Initial delay before first cleanup
+    await asyncio.sleep(60)  # 1 minute initial delay
+    
+    while True:
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Count expired sessions before cleanup
+            cursor.execute("""
+                SELECT COUNT(*) as count FROM oauth_sessions 
+                WHERE is_active = 1 AND datetime(expires_at) <= datetime('now')
+            """)
+            expired_count = cursor.fetchone()['count']
+            
+            if expired_count > 0:
+                # Deactivate expired sessions (preserve data for audit)
+                cursor.execute("""
+                    UPDATE oauth_sessions 
+                    SET is_active = 0, 
+                        deactivated_at = datetime('now'),
+                        deactivation_reason = 'expired_cleanup_job'
+                    WHERE is_active = 1 AND datetime(expires_at) <= datetime('now')
+                """)
+                conn.commit()
+                
+                logger.info(f"🧹 OAuth Cleanup: {expired_count} expired sessions deactivated (data preserved for audit)")
+                log_activity("INFO", "OAUTH_CLEANUP", f"Deactivated {expired_count} expired sessions", 
+                           details=f"Sessions preserved for audit compliance")
+            
+            conn.close()
+            
+        except Exception as e:
+            logger.error(f"❌ OAuth Cleanup error: {str(e)}")
+            log_activity("ERROR", "OAUTH_CLEANUP", f"Cleanup failed: {str(e)}")
+        
+        # Run every hour
+        await asyncio.sleep(3600)
+
+
 @app.get("/api/airdrop-status/{address}")
 async def get_airdrop_status(address: str):
     """
@@ -8059,8 +8123,9 @@ async def verify_dashboard_signature(data: dict):
                     from web3 import Web3
                     from eth_account.messages import defunct_hash_message
                     
-                    # Connect to BASE mainnet
-                    w3 = Web3(Web3.HTTPProvider('https://mainnet.base.org'))
+                    # Connect to BASE mainnet via Alchemy (faster & more reliable)
+                    alchemy_url = os.getenv("BASE_ALCHEMY_API_URL") or os.getenv("BASE_RPC_URL", "https://mainnet.base.org")
+                    w3 = Web3(Web3.HTTPProvider(alchemy_url))
                     
                     # EIP-1271 ABI - just the isValidSignature function
                     EIP1271_ABI = [
@@ -8442,19 +8507,21 @@ async def get_followers_dashboard(req: Request):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Get all followers for this owner
+        # Get all followers for this owner with CURRENT scores from users table
         cursor.execute("""
             SELECT 
                 f.id,
                 f.follower_address,
-                f.follower_score,
+                f.follower_score as original_score,
+                COALESCE(u.score, f.follower_score) as current_score,
                 f.follower_display_name,
                 f.verified_at,
                 f.source_platform,
                 f.verified,
                 u.login_count,
                 u.last_login,
-                u.created_at
+                u.created_at,
+                u.blockchain_score
             FROM followers f
             LEFT JOIN users u ON f.follower_address = u.address
             WHERE f.owner_wallet = ?
@@ -8463,10 +8530,10 @@ async def get_followers_dashboard(req: Request):
         
         followers = cursor.fetchall()
         
-        # Calculate statistics
+        # Calculate statistics using CURRENT scores
         if followers:
             total_verified = len(followers)
-            avg_score = sum(f['follower_score'] if f['follower_score'] else 0 for f in followers) / len(followers)
+            avg_score = sum(f['current_score'] if f['current_score'] else 0 for f in followers) / len(followers)
             
             # Group by platform
             platform_counts = {}
@@ -8497,7 +8564,9 @@ async def get_followers_dashboard(req: Request):
                 {
                     "follower_address": f['follower_address'],
                     "display_name": f['follower_display_name'],
-                    "resonance_score": f['follower_score'],
+                    "resonance_score": f['current_score'],  # Current score from users table
+                    "original_score": f['original_score'],   # Score at follow time
+                    "blockchain_score": f['blockchain_score'],  # On-chain score
                     "verified_at": f['verified_at'],
                     "source_platform": f['source_platform'],
                     "verified": bool(f['verified']),
@@ -8836,12 +8905,20 @@ async def get_admin_stats(req: Request):
         """, (time_filter,))
         failed_logins = cursor.fetchone()['count']
         
-        # OAuth sessions
+        # OAuth sessions (active and not expired)
         cursor.execute("""
             SELECT COUNT(*) as count FROM oauth_sessions 
-            WHERE is_active = 1
+            WHERE is_active = 1 AND datetime(expires_at) > datetime('now')
         """)
         active_oauth_sessions = cursor.fetchone()['count']
+        
+        # Total OAuth sessions (for audit overview)
+        cursor.execute("SELECT COUNT(*) as count FROM oauth_sessions")
+        total_oauth_sessions = cursor.fetchone()['count']
+        
+        # Deactivated sessions (audit trail)
+        cursor.execute("SELECT COUNT(*) as count FROM oauth_sessions WHERE is_active = 0")
+        deactivated_oauth_sessions = cursor.fetchone()['count']
         
         # OAuth clients
         cursor.execute("SELECT COUNT(*) as count FROM oauth_clients WHERE is_active = 1")
@@ -8863,7 +8940,10 @@ async def get_admin_stats(req: Request):
             "failed_logins": failed_logins,
             "active_oauth_sessions": active_oauth_sessions,
             "active_oauth_clients": active_oauth_clients,
-            "logins_by_source": logins_by_source
+            "logins_by_source": logins_by_source,
+            # Audit data
+            "total_oauth_sessions_audit": total_oauth_sessions,
+            "deactivated_oauth_sessions": deactivated_oauth_sessions
         }
         
         # ===== GATE OVERVIEW =====
@@ -9041,17 +9121,98 @@ async def get_admin_stats(req: Request):
         """)
         profile_visibility = {row['profile_nft_visibility']: row['count'] for row in cursor.fetchall()}
         
+        # ===== BLOCKCHAIN DATA (via Alchemy API) =====
+        blockchain_data = {
+            "identity_nfts_onchain": None,
+            "profile_nfts_onchain": None,
+            "total_resonance_onchain": None,
+            "sync_status": "unknown"
+        }
+        
+        try:
+            import urllib.request
+            import json as json_lib
+            
+            ALCHEMY_URL = os.getenv("BASE_ALCHEMY_API_URL", "")
+            ALCHEMY_API_KEY = ALCHEMY_URL.split("/v2/")[-1] if "/v2/" in ALCHEMY_URL else None
+            IDENTITY_NFT = os.getenv("IDENTITY_NFT_ADDRESS", "0xF9ff5DC523927B9632049bd19e17B610E9197d53")
+            PROFILE_NFT = os.getenv("PROFILE_NFT_ADDRESS", "")
+            RESONANCE_SCORE = os.getenv("RESONANCE_SCORE_ADDRESS", "0x9A814DBF7E2352CE9eA6293b4b731B2a24800102")
+            
+            if ALCHEMY_API_KEY:
+                # Get Identity NFT count from blockchain
+                identity_url = f"https://base-mainnet.g.alchemy.com/nft/v3/{ALCHEMY_API_KEY}/getOwnersForContract?contractAddress={IDENTITY_NFT}&withTokenBalances=true"
+                with urllib.request.urlopen(identity_url, timeout=5) as resp:
+                    data = json_lib.loads(resp.read().decode())
+                    blockchain_data["identity_nfts_onchain"] = len(data.get("owners", []))
+                
+                # Get Profile NFT count if configured
+                if PROFILE_NFT:
+                    profile_url = f"https://base-mainnet.g.alchemy.com/nft/v3/{ALCHEMY_API_KEY}/getOwnersForContract?contractAddress={PROFILE_NFT}&withTokenBalances=true"
+                    with urllib.request.urlopen(profile_url, timeout=5) as resp:
+                        data = json_lib.loads(resp.read().decode())
+                        blockchain_data["profile_nfts_onchain"] = len(data.get("owners", []))
+                
+                # Get Resonance Score totalSupply via RPC call
+                if RESONANCE_SCORE and ALCHEMY_URL:
+                    payload = {
+                        'jsonrpc': '2.0',
+                        'method': 'eth_call',
+                        'params': [{
+                            'to': RESONANCE_SCORE,
+                            'data': '0x18160ddd'  # totalSupply()
+                        }, 'latest'],
+                        'id': 1
+                    }
+                    req = urllib.request.Request(ALCHEMY_URL, 
+                        data=json_lib.dumps(payload).encode(),
+                        headers={'Content-Type': 'application/json'})
+                    with urllib.request.urlopen(req, timeout=5) as resp:
+                        data = json_lib.loads(resp.read().decode())
+                        result = data.get('result', '0x0')
+                        blockchain_data["total_resonance_onchain"] = int(result, 16)
+                
+                # Check sync status for Identity NFTs
+                if blockchain_data["identity_nfts_onchain"] is not None:
+                    if blockchain_data["identity_nfts_onchain"] == minted_nfts:
+                        blockchain_data["sync_status"] = "synced"
+                    elif blockchain_data["identity_nfts_onchain"] > minted_nfts:
+                        blockchain_data["sync_status"] = f"db_behind_{blockchain_data['identity_nfts_onchain'] - minted_nfts}"
+                    else:
+                        blockchain_data["sync_status"] = f"db_ahead_{minted_nfts - blockchain_data['identity_nfts_onchain']}"
+                
+                # Check sync status for Resonance Tokens
+                if blockchain_data["total_resonance_onchain"] is not None:
+                    onchain = blockchain_data["total_resonance_onchain"]
+                    db_total = int(total_tokens_circulation)
+                    diff = onchain - db_total
+                    if diff == 0:
+                        blockchain_data["resonance_sync_status"] = "synced"
+                    elif diff > 0:
+                        blockchain_data["resonance_sync_status"] = f"db_behind_{diff}_tokens"
+                    else:
+                        blockchain_data["resonance_sync_status"] = f"db_ahead_{abs(diff)}_tokens"
+                        
+        except Exception as bc_err:
+            logger.warning(f"⚠️ Blockchain data fetch failed: {bc_err}")
+            blockchain_data["sync_status"] = f"error: {str(bc_err)[:50]}"
+        
         nft_token_stats = {
             "minted_nfts": minted_nfts,
+            "minted_nfts_onchain": blockchain_data["identity_nfts_onchain"],
             "minting_nfts": minting_nfts,
             "failed_nfts": failed_nfts,
             "total_tokens_circulation": int(total_tokens_circulation),
+            "total_tokens_onchain": blockchain_data["total_resonance_onchain"],
+            "resonance_sync_status": blockchain_data.get("resonance_sync_status", "unknown"),
             "users_with_tokens": users_with_tokens,
             "avg_tokens_per_user": avg_tokens_per_user,
             "highest_score": int(highest_score),
             "profile_nfts_minted": profile_nfts_minted,
+            "profile_nfts_onchain": blockchain_data["profile_nfts_onchain"],
             "profile_nfts_public": profile_visibility.get('public', 0),
-            "profile_nfts_private": profile_visibility.get('private', 0)
+            "profile_nfts_private": profile_visibility.get('private', 0),
+            "blockchain_sync_status": blockchain_data["sync_status"]
         }
         
         conn.close()

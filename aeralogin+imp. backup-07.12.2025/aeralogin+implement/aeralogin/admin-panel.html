@@ -478,15 +478,18 @@
             </div>
             <div class="stat-card success">
                 <div class="label">Online Now</div>
-                <div class="value" id="active24h">-</div>
+                <div class="value" id="onlineNow">-</div>
+                <div class="subtext">Last 5 minutes</div>
             </div>
             <div class="stat-card">
                 <div class="label">Active (Period)</div>
-                <div class="value" id="active7d">-</div>
+                <div class="value" id="activeUsers">-</div>
+                <div class="subtext" id="activeUsersDetail">Period</div>
             </div>
             <div class="stat-card">
                 <div class="label">New Users</div>
-                <div class="value" id="totalLogins">-</div>
+                <div class="value" id="newUsers">-</div>
+                <div class="subtext" id="newUsersDetail">Period</div>
             </div>
             <div class="stat-card warning">
                 <div class="label">Failed Logins</div>
@@ -509,16 +512,17 @@
             </div>
             <div class="stat-card info">
                 <div class="label">OAuth Sessions</div>
-                <div class="value" id="oauthRedirects">-</div>
+                <div class="value" id="oauthSessions">-</div>
                 <div class="subtext">active</div>
             </div>
             <div class="stat-card warning">
                 <div class="label">Failed Auth</div>
-                <div class="value" id="failedOauth">-</div>
+                <div class="value" id="failedAuth">-</div>
+                <div class="subtext" id="failedAuthDetail">Period</div>
             </div>
             <div class="stat-card">
                 <div class="label">OAuth Clients</div>
-                <div class="value" id="avgLoginTime">-</div>
+                <div class="value" id="oauthClients">-</div>
                 <div class="subtext">registered</div>
             </div>
         </div>
@@ -828,9 +832,11 @@
             if (!stats) return;
             
             document.getElementById('totalWallets').textContent = formatNumber(stats.total_users);
-            document.getElementById('active24h').textContent = formatNumber(stats.online_now);
-            document.getElementById('active7d').textContent = formatNumber(stats.active_users);
-            document.getElementById('totalLogins').textContent = formatNumber(stats.new_users);
+            document.getElementById('onlineNow').textContent = formatNumber(stats.online_now);
+            document.getElementById('activeUsers').textContent = formatNumber(stats.active_users);
+            document.getElementById('activeUsersDetail').textContent = `in ${currentPeriod}`;
+            document.getElementById('newUsers').textContent = formatNumber(stats.new_users);
+            document.getElementById('newUsersDetail').textContent = `in ${currentPeriod}`;
             document.getElementById('failedLogins').textContent = '0';  // Not tracked separately
             document.getElementById('failedLoginsDetail').textContent = `in ${currentPeriod}`;
             document.getElementById('avgScore').textContent = stats.average_score?.toFixed(1) || '-';
@@ -841,9 +847,10 @@
             
             document.getElementById('siweLogins').textContent = formatNumber(stats.siwe_verifications);
             document.getElementById('siweLoginsDetail').textContent = `in ${currentPeriod}`;
-            document.getElementById('oauthRedirects').textContent = formatNumber(stats.active_oauth_sessions);
-            document.getElementById('failedOauth').textContent = formatNumber(stats.failed_logins);
-            document.getElementById('avgLoginTime').textContent = formatNumber(stats.active_oauth_clients);
+            document.getElementById('oauthSessions').textContent = formatNumber(stats.active_oauth_sessions);
+            document.getElementById('failedAuth').textContent = formatNumber(stats.failed_logins);
+            document.getElementById('failedAuthDetail').textContent = `in ${currentPeriod}`;
+            document.getElementById('oauthClients').textContent = formatNumber(stats.active_oauth_clients);
         }
 
         function updateGateStats(stats) {

@@ -23,7 +23,7 @@ logger = setup_logger(__name__)
 
 
 class Web3Service:
-    """Service for interacting with BASE Sepolia blockchain"""
+    """Service for interacting with BASE Mainnet blockchain"""
     
     def __init__(self):
         """Initialize Web3 connection and contract instances"""
@@ -33,8 +33,8 @@ class Web3Service:
         self._last_nonce_time = 0
         
         # Load environment variables (will be loaded by server.py before import)
-        # Prefer BASE_RPC_URL (Mainnet), fallback to BASE_SEPOLIA_RPC_URL
-        self.rpc_url = os.getenv("BASE_RPC_URL") or os.getenv("BASE_SEPOLIA_RPC_URL", "https://mainnet.base.org")
+        # Prefer BASE_ALCHEMY_API_URL (reliable!), then BASE_RPC_URL, fallback to public RPC
+        self.rpc_url = os.getenv("BASE_ALCHEMY_API_URL") or os.getenv("BASE_RPC_URL") or os.getenv("BASE_SEPOLIA_RPC_URL", "https://mainnet.base.org")
         # Try BACKEND_PRIVATE_KEY first (has funds!), then fallback to others
         self.private_key = os.getenv("BACKEND_PRIVATE_KEY") or os.getenv("PRIVATE_KEY") or os.getenv("ADMIN_PRIVATE_KEY")
         
@@ -46,8 +46,8 @@ class Web3Service:
         # Profile NFT Contract (OPTIONAL - Public Display Layer)
         self.profile_nft_address = os.getenv("PROFILE_NFT_ADDRESS")
         
-        # Blockscout API for event queries (BASE Sepolia uses Blockscout, not Basescan!)
-        self.blockscout_api_url = os.getenv("BLOCKSCOUT_API_URL", "https://base-sepolia.blockscout.com/api/v2")
+        # Blockscout API for event queries (BASE Mainnet)
+        self.blockscout_api_url = os.getenv("BLOCKSCOUT_API_URL", "https://base.blockscout.com/api/v2")
         
         # Initialize Web3 (read-only mode if no PRIVATE_KEY)
         self.w3 = Web3(Web3.HTTPProvider(self.rpc_url))
@@ -864,13 +864,15 @@ class Web3Service:
             # Test connection
             block_number = self.w3.eth.block_number
             gas_price = self.w3.eth.gas_price
+            chain_id = int(os.getenv("BASE_NETWORK_CHAIN_ID", 8453))
             
             result = {
                 "status": "connected",
                 "block_number": block_number,
                 "gas_price_gwei": float(Web3.from_wei(gas_price, 'gwei')),
                 "rpc_url": self.rpc_url,
-                "chain_id": 84532
+                "chain_id": chain_id,
+                "network": "BASE Mainnet" if chain_id == 8453 else "BASE Sepolia"
             }
             
             # Add backend wallet info if available

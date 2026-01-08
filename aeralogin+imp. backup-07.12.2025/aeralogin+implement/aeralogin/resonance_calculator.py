@@ -41,11 +41,13 @@ def calculate_resonance_score(address: str, conn: sqlite3.Connection) -> Tuple[f
         user = cursor.fetchone()
         own_score = float(user[0]) if user and user[0] else 0.0
         
-        # Get follower stats
+        # Get follower stats with CURRENT scores from users table (not outdated followers.follower_score)
         cursor.execute("""
-            SELECT COUNT(*) as count, AVG(follower_score) as avg_score
-            FROM followers 
-            WHERE owner_wallet=?
+            SELECT COUNT(*) as count, 
+                   AVG(COALESCE(u.score, f.follower_score)) as avg_score
+            FROM followers f
+            LEFT JOIN users u ON f.follower_address = u.address
+            WHERE f.owner_wallet=?
         """, (address,))
         
         stats = cursor.fetchone()
