@@ -8893,19 +8893,22 @@ async def get_admin_stats(req: Request):
         """, (time_filter,))
         recent_passages = cursor.fetchone()['count']
         
-        # Top gates by passage count
+        # Top gates by passage count (include group_id in JOIN and GROUP BY for multi-gate support)
         cursor.execute("""
             SELECT 
                 g.owner_wallet,
                 g.platform,
                 g.group_name,
+                g.group_id,
                 COUNT(i.id) as passage_count
             FROM owner_gate_configs g
-            LEFT JOIN telegram_invites i ON g.owner_wallet = i.owner_wallet AND g.platform = i.platform
+            LEFT JOIN telegram_invites i ON g.owner_wallet = i.owner_wallet 
+                AND g.platform = i.platform 
+                AND g.group_id = i.group_id
             WHERE g.is_active = 1
-            GROUP BY g.owner_wallet, g.platform
+            GROUP BY g.owner_wallet, g.platform, g.group_id
             ORDER BY passage_count DESC
-            LIMIT 5
+            LIMIT 10
         """)
         top_gates = [
             {
