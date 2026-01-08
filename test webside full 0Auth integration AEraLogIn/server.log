@@ -2842,3 +2842,4 @@ nohup: ignoring input
 [VERIFY] ===== SUCCESS! User: 0x37d932c3917ed7d61280540353ceb485e3778a8d =====
 127.0.0.1 - - [06/Jan/2026 14:39:00] "GET /example-oauth/api/verify HTTP/1.1" 200 -
 127.0.0.1 - - [06/Jan/2026 14:39:02] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
+127.0.0.1 - - [07/Jan/2026 18:23:50] "GET /example-oauth/ HTTP/1.1" 200 -
