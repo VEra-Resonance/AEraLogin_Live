@@ -1446,8 +1446,7 @@
             <a href="https://base.org" target="_blank">BASE L2</a>
         </div>
         <p>
-            &copy; 2025 AEraLogIn. Built on Coinbase BASE L2.<br>
-            Community-funded project powered by Blockscout & Web3.py 💙
+            &copy; 2025 AEraLogIn. Built on Coinbase BASE L2.
         </p>
         <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.5;">
             🚀 Live on BASE Mainnet - Production Ready
@@ -1602,6 +1601,15 @@
         } else {
             console.error('❌ initAeraChat not found');
         }
+    </script>
+    
+    <!-- Anonymous Page View Tracking -->
+    <script>
+        fetch('/api/track/pageview', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({page: 'landing'})
+        }).catch(() => {});
     </script>
 </body>
 </html>

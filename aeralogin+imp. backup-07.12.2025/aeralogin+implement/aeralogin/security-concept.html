@@ -1161,5 +1161,14 @@ else:
             console.log('🌀 AEra Chat Widget initialized');
         }
     </script>
+    
+    <!-- Anonymous Page View Tracking -->
+    <script>
+        fetch('/api/track/pageview', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({page: 'security'})
+        }).catch(() => {});
+    </script>
 </body>
 </html>

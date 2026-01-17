@@ -2879,8 +2879,7 @@ Issued At: ${issuedAt}`;
             <a href="https://base.org" target="_blank" style="color: rgba(240, 244, 255, 0.6); text-decoration: none; transition: color 0.3s; font-size: 0.85rem;">BASE L2</a>
         </div>
         <p>
-            &copy; 2025 AEraLogIn. Built on Coinbase BASE L2.<br>
-            Powered by Alchemy, Blockscout & Web3.py
+            &copy; 2025 AEraLogIn. Built on Coinbase BASE L2.
         </p>
         <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;">
             🚀 Live on BASE Mainnet
@@ -2896,6 +2895,15 @@ Issued At: ${issuedAt}`;
             initAeraChat();
             console.log('🌀 AEra Chat Widget initialized');
         }
+    </script>
+    
+    <!-- Anonymous Page View Tracking -->
+    <script>
+        fetch('/api/track/pageview', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({page: 'dashboard'})
+        }).catch(() => {});
     </script>
 </body>
 </html>

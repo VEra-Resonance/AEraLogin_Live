@@ -2843,3 +2843,5 @@ nohup: ignoring input
 127.0.0.1 - - [06/Jan/2026 14:39:00] "GET /example-oauth/api/verify HTTP/1.1" 200 -
 127.0.0.1 - - [06/Jan/2026 14:39:02] "POST /example-oauth/auth/aera/logout HTTP/1.1" 200 -
 127.0.0.1 - - [07/Jan/2026 18:23:50] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jan/2026 12:33:31] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [14/Jan/2026 22:05:49] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -

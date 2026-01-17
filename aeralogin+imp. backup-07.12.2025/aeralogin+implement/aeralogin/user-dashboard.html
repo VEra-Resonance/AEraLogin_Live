@@ -608,6 +608,7 @@ Licensed under the Apache License, Version 2.0
 
             .card {
                 padding: 1.5rem;
+                overflow: hidden;
             }
 
             .profile-header {
@@ -623,6 +624,23 @@ Licensed under the Apache License, Version 2.0
 
             .stats-grid {
                 grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+            }
+            
+            .stat-card {
+                padding: 0.75rem;
+                min-width: 0;
+                overflow: hidden;
+            }
+            
+            .stat-card .stat-value {
+                font-size: 0.9rem;
+                word-break: break-word;
+                overflow-wrap: break-word;
+            }
+            
+            .stat-card .stat-label {
+                font-size: 0.7rem;
             }
 
             .feed-item-header {
@@ -632,6 +650,17 @@ Licensed under the Apache License, Version 2.0
             .protection-banner {
                 flex-direction: column;
                 text-align: center;
+            }
+        }
+        
+        /* Extra small screens (phones in portrait) */
+        @media (max-width: 400px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stat-card .stat-value {
+                font-size: 0.85rem;
             }
         }
 
@@ -4104,7 +4133,7 @@ Licensed under the Apache License, Version 2.0
                     // Blockchain Score with breakdown
                     document.getElementById('blockchainScore').innerHTML = `
                         ✅ <span style="color: var(--light);">${bcScore}</span>
-                        <br><span style="font-size: 0.6rem; opacity: 0.85;">Own: ${ownScore} + Follower Bonus: ${followerBonus}${followerCount > 0 ? ` (${followerCount} followers)` : ''}</span>
+                        <br><span style="font-size: 0.6rem; opacity: 0.85;">Own: ${ownScore} + Follower Bonus: ${followerBonus.toFixed(2)}${followerCount > 0 ? ` (${followerCount} followers)` : ''}</span>
                     `;
                     
                     // Sync Status with pending info
@@ -4363,11 +4392,11 @@ Licensed under the Apache License, Version 2.0
                 const profileNameEl = document.getElementById('profileName');
                 const profileAddressEl = document.getElementById('profileAddress');
                 if (profileNameEl) profileNameEl.textContent = `Welcome, Builder`;
-                if (profileAddressEl) profileAddressEl.textContent = connectedWallet;
+                if (profileAddressEl) profileAddressEl.textContent = shortAddr;
                 
                 // Update Stats Section header with wallet info
                 document.getElementById('statsProfileName').textContent = `Builder ${shortAddr}`;
-                document.getElementById('statsProfileAddress').textContent = connectedWallet;
+                document.getElementById('statsProfileAddress').textContent = shortAddr;
                 
                 // USE CACHED DATA from session validation (avoid duplicate API call!)
                 let data;
@@ -4395,7 +4424,7 @@ Licensed under the Apache License, Version 2.0
                     const avatarEmoji = data.avatar_emoji || '👤';
                     
                     if (profileNameEl) profileNameEl.textContent = displayName;
-                    if (profileAddressEl) profileAddressEl.textContent = connectedWallet;
+                    if (profileAddressEl) profileAddressEl.textContent = shortAddr;
                     
                     // Update Stats Section header with display name and avatar
                     document.getElementById('statsProfileName').textContent = displayName;
@@ -4597,5 +4626,13 @@ Licensed under the Apache License, Version 2.0
         </div>
     </div>
 
+    <!-- Anonymous Page View Tracking -->
+    <script>
+        fetch('/api/track/pageview', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({page: 'user-dashboard'})
+        }).catch(() => {});
+    </script>
 </body>
 </html>

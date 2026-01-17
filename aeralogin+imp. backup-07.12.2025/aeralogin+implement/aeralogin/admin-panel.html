@@ -469,6 +469,41 @@
             </div>
         </div>
 
+        <!-- Page View Analytics -->
+        <div class="section-header"><span>👁️</span> Page Views (Anonymous)</div>
+        <div class="stats-grid">
+            <div class="stat-card info">
+                <div class="label">Landing</div>
+                <div class="value" id="pvLanding">-</div>
+                <div class="subtext" id="pvLandingAll">All-time: -</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Dashboard</div>
+                <div class="value" id="pvDashboard">-</div>
+                <div class="subtext" id="pvDashboardAll">All-time: -</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">User Dashboard</div>
+                <div class="value" id="pvUserDashboard">-</div>
+                <div class="subtext" id="pvUserDashboardAll">All-time: -</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Privacy</div>
+                <div class="value" id="pvPrivacy">-</div>
+                <div class="subtext" id="pvPrivacyAll">All-time: -</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Security</div>
+                <div class="value" id="pvSecurity">-</div>
+                <div class="subtext" id="pvSecurityAll">All-time: -</div>
+            </div>
+            <div class="stat-card success">
+                <div class="label">Total Views</div>
+                <div class="value" id="pvTotal">-</div>
+                <div class="subtext" id="pvTotalAll">All-time: -</div>
+            </div>
+        </div>
+
         <!-- User Overview -->
         <div class="section-header"><span>👥</span> User Overview</div>
         <div class="stats-grid">
@@ -785,6 +820,7 @@
                 if (data.success) {
                     // Update all UI sections with the combined data
                     updateSystemStatus(data.system_status);
+                    updatePageViewStats(data.page_view_stats);
                     updateUserStats(data.user_stats);
                     updateAuthStats(data.auth_stats);
                     updateGateStats(data.gate_stats);
@@ -840,6 +876,23 @@
             document.getElementById('failedLogins').textContent = '0';  // Not tracked separately
             document.getElementById('failedLoginsDetail').textContent = `in ${currentPeriod}`;
             document.getElementById('avgScore').textContent = stats.average_score?.toFixed(1) || '-';
+        }
+
+        function updatePageViewStats(stats) {
+            if (!stats) return;
+            
+            document.getElementById('pvLanding').textContent = formatNumber(stats.landing || 0);
+            document.getElementById('pvLandingAll').textContent = `All-time: ${formatNumber(stats.landing_all || 0)}`;
+            document.getElementById('pvDashboard').textContent = formatNumber(stats.dashboard || 0);
+            document.getElementById('pvDashboardAll').textContent = `All-time: ${formatNumber(stats.dashboard_all || 0)}`;
+            document.getElementById('pvUserDashboard').textContent = formatNumber(stats.user_dashboard || 0);
+            document.getElementById('pvUserDashboardAll').textContent = `All-time: ${formatNumber(stats.user_dashboard_all || 0)}`;
+            document.getElementById('pvPrivacy').textContent = formatNumber(stats.privacy || 0);
+            document.getElementById('pvPrivacyAll').textContent = `All-time: ${formatNumber(stats.privacy_all || 0)}`;
+            document.getElementById('pvSecurity').textContent = formatNumber(stats.security || 0);
+            document.getElementById('pvSecurityAll').textContent = `All-time: ${formatNumber(stats.security_all || 0)}`;
+            document.getElementById('pvTotal').textContent = formatNumber(stats.total || 0);
+            document.getElementById('pvTotalAll').textContent = `All-time: ${formatNumber(stats.total_all || 0)}`;
         }
 
         function updateAuthStats(stats) {

@@ -9215,6 +9215,38 @@ async def get_admin_stats(req: Request):
             "blockchain_sync_status": blockchain_data["sync_status"]
         }
         
+        # ===== PAGE VIEW STATS =====
+        page_types = ['landing', 'dashboard', 'user-dashboard', 'privacy', 'security', 'admin']
+        page_view_stats = {}
+        
+        for page in page_types:
+            # Period count
+            cursor.execute("""
+                SELECT COUNT(*) as count FROM events 
+                WHERE event_type = ? AND timestamp > ?
+            """, (f"pageview_{page}", time_filter))
+            page_view_stats[page.replace('-', '_')] = cursor.fetchone()['count']
+            
+            # All-time count
+            cursor.execute("""
+                SELECT COUNT(*) as count FROM events 
+                WHERE event_type = ?
+            """, (f"pageview_{page}",))
+            page_view_stats[f"{page.replace('-', '_')}_all"] = cursor.fetchone()['count']
+        
+        # Total views
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM events 
+            WHERE event_type LIKE 'pageview_%' AND timestamp > ?
+        """, (time_filter,))
+        page_view_stats['total'] = cursor.fetchone()['count']
+        
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM events 
+            WHERE event_type LIKE 'pageview_%'
+        """)
+        page_view_stats['total_all'] = cursor.fetchone()['count']
+        
         conn.close()
         
         return {
@@ -9227,7 +9259,8 @@ async def get_admin_stats(req: Request):
             "gate_stats": gate_stats,
             "funnel_data": funnel_data,
             "follower_stats": follower_stats,
-            "nft_token_stats": nft_token_stats
+            "nft_token_stats": nft_token_stats,
+            "page_view_stats": page_view_stats
         }
         
     except Exception as e:
@@ -9322,6 +9355,38 @@ async def trigger_sync(address: str):
     except Exception as e:
         logger.error(f"❌ trigger_sync error: {str(e)}")
         return {"error": str(e), "success": False}
+
+# ============================================
+# ANONYMOUS PAGE VIEW TRACKING (GDPR-compliant)
+# ============================================
+@app.post("/api/track/pageview")
+async def track_pageview(request: Request):
+    """Track anonymous page views without personal data"""
+    try:
+        data = await request.json()
+        page = data.get("page", "unknown")
+        
+        # Only track known pages
+        allowed_pages = ["landing", "dashboard", "admin", "follow", "privacy", "security", "user-dashboard"]
+        if page not in allowed_pages:
+            return {"success": False, "error": "Invalid page"}
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Insert anonymous page view event (using existing schema)
+        cursor.execute("""
+            INSERT INTO events (event_type, timestamp, created_at)
+            VALUES (?, strftime('%s', 'now'), datetime('now'))
+        """, (f"pageview_{page}",))
+        
+        conn.commit()
+        conn.close()
+        
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Track pageview error: {str(e)}")
+        return {"success": False}
 
 if __name__ == "__main__":
     import uvicorn

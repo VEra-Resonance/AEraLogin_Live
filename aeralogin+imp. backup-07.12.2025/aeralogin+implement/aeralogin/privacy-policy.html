@@ -350,5 +350,14 @@ Licensed under the Apache License, Version 2.0
             console.log('🌀 AEra Chat Widget initialized');
         }
     </script>
+    
+    <!-- Anonymous Page View Tracking -->
+    <script>
+        fetch('/api/track/pageview', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({page: 'privacy'})
+        }).catch(() => {});
+    </script>
 </body>
 </html>
