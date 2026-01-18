@@ -8587,6 +8587,129 @@ async def get_followers_dashboard(req: Request):
         log_activity("ERROR", "ADMIN", f"Dashboard error: {str(e)}")
         return {"error": str(e), "success": False}
 
+
+@app.post("/api/user/profile-with-follow-status")
+async def get_user_profile_with_follow_status(req: Request):
+    """
+    Get user profile data with mutual follow status check
+    
+    Request:
+        {
+            "address": "0x..." (target user to view),
+            "viewer": "0x..." (current logged-in user)
+        }
+    
+    Response:
+        {
+            "success": true,
+            "profile": { ... user profile data ... },
+            "follow_status": {
+                "viewer_follows_target": true/false,
+                "target_follows_viewer": true/false,
+                "mutual": true/false
+            },
+            "follow_back_link": "https://..." (if viewer doesn't follow target)
+        }
+    """
+    try:
+        data = await req.json()
+        target_address = data.get("address", "").lower()
+        viewer_address = data.get("viewer", "").lower()
+        
+        if not target_address or not target_address.startswith("0x") or len(target_address) != 42:
+            return {"success": False, "error": "Invalid target address"}
+        
+        if not viewer_address or not viewer_address.startswith("0x") or len(viewer_address) != 42:
+            return {"success": False, "error": "Invalid viewer address"}
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get target user profile
+        cursor.execute("""
+            SELECT 
+                address, display_name, avatar_emoji, score, blockchain_score,
+                created_at, identity_status, identity_nft_token_id, first_seen, login_count
+            FROM users 
+            WHERE LOWER(address) = ?
+        """, (target_address,))
+        
+        user_row = cursor.fetchone()
+        
+        if not user_row:
+            conn.close()
+            return {"success": False, "error": "User not found"}
+        
+        # Calculate Resonance Score with follower bonus
+        from resonance_calculator import calculate_resonance_score
+        own_score, follower_bonus, follower_count, total_resonance = calculate_resonance_score(target_address, conn)
+        
+        # Check follow status: Does viewer follow target?
+        cursor.execute("""
+            SELECT 1 FROM followers 
+            WHERE owner_wallet = ? AND follower_address = ?
+        """, (target_address, viewer_address))
+        viewer_follows_target = cursor.fetchone() is not None
+        
+        # Check follow status: Does target follow viewer?
+        cursor.execute("""
+            SELECT 1 FROM followers 
+            WHERE owner_wallet = ? AND follower_address = ?
+        """, (viewer_address, target_address))
+        target_follows_viewer = cursor.fetchone() is not None
+        
+        # Get community count
+        cursor.execute("""
+            SELECT COUNT(DISTINCT owner_wallet) as community_count
+            FROM telegram_invites 
+            WHERE LOWER(address) = ? AND granted = 1
+        """, (target_address,))
+        community_row = cursor.fetchone()
+        community_count = community_row['community_count'] if community_row else 0
+        
+        conn.close()
+        
+        # Build follow back link if viewer doesn't follow target yet
+        follow_back_link = None
+        if not viewer_follows_target:
+            base_url = NGROK_URL if NGROK_URL else PUBLIC_URL
+            follow_back_link = f"{base_url}/follow?owner={target_address}&source=followback"
+        
+        # Build response
+        short_addr = target_address[:6] + '...' + target_address[-4:]
+        display_name = user_row['display_name'] if user_row['display_name'] else f"Builder {short_addr}"
+        
+        return {
+            "success": True,
+            "profile": {
+                "address": target_address,
+                "short_address": short_addr,
+                "display_name": display_name,
+                "avatar_emoji": user_row['avatar_emoji'] if user_row['avatar_emoji'] else '👤',
+                "score": float(total_resonance) if total_resonance else 0.0,
+                "own_score": float(own_score) if own_score else 0.0,
+                "follower_bonus": float(follower_bonus) if follower_bonus else 0.0,
+                "follower_count": follower_count,
+                "blockchain_score": float(user_row['blockchain_score']) if user_row['blockchain_score'] else 0.0,
+                "nft_verified": user_row['identity_status'] == 'active' and user_row['identity_nft_token_id'] is not None,
+                "token_id": user_row['identity_nft_token_id'],
+                "communities": community_count,
+                "join_date": user_row['created_at'] or user_row['first_seen'],
+                "login_count": user_row['login_count'] or 0
+            },
+            "follow_status": {
+                "viewer_follows_target": viewer_follows_target,
+                "target_follows_viewer": target_follows_viewer,
+                "mutual": viewer_follows_target and target_follows_viewer
+            },
+            "follow_back_link": follow_back_link
+        }
+        
+    except Exception as e:
+        log_activity("ERROR", "USER_PROFILE", f"Profile with follow status error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
 @app.get("/admin/follower-link")
 async def generate_follower_link(req: Request):
     """

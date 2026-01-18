@@ -1178,7 +1178,7 @@ Licensed under the Apache License, Version 2.0
         <div class="protection-banner">
             <div class="protection-banner-icon">🔐</div>
             <div class="protection-banner-text">
-                <div class="title">Protected by AEra LogIn</div>
+                <div class="title">Protected by AEraLogIn</div>
                 <div class="subtitle">This page is only visible to verified AEra Identity NFT holders</div>
             </div>
         </div>
@@ -4045,7 +4045,12 @@ Licensed under the Apache License, Version 2.0
                     </thead>
                     <tbody>
                         ${followers.map(f => `
-                            <tr data-platform="${f.source_platform || 'direct'}">
+                            <tr data-platform="${f.source_platform || 'direct'}" 
+                                data-address="${f.follower_address || ''}"
+                                onclick="showFollowerDetails('${f.follower_address || ''}')"
+                                style="cursor: pointer; transition: background 0.2s;"
+                                onmouseover="this.style.background='rgba(102, 126, 234, 0.15)'"
+                                onmouseout="this.style.background=''">
                                 <td>${f.display_name || (f.follower_address ? f.follower_address.substring(0, 10) + '...' : 'Unknown')}</td>
                                 <td><span class="score-badge">${f.resonance_score || 0}/100</span></td>
                                 <td><span class="platform-badge">${f.source_platform || 'direct'}</span></td>
@@ -4075,6 +4080,179 @@ Licensed under the Apache License, Version 2.0
                 } else {
                     row.style.display = 'none';
                 }
+            });
+        }
+        
+        // ========================================
+        // FOLLOWER DETAILS MODAL FUNCTIONS
+        // ========================================
+        async function showFollowerDetails(followerAddress) {
+            if (!followerAddress || !connectedWallet) {
+                console.warn('❌ Missing follower address or wallet');
+                return;
+            }
+            
+            console.log('👤 Loading follower details:', followerAddress);
+            
+            // Show modal with loading state
+            const modal = document.getElementById('followerDetailsModal');
+            const content = document.getElementById('followerDetailsContent');
+            
+            modal.style.display = 'flex';
+            content.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
+                    <p>Loading profile...</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/user/profile-with-follow-status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        address: followerAddress,
+                        viewer: connectedWallet
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #ef4444;">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">❌</div>
+                            <p>${data.error || 'Failed to load profile'}</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const p = data.profile;
+                const fs = data.follow_status;
+                
+                // Build follow status badge
+                let followBadge = '';
+                if (fs.mutual) {
+                    followBadge = '<span style="background: linear-gradient(135deg, #10b981, #3b82f6); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; color: white;">🤝 Mutual Follow</span>';
+                } else if (fs.target_follows_viewer) {
+                    followBadge = '<span style="background: rgba(16, 185, 129, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; color: #10b981;">✅ Follows You</span>';
+                }
+                
+                // Build follow back button if needed
+                let followBackBtn = '';
+                if (!fs.viewer_follows_target && data.follow_back_link) {
+                    followBackBtn = `
+                        <a href="${data.follow_back_link}" target="_blank" style="
+                            display: inline-block;
+                            background: linear-gradient(135deg, var(--primary), var(--secondary));
+                            color: white;
+                            padding: 12px 24px;
+                            border-radius: 8px;
+                            text-decoration: none;
+                            font-weight: 600;
+                            margin-top: 1rem;
+                            transition: transform 0.2s, box-shadow 0.2s;
+                        " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 20px rgba(102, 126, 234, 0.4)'"
+                           onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
+                            🔄 Follow Back
+                        </a>
+                    `;
+                }
+                
+                // NFT status
+                const nftStatus = p.nft_verified 
+                    ? `<span style="color: #10b981;">✅ Verified (Token #${p.token_id})</span>`
+                    : '<span style="color: rgba(240, 244, 255, 0.5);">⏳ Not Minted</span>';
+                
+                // Format join date
+                const joinDate = p.join_date ? new Date(p.join_date).toLocaleDateString('de-DE') : 'Unknown';
+                
+                content.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <div style="font-size: 4rem; margin-bottom: 0.5rem;">${p.avatar_emoji}</div>
+                        <h3 style="margin: 0; color: var(--light); font-size: 1.3rem;">${p.display_name}</h3>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 0.5rem;">
+                            <code style="background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 6px; font-size: 0.85rem;">${p.short_address}</code>
+                            <button onclick="copyFollowerAddress('${p.address}')" style="
+                                background: none; border: none; cursor: pointer; font-size: 1rem; padding: 4px;
+                            " title="Copy full address">📋</button>
+                        </div>
+                        <div style="margin-top: 0.75rem;">${followBadge}</div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 1.5rem;">
+                        <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: var(--secondary);">${Math.round(p.score)}</div>
+                            <div style="font-size: 0.75rem; opacity: 0.7;">Resonance Score</div>
+                            <div style="font-size: 0.65rem; opacity: 0.5; margin-top: 4px;">
+                                Own: ${Math.round(p.own_score)} + Bonus: ${p.follower_bonus.toFixed(2)}
+                            </div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">${p.follower_count}</div>
+                            <div style="font-size: 0.75rem; opacity: 0.7;">Followers</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #10b981;">${Math.round(p.blockchain_score)}</div>
+                            <div style="font-size: 0.75rem; opacity: 0.7;">Blockchain Score</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #f59e0b;">${p.login_count}</div>
+                            <div style="font-size: 0.75rem; opacity: 0.7;">Logins</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem;">
+                        <div>
+                            <span style="opacity: 0.6;">Identity NFT:</span>
+                            <span style="margin-left: 8px;">${nftStatus}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem;">
+                        <div>
+                            <span style="opacity: 0.6;">Communities:</span>
+                            <span style="margin-left: 8px; color: var(--light);">${p.communities}</span>
+                        </div>
+                        <div>
+                            <span style="opacity: 0.6;">Joined:</span>
+                            <span style="margin-left: 8px; color: var(--light);">${joinDate}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        ${followBackBtn}
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('❌ Error loading follower details:', error);
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ef4444;">
+                        <div style="font-size: 2rem; margin-bottom: 1rem;">❌</div>
+                        <p>Network error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function closeFollowerDetailsModal() {
+            document.getElementById('followerDetailsModal').style.display = 'none';
+        }
+        
+        function copyFollowerAddress(address) {
+            navigator.clipboard.writeText(address).then(() => {
+                showNotification('success', '✅ Address copied!');
+            }).catch(() => {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = address;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showNotification('success', '✅ Address copied!');
             });
         }
         
@@ -4622,6 +4800,21 @@ Licensed under the Apache License, Version 2.0
             <div style="display: flex; gap: 12px;">
                 <button onclick="closeProfileEditor()" style="flex: 1; padding: 14px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #f0f4ff; cursor: pointer; font-size: 0.95rem; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Cancel</button>
                 <button onclick="saveProfile()" id="saveProfileBtn" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: all 0.2s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102, 126, 234, 0.3)'">💾 Save Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         FOLLOWER DETAILS MODAL (Global Overlay)
+         ======================================== -->
+    <div id="followerDetailsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 99999; justify-content: center; align-items: center;" onclick="if(event.target === this) closeFollowerDetailsModal()">
+        <div style="background: linear-gradient(145deg, rgba(26, 27, 38, 0.98), rgba(15, 16, 24, 0.98)); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 16px; padding: 28px; max-width: 440px; width: 92%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0; color: var(--light); font-size: 1.1rem;">👤 Follower Profile</h3>
+                <button onclick="closeFollowerDetailsModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: rgba(240, 244, 255, 0.6); padding: 4px;" title="Close">✕</button>
+            </div>
+            <div id="followerDetailsContent">
+                <!-- Content loaded dynamically -->
             </div>
         </div>
     </div>
