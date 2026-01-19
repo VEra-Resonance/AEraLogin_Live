@@ -1793,16 +1793,34 @@ Licensed under the Apache License, Version 2.0
             </div>
             <p id="followerCount2" style="font-size: 0.85rem; opacity: 0.7; margin-bottom: 1rem;">0 verified followers</p>
             
-            <!-- Platform Filter -->
-            <div class="filter-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem;">
-                <span style="font-size: 12px; color: var(--light); opacity: 0.7; margin-right: 8px;">Filter by Platform:</span>
-                <button class="filter-btn active" data-platform="all" onclick="filterByPlatform('all')">All</button>
-                <button class="filter-btn" data-platform="twitter" onclick="filterByPlatform('twitter')">🐦 Twitter</button>
-                <button class="filter-btn" data-platform="telegram" onclick="filterByPlatform('telegram')">✈️ Telegram</button>
-                <button class="filter-btn" data-platform="discord" onclick="filterByPlatform('discord')">🎮 Discord</button>
-                <button class="filter-btn" data-platform="facebook" onclick="filterByPlatform('facebook')">👍 Facebook</button>
-                <button class="filter-btn" data-platform="reddit" onclick="filterByPlatform('reddit')">🤖 Reddit</button>
-                <button class="filter-btn" data-platform="direct" onclick="filterByPlatform('direct')">🔗 Direct</button>
+            <!-- Platform Filter (Collapsible) -->
+            <div class="filter-wrapper" style="margin-bottom: 1rem;">
+                <button onclick="toggleFilterMenu()" id="filterToggleBtn" style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 8px 14px;
+                    background: rgba(102, 126, 234, 0.15);
+                    border: 1px solid rgba(102, 126, 234, 0.3);
+                    border-radius: 8px;
+                    color: var(--light);
+                    cursor: pointer;
+                    font-size: 0.85rem;
+                    transition: all 0.2s ease;
+                " onmouseover="this.style.background='rgba(102, 126, 234, 0.25)'" onmouseout="this.style.background='rgba(102, 126, 234, 0.15)'">
+                    <span>🔍 Filter by Platform</span>
+                    <span id="filterArrow" style="transition: transform 0.2s ease;">▼</span>
+                    <span id="activeFilterBadge" style="display: none; background: var(--secondary); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; margin-left: 4px;">All</span>
+                </button>
+                <div id="filterDropdown" class="filter-container" style="display: none; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; animation: fadeIn 0.2s ease;">
+                    <button class="filter-btn active" data-platform="all" onclick="filterByPlatform('all')">All</button>
+                    <button class="filter-btn" data-platform="twitter" onclick="filterByPlatform('twitter')">🐦 Twitter</button>
+                    <button class="filter-btn" data-platform="telegram" onclick="filterByPlatform('telegram')">✈️ Telegram</button>
+                    <button class="filter-btn" data-platform="discord" onclick="filterByPlatform('discord')">🎮 Discord</button>
+                    <button class="filter-btn" data-platform="facebook" onclick="filterByPlatform('facebook')">👍 Facebook</button>
+                    <button class="filter-btn" data-platform="reddit" onclick="filterByPlatform('reddit')">🤖 Reddit</button>
+                    <button class="filter-btn" data-platform="direct" onclick="filterByPlatform('direct')">🔗 Direct</button>
+                </div>
             </div>
             
             <!-- Followers Table -->
@@ -4063,6 +4081,25 @@ Licensed under the Apache License, Version 2.0
             `;
         }
         
+        // ========================================
+        // FILTER MENU TOGGLE
+        // ========================================
+        let filterMenuOpen = false;
+        
+        function toggleFilterMenu() {
+            const dropdown = document.getElementById('filterDropdown');
+            const arrow = document.getElementById('filterArrow');
+            filterMenuOpen = !filterMenuOpen;
+            
+            if (filterMenuOpen) {
+                dropdown.style.display = 'flex';
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                dropdown.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+        
         function filterByPlatform(platform) {
             console.log('🔍 Filtering by platform:', platform);
             
@@ -4071,6 +4108,17 @@ Licensed under the Apache License, Version 2.0
             });
             const activeBtn = document.querySelector(`[data-platform="${platform}"]`);
             if (activeBtn) activeBtn.classList.add('active');
+            
+            // Update badge to show active filter
+            const badge = document.getElementById('activeFilterBadge');
+            if (badge) {
+                if (platform === 'all') {
+                    badge.style.display = 'none';
+                } else {
+                    badge.textContent = platform.charAt(0).toUpperCase() + platform.slice(1);
+                    badge.style.display = 'inline-block';
+                }
+            }
             
             const rows = document.querySelectorAll('#followersContainer tbody tr');
             rows.forEach(row => {
