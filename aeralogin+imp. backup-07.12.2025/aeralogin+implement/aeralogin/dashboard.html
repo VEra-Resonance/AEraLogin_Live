@@ -1431,128 +1431,161 @@ Licensed under the Apache License, Version 2.0
         // Project Update Feed Data
         const feedData = [
             {
-                id: 1,
-                title: "🎉 AEra Officially Live!",
-                badge: "update",
-                timestamp: "Jan 01, 2026",
+                id: 0,
+                title: "🎉 AEraLogIn is Officially Live!",
+                badge: "milestone",
+                timestamp: "📌 Pinned",
                 content: "We're officially live! AEra is now ready to revolutionize blockchain identity and community engagement. Join us on our journey to build the future of decentralized social connections.",
-                link: "https://x.com/AEraResonant/status/2006733563044167694"
+                link: "https://x.com/AEraResonant/status/2006733563044167694",
+                pinned: true
+            },
+            {
+                id: 1,
+                title: "🔐 Safe Wallet Admin Role Added",
+                badge: "security",
+                timestamp: "Jan 19, 2026",
+                content: "Enhanced contract security: Safe Wallet added as additional admin for Profile NFT contract. Backend wallet retains all operational roles for uninterrupted service.",
+                link: null
             },
             {
                 id: 2,
-                title: "✨ Profile Editor: Expanded Emoji Collection",
+                title: "� Follower Details Modal & Follow-Back",
                 badge: "feature",
-                timestamp: "Jan 04, 2026",
-                content: "User Dashboard now includes a comprehensive emoji selector with over 300 emojis. Choose from various categories including symbols, flags from 48 countries, diverse skin tones, crypto icons, animals, and nature themes. The new spiral/circle category features: 🌀💫✨🔮♾️☯️🪬🧿⚛️ and color variants. Personalize your profile avatar to match your style!",
+                timestamp: "Jan 18, 2026",
+                content: "New follower details modal with comprehensive user information. Added follow-back functionality to easily connect with your community members.",
                 link: null
             },
             {
                 id: 3,
-                title: "🔧 Gate Follower Registration Fix",
+                title: "📊 Anonymous Page View Tracking",
                 badge: "update",
-                timestamp: "Jan 03, 2026",
-                content: "Fixed critical bug where users were blocked with 'Already registered as follower' error when retrying gate access after score increase. Follower registration is now properly deferred for Telegram/Discord gates until after successful gate passage. Also fixed SQL ON CONFLICT clause to match the 3-column UNIQUE constraint (owner_wallet, follower_address, source_platform).",
+                timestamp: "Jan 17, 2026",
+                content: "Privacy-respecting analytics: Anonymous page view tracking implemented for better insights while maintaining user privacy.",
                 link: null
             },
             {
                 id: 4,
-                title: "📊 On-Chain Score Verification",
-                badge: "security",
-                timestamp: "Jan 03, 2026",
-                content: "Gate access now reads Resonance Score directly from the blockchain contract (0x9A814DBF...102) for tamper-proof verification. Gates check on-chain score against minimum requirements (50-200) and provide clear error messages when access is denied. Follower confirmation flow improved: follow_confirmed = 0 initially, set to 1 only after successful gate passage.",
+                title: "⚡ Alchemy API Integration & Live Scores",
+                badge: "integration",
+                timestamp: "Jan 15, 2026",
+                content: "Integrated Alchemy API for reliable blockchain data. Resonance scores now update in real-time with improved accuracy.",
                 link: null
             },
             {
                 id: 5,
-                title: "🚀 Dynamic Multi-Tenant Gate Service",
-                badge: "update",
-                timestamp: "Jan 03, 2026",
-                content: "Major infrastructure upgrade: Each community owner can now configure their own Telegram/Discord bot for secure NFT-gated access! Features include: AES-256 encrypted bot token storage, dynamic bot instantiation with caching, automatic health monitoring every 30 minutes, fallback to static links when no bot configured, support for multiple gates per owner/platform. New dashboard section allows owners to choose between Basic Security (static links) or Advanced Security (bot-based one-time links).",
+                title: "�️ Admin Panel & NFT/Token Stats",
+                badge: "feature",
+                timestamp: "Jan 10, 2026",
+                content: "New admin panel with comprehensive NFT and token statistics. Base Mainnet RPC connection optimized for faster responses.",
                 link: null
             },
             {
                 id: 6,
-                title: "🗑️ Gate Management & Deletion",
-                badge: "update",
-                timestamp: "Jan 03, 2026",
-                content: "Added comprehensive gate overview section in User Dashboard. Owners can now view all configured gates with real-time status (HIGH/LOW security), see invite statistics per gate, and delete gates with confirmation modal. Multi-gate support allows same owner to manage multiple communities on the same platform.",
+                title: "✨ Profile Editor: Spiral Emoji Collection",
+                badge: "feature",
+                timestamp: "Jan 08, 2026",
+                content: "Customizable profile avatars: Choose from the exclusive Spiral Emoji Collection to personalize your AEra identity. Over 300 emojis including 🌀💫✨🔮♾️☯️🪬🧿⚛️ and color variants.",
                 link: null
             },
             {
                 id: 7,
-                title: "👛 View NFTs & Tokens in Your Wallet",
+                title: "� Dynamic Gate Service Live",
+                badge: "integration",
+                timestamp: "Jan 05, 2026",
+                content: "Owner-specific bot configuration for NFT-gated communities. Each gate owner can now use their own Telegram/Discord bot for maximum security with AES-256 encrypted token storage.",
+                link: null
+            },
+            {
+                id: 8,
+                title: "� Gate Follower Registration Fix",
                 badge: "update",
-                timestamp: "Jan 02, 2026",
-                content: "Here's how to make your AEra assets visible in your wallet:<br><br><strong style='color: var(--accent);'>🆔 Identity & Profile NFTs (Auto-Detection):</strong><br>• <strong>MetaMask:</strong> Settings → Security & Privacy → Enable NFT Detection<br>• <strong>Coinbase/Base Wallet:</strong> NFTs appear automatically in the NFT tab<br>• <strong>Trust Wallet:</strong> Collectibles tab → NFTs auto-detected<br><br><strong style='color: var(--secondary);'>🆔 Add NFTs Manually (if not detected):</strong><br>• Open wallet → Import NFT / Add Collectible<br>• Network: <strong>BASE Mainnet</strong><br>• Identity NFT: <code style='background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.85em;'>0xF9ff5DC523927B9632049bd19e17B610E9197d53</code><br>• Profile NFT: <code style='background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.85em;'>0x0a630a3dc0c7387e0226d1b285c43b753506b27e</code><br>• Token ID: Find your NFT IDs in <a href='javascript:navigateToCore()' style='color: var(--secondary);'>AEra Core</a> (Identity & Profile section)<br><br><strong style='color: var(--accent);'>🪙 Add Resonance Score Token (RSNC):</strong><br>• Open wallet → Import Token<br>• Network: <strong>BASE Mainnet</strong><br>• Contract: <code style='background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.85em;'>0x9A814DBF7E2352CE9eA6293b4b731B2a24800102</code><br>• Symbol: <strong>RSNC</strong> | Decimals: <strong>0</strong><br><br>💡 <em style='opacity: 0.8;'>Tip: Your Identity NFT is minted automatically on first login!</em>",
-                link: null
-            },
-            {
-                id: 8,
-                title: "🖼️ AEra NFTs Now on OpenSea",
-                badge: "integration",
-                timestamp: "Jan 02, 2026",
-                content: "Our OpenSea presence has been enhanced! AEra Identity NFTs and Profile NFTs are now fully discoverable on OpenSea. Browse, verify, and showcase your on-chain identity in the world's largest NFT marketplace.<br><br>🆔 <a href='https://opensea.io/collection/aera-identity' target='_blank' style='color: var(--secondary);'>AEra Identity Collection</a> — Your unique on-chain identity<br>👤 <a href='https://opensea.io/collection/aera-profile' target='_blank' style='color: var(--accent);'>AEra Profile Collection</a> — Your social profile NFT",
-                link: null
-            },
-            {
-                id: 8,
-                title: "�️ AEra NFTs Now on OpenSea",
-                badge: "integration",
-                timestamp: "Jan 02, 2026",
-                content: "Our OpenSea presence has been enhanced! AEra Identity NFTs and Profile NFTs are now fully discoverable on OpenSea. Browse, verify, and showcase your on-chain identity in the world's largest NFT marketplace.<br><br>🆔 <a href='https://opensea.io/collection/aera-identity' target='_blank' style='color: var(--secondary);'>AEra Identity Collection</a> — Your unique on-chain identity<br>👤 <a href='https://opensea.io/collection/aera-profile' target='_blank' style='color: var(--accent);'>AEra Profile Collection</a> — Your social profile NFT",
+                timestamp: "Jan 03, 2026",
+                content: "Fixed critical bug where users were blocked with 'Already registered as follower' error when retrying gate access after score increase. Follower registration now properly deferred until after successful gate passage.",
                 link: null
             },
             {
                 id: 9,
-                title: "�📜 AEra Smart Contracts on BASE",
+                title: "📊 On-Chain Score Verification",
                 badge: "security",
-                timestamp: "Jan 02, 2026",
-                content: "All AEra smart contracts are deployed on BASE Mainnet and fully verified on BaseScan. Explore our on-chain infrastructure:<br><br>🎨 <strong style='color: var(--accent);'>AEraProfileNFT</strong> — <a href='https://basescan.org/address/0x0a630a3dc0c7387e0226d1b285c43b753506b27e' target='_blank' style='color: var(--secondary);'>0x0a63...b27e</a><br><span style='opacity: 0.7; font-size: 0.9em;'>Optional ERC-721 NFT with user profile data</span><br><br>🆔 <strong style='color: var(--accent);'>AEraIdentityNFT</strong> — <a href='https://basescan.org/address/0xF9ff5DC523927B9632049bd19e17B610E9197d53' target='_blank' style='color: var(--secondary);'>0xF9ff...d53</a><br><span style='opacity: 0.7; font-size: 0.9em;'>Soul-Bound ERC-721 Token — non-transferable, 1 NFT per user</span><br><br>📊 <strong style='color: var(--accent);'>AEraResonanceScore</strong> — <a href='https://basescan.org/address/0x9A814DBF7E2352CE9eA6293b4b731B2a24800102' target='_blank' style='color: var(--secondary);'>0x9A81...102</a><br><span style='opacity: 0.7; font-size: 0.9em;'>On-chain score storage — public read, UPDATER_ROLE write</span><br><br>🔗 <strong style='color: var(--accent);'>AEraResonanceRegistry</strong> — <a href='https://basescan.org/address/0xAAf30d96382D2409Cf1626095e97BEc1C59e5cdF' target='_blank' style='color: var(--secondary);'>0xAAf3...cdF</a><br><span style='opacity: 0.7; font-size: 0.9em;'>Social interaction log — FOLLOW, SHARE, ENGAGE events</span>",
-                link: "https://basescan.org/address/0xF9ff5DC523927B9632049bd19e17B610E9197d53"
+                timestamp: "Jan 03, 2026",
+                content: "Gate access now reads Resonance Score directly from the blockchain contract for tamper-proof verification. Gates check on-chain score against minimum requirements (50-200).",
+                link: null
             },
             {
                 id: 10,
-                title: "AEra Gate SDK Infrastructure Live",
-                badge: "integration",
-                timestamp: "Dec 20, 2025",
-                content: "Complete SDK infrastructure deployed: New server endpoints for authentication and NFT verification added, comprehensive SDK documentation portal launched at /sdk-docs with integration guides and code examples, developer resources including basic-integration demo with live authentication testing available.",
-                link: "/sdk-docs"
+                title: "� View NFTs & Tokens in Your Wallet",
+                badge: "update",
+                timestamp: "Jan 02, 2026",
+                content: "Guide for making AEra assets visible: Identity NFT (0xF9ff...d53), Profile NFT (0x0a63...b27e), and RSNC Token (0x9A81...102) can be imported to MetaMask, Coinbase Wallet, or Trust Wallet on BASE Mainnet.",
+                link: null
             },
             {
                 id: 11,
-                title: "Android Intent-Bridge Live",
+                title: "🖼️ AEra NFTs Now on OpenSea",
+                badge: "integration",
+                timestamp: "Jan 02, 2026",
+                content: "AEra Identity NFTs and Profile NFTs are now fully discoverable on OpenSea. Browse, verify, and showcase your on-chain identity in the world's largest NFT marketplace.",
+                link: "https://opensea.io/collection/aera-identity"
+            },
+            {
+                id: 12,
+                title: "🎨 Profile NFT with OpenSea Integration",
+                badge: "feature",
+                timestamp: "Dec 28, 2025",
+                content: "Optional Profile NFTs now visible on OpenSea. Delegate pattern enables gas-free visibility toggles. Tiered scoring system implemented.",
+                link: null
+            },
+            {
+                id: 13,
+                title: "📱 Mobile Optimization Complete",
+                badge: "update",
+                timestamp: "Dec 25, 2025",
+                content: "Comprehensive responsive design overhaul. All pages now optimized for mobile devices with improved touch interactions.",
+                link: null
+            },
+            {
+                id: 14,
+                title: "🔧 AEra Gate SDK Infrastructure Live",
+                badge: "integration",
+                timestamp: "Dec 20, 2025",
+                content: "Complete SDK infrastructure deployed: New server endpoints for authentication and NFT verification added, comprehensive SDK documentation portal launched at /sdk-docs.",
+                link: "/sdk-docs"
+            },
+            {
+                id: 15,
+                title: "📲 Android Intent-Bridge Live",
                 badge: "integration",
                 timestamp: "Dec 19, 2025",
                 content: "AEra now supports direct Telegram access from Android wallet browsers including MetaMask Mobile, Base Wallet, and Trust Wallet.",
                 link: null
             },
             {
-                id: 12,
-                title: "EIP-1271 Smart Contract Wallet Support",
+                id: 16,
+                title: "🔐 EIP-1271 Smart Contract Wallet Support",
                 badge: "security",
                 timestamp: "Dec 18, 2025",
                 content: "Added full support for Smart Contract Wallets including Base Wallet and Coinbase Smart Wallet signature verification via isValidSignature().",
                 link: null
             },
             {
-                id: 13,
-                title: "iOS Universal Links Enabled",
+                id: 17,
+                title: "🍎 iOS Universal Links Enabled",
                 badge: "update",
                 timestamp: "Dec 17, 2025",
                 content: "Improved iOS Telegram integration with Universal Links support for seamless deep linking from wallet browsers.",
                 link: null
             },
             {
-                id: 14,
-                title: "Multi-Wallet Signature Support",
+                id: 18,
+                title: "👛 Multi-Wallet Signature Support",
                 badge: "update",
                 timestamp: "Dec 15, 2025",
                 content: "AEra supports signature verification across MetaMask, Rainbow, Trust Wallet, Base Wallet, and Coinbase Wallet with automatic fallback strategies.",
                 link: null
             },
             {
-                id: 15,
-                title: "BASE Mainnet Deployment",
+                id: 19,
+                title: "⛓️ BASE Mainnet Deployment",
                 badge: "integration",
                 timestamp: "Dec 10, 2025",
                 content: "AEra Identity NFT and Resonance Registry contracts are now live on BASE Mainnet (Chain ID: 8453).",
