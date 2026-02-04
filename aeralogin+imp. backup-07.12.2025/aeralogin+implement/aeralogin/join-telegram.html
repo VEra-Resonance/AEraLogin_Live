@@ -12,6 +12,11 @@ Platform: Telegram Gate
     <link rel="icon" type="image/png" href="favicon.png?v=20251225c">
     <title>Join AEra Telegram Community | NFT-Gated Access</title>
     <meta name="description" content="Join the exclusive AEra Telegram community - Identity NFT required">
+    
+    <!-- 📊 Plausible Analytics (GDPR-compliant, no cookies) -->
+    <script async src="https://plausible.io/js/pa-M88QuraNbHkTcRCfrPSJ4.js"></script>
+    <script>window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init()</script>
+    
     <style>
         * { 
             margin: 0; 
@@ -1210,7 +1215,12 @@ Issued At: ${issuedAt}`;
                 currentAddress = accounts[0];
                 log('✅ Wallet connected: ' + currentAddress);
                 
-                // 🔒 Check if already a follower (if owner parameter present)
+                // � Track wallet connection
+                if (typeof AEraAnalytics !== 'undefined') {
+                    AEraAnalytics.walletConnect(currentAddress);
+                }
+                
+                // �🔒 Check if already a follower (if owner parameter present)
                 const urlParams = new URLSearchParams(window.location.search);
                 const ownerParam = urlParams.get('owner');
                 const sourceParam = urlParams.get('source') || 'direct';
@@ -1502,6 +1512,11 @@ Issued At: ${issuedAt}`;
                         
                         // ✅ SUCCESS: Update status to "Access Granted"
                         document.getElementById('statusValue').innerHTML = '<span style="color: #00ff88;">✅ Access Granted</span>';
+                        
+                        // 📊 Track Gate Access Success
+                        if (typeof AEraAnalytics !== 'undefined') {
+                            AEraAnalytics.gateAccess('telegram', 'granted');
+                        }
                         
                         // 🤖 INTENT-BRIDGE: Android + In-App Browser (MetaMask, Trust Wallet, etc.)
                         if (inviteData.method === "intent_bridge") {

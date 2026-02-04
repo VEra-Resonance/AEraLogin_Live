@@ -279,12 +279,13 @@ class CSPMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         # CSP für Web3: unsafe-eval wird für Web3-Provider benötigt (MetaMask, Coinbase Wallet, Base Wallet, etc.)
         # UPDATED: Added frame-ancestors and relaxed frame-src for wallet browser compatibility
+        # UPDATED: Added plausible.io for GDPR-compliant analytics
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://*.coinbase.com https://*.base.org; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://*.coinbase.com https://*.base.org https://plausible.io; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "img-src 'self' data: https: blob:; "
-            "connect-src 'self' https: wss: http://localhost:* https://base-sepolia.blockscout.com https://sepolia.base.org https://base-rpc.publicnode.com https://base.blockscout.com wss://base-rpc.publicnode.com https://mainnet.base.org https://api.base.org https://*.coinbase.com https://*.wallet.coinbase.com wss://*.coinbase.com; "
+            "connect-src 'self' https: wss: http://localhost:* https://base-sepolia.blockscout.com https://sepolia.base.org https://base-rpc.publicnode.com https://base.blockscout.com wss://base-rpc.publicnode.com https://mainnet.base.org https://api.base.org https://*.coinbase.com https://*.wallet.coinbase.com wss://*.coinbase.com https://plausible.io; "
             "font-src 'self' data: https://fonts.gstatic.com; "
             "frame-src 'self' https://*.coinbase.com https://*.wallet.coinbase.com; "
             "frame-ancestors 'self' https://*.coinbase.com https://*.wallet.coinbase.com app://*; "
