@@ -8671,9 +8671,10 @@ async def get_user_profile_with_follow_status(req: Request):
         conn.close()
         
         # Build follow back link if viewer doesn't follow target yet
+        # PRODUCTION FIX: Always use PUBLIC_URL (aeralogin.com)
         follow_back_link = None
         if not viewer_follows_target:
-            base_url = NGROK_URL if NGROK_URL else PUBLIC_URL
+            base_url = PUBLIC_URL
             follow_back_link = f"{base_url}/follow?owner={target_address}&source=followback"
         
         # Build response
@@ -8734,24 +8735,27 @@ async def generate_follower_link(req: Request):
         if not owner_wallet or not owner_wallet.startswith("0x") or len(owner_wallet) != 42:
             return {"error": "Invalid owner wallet", "success": False}
         
-        # Use ngrok URL if available, otherwise fall back to PUBLIC_URL
-        base_url = NGROK_URL if NGROK_URL else PUBLIC_URL
+        # PRODUCTION FIX: Always use PUBLIC_URL for follower links
+        # Only use ngrok for local development when PUBLIC_URL is localhost
+        base_url = PUBLIC_URL
         
-        # If ngrok URL not set, try to detect from ngrok API
-        if not base_url or base_url == PUBLIC_URL:
-            try:
-                import urllib.request
-                ngrok_response = urllib.request.urlopen("http://127.0.0.1:4040/api/tunnels", timeout=2)
-                import json as json_lib
-                tunnels_data = json_lib.loads(ngrok_response.read().decode())
-                tunnels = tunnels_data.get("tunnels", [])
-                for tunnel in tunnels:
-                    if tunnel.get("proto") == "https":
-                        base_url = tunnel.get("public_url", base_url)
-                        break
-            except:
-                # Fall back to PUBLIC_URL if ngrok API not available
-                base_url = PUBLIC_URL
+        # Only try ngrok detection for LOCAL development (localhost/127.0.0.1)
+        if "localhost" in PUBLIC_URL or "127.0.0.1" in PUBLIC_URL:
+            if NGROK_URL:
+                base_url = NGROK_URL
+            else:
+                try:
+                    import urllib.request
+                    ngrok_response = urllib.request.urlopen("http://127.0.0.1:4040/api/tunnels", timeout=2)
+                    import json as json_lib
+                    tunnels_data = json_lib.loads(ngrok_response.read().decode())
+                    tunnels = tunnels_data.get("tunnels", [])
+                    for tunnel in tunnels:
+                        if tunnel.get("proto") == "https":
+                            base_url = tunnel.get("public_url", base_url)
+                            break
+                except:
+                    pass  # Keep PUBLIC_URL if ngrok not available
         
         # Build follower link (using /follow route)
         follower_link = f"{base_url}/follow?owner={owner_wallet}&source={source}"
