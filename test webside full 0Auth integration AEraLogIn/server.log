@@ -2953,3 +2953,9 @@ nohup: ignoring input
 127.0.0.1 - - [30/Jan/2026 23:34:10] "GET /example-oauth/ HTTP/1.1" 200 -
 127.0.0.1 - - [30/Jan/2026 23:55:08] "GET /example-oauth/ HTTP/1.1" 200 -
 127.0.0.1 - - [03/Feb/2026 23:09:56] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [06/Feb/2026 22:44:02] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [06/Feb/2026 23:21:20] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [07/Feb/2026 08:52:14] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [07/Feb/2026 08:52:17] "GET /example-oauth/static/aera-client.js HTTP/1.1" 200 -
+127.0.0.1 - - [13/Feb/2026 23:07:34] "GET /example-oauth/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Feb/2026 20:00:08] "[36mGET /example-oauth/ HTTP/1.1[0m" 304 -
